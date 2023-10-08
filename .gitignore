@@ -1,0 +1,15 @@
+# ignore all file in Debug
+Debug/
+
+# ignore all file in Release
+Release/
+
+# ignore all file in x64
+x64/
+
+# ignore
+*.ico
+*.vcxproj
+*.filters
+*.user
+*.manifast
