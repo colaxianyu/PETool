@@ -100,7 +100,6 @@ public:
 	void AddImport(const TCHAR tDllName[], const TCHAR tFuncName[]);
 	bool AddSectionHeaderIfAvailable();
 	void AdjustHeadrs();
-	void AddSection(const IMAGE_SECTION_HEADER sectionHeader);
 	void AddSection(DWORD SectionSize);
 	void AddSectionHeader(IMAGE_SECTION_HEADER* mySectionHeader);
 	void MoveToNewFileBuffer(const DWORD bufferSize);

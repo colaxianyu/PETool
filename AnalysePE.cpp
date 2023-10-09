@@ -509,49 +509,6 @@ void AnalysePE::AnalysePE::AdjustHeadrs() {
 	memset(headers_.sectionHeader + headers_.fileHeader->NumberOfSections, 0, freeSpaceSize);
 }
 
-void AnalysePE::AddSection(const IMAGE_SECTION_HEADER sectionHeader) {
-	// 如果空间不够，则抬高除dos头之外的所有头结构，若抬高之后空间仍然不够，则开辟新的空间
-	bool isAvailableSpace = AddSectionHeaderIfAvailable();
-	DWORD newFileBufferSize = 0;
-
-	DWORD newSectionSizeInFile = GetFileSectionSizeAlignment(sectionHeader);
-	DWORD newSectionSizeInImage = GetImageSectionSizeAlignment(sectionHeader);
-
-	if (!isAvailableSpace) {
-		AdjustHeadrs();
-		bool isAvailableAdjust = AddSectionHeaderIfAvailable();
-
-		// 因为是磁盘buffer，所以开辟新buffer时按VirtualSize和SizeOfRawData中较小的值开辟，且按磁盘对齐
-		// 若是映像buffer，应该按VirtualSize和SizeOfRawData中较大的值开辟，且按内存对齐
-		// 如果空间足够(无论是否移动头部)，newFileBufferSize = 原先的fileBufferSize + 新增区块的大小
-		// 如果移动头部后空间仍然不够，则newFileBufferSize = 原先的fileBufferSize + 新增区块的大小 + 一个区块表的大小
-		newFileBufferSize = isAvailableAdjust ? fileBufferSize_ + newSectionSizeInFile
-			: fileBufferSize_ + newSectionSizeInFile + IMAGE_SIZEOF_SECTION_HEADER;
-	}
-	else {
-		newFileBufferSize = fileBufferSize_ + newSectionSizeInFile;
-	}
-
-	// 增加SizeOfRawData == 0的区块不会影响程序的正常运行，但人为添加的这样的区块不具备实际意义
-	// 因为这样的区块在文件中并不分配磁盘空间，无法写入数据
-	// IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-	// DWORD newSectionRVA = lastSectionHeader->PointerToRawData + lastSectionHeader->SizeOfRawData;
-
-	MoveToNewFileBuffer(newFileBufferSize);
-	IMAGE_SECTION_HEADER* newSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections;
-	memcpy(newSectionHeader, &sectionHeader, IMAGE_SIZEOF_SECTION_HEADER);
-
-	// 内存映像的大小需要考虑未初始化的数据
-	// 所以增加的大小应该为max(newSectionHeader->Misc.VirtualSize, newSectionHeader->SizeOfRawData)，并按内存对齐
-	headers_.optionalHeader->SizeOfImage += newSectionSizeInImage;
-	headers_.fileHeader->NumberOfSections += 1;
-
-	IMAGE_SECTION_HEADER* lastSection = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 2;
-	newSectionHeader->PointerToRawData = lastSection->PointerToRawData + lastSection->SizeOfRawData;
-	newSectionHeader->VirtualAddress = lastSection->VirtualAddress + headers_.optionalHeader->SectionAlignment
-		* ceil(static_cast<float>(max(lastSection->Misc.VirtualSize, lastSection->SizeOfRawData)) / static_cast<float>(headers_.optionalHeader->SectionAlignment));
-}
-
 void AnalysePE::AddSection(DWORD SectionSize) {
 	IMAGE_SECTION_HEADER mySectionHeader{0};
 	
