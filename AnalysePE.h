@@ -89,7 +89,8 @@ public:
 	void DecodeTimeStamp(const time_t timeStamp, tm& timeFormat);
 	DWORD GetImageSectionSizeAlignment(const IMAGE_SECTION_HEADER& sectionHeader);
 	DWORD GetFileSectionSizeAlignment(const IMAGE_SECTION_HEADER& sectionHeader);
-
+	void SetSectionCharacter(IMAGE_SECTION_HEADER& secHeader, DWORD cha);
+	
 	// 注入相关工具
 	// EnlargeLastSection是VirtualSize <= SizeOfRawData特供版
 	// AddSection是VirtualSize > SizeOfRawData特供版
@@ -113,6 +114,5 @@ private:
 	unique_ptr<char> filePath_ = nullptr;
 	unique_ptr<char> fileBuffer_ = nullptr;
 	DWORD fileBufferSize_ = 0;
-	DWORD imageBufferSize_ = 0;				// 用于记录内存映像Buffer的实际大小
 	PeHeaders headers_{ };
 };

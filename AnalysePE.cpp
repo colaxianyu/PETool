@@ -12,7 +12,6 @@ void AnalysePE::Init(const TCHAR* tFilePath) {
 	if (isReadToBuffer) {
 		SetHeaders();
 	}
-	imageBufferSize_ = CalculateImageSize();
 
 }
 
@@ -243,7 +242,7 @@ PositionInPE AnalysePE::PositonInfoRVA(const DWORD RVA) {
 	if (RVA < headers_.sectionHeader->VirtualAddress) {
 		Pos = inHead;
 	}
-	else if (RVA >= imageBufferSize_) {
+	else if (RVA >= headers_.optionalHeader->SizeOfImage) {
 		Pos = outFile;
 	}
 	else {
@@ -272,7 +271,7 @@ PositionInPE AnalysePE::PositonInfoFOA(const DWORD FOA) {
 DWORD AnalysePE::InWhichSectionRVA(const DWORD RVA) {
 	DWORD sectionIndex = headers_.fileHeader->NumberOfSections - 1;
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-	DWORD sectionEdge = imageBufferSize_;
+	DWORD sectionEdge = headers_.optionalHeader->SizeOfImage;
 
 	while (sectionIndex >= 0) {
 		if (RVA >= headers_.sectionHeader[sectionIndex].VirtualAddress
@@ -341,6 +340,10 @@ DWORD AnalysePE::GetFileSectionSizeAlignment(const IMAGE_SECTION_HEADER& section
 	return fileSectionSize;
 }
 
+void AnalysePE::SetSectionCharacter(IMAGE_SECTION_HEADER& secHeader, DWORD cha) {
+	secHeader.Characteristics = cha;
+}
+
 void AnalysePE::EnlargeLastSection(DWORD enlargeSize) {
 	if (enlargeSize == 0) {
 		return;
@@ -389,7 +392,6 @@ void AnalysePE::MoveImport() {
 
 
 	headers_.optionalHeader->DataDirectory[1].VirtualAddress = FOAToRVA(newImportAddr - (DWORD)headers_.dosHeader);
-	//lastSectionHeader->Characteristics = 0xC0000040;
 }
 
 void AnalysePE::AddImport(const TCHAR tDllName[], const TCHAR tFuncName[]) {
@@ -580,52 +582,11 @@ void AnalysePE::AddSection(DWORD SectionSize) {
 	fileBuffer_.reset();
 	fileBuffer_ = unique_ptr<char>(newFileBuffer);
 	fileBufferSize_ += mySectionHeader.SizeOfRawData;
-	imageBufferSize_ += GetImageSectionSizeAlignment(mySectionHeader);
 	SetHeaders();
 
 	AddSectionHeader(&mySectionHeader);
 	headers_.fileHeader->NumberOfSections++;
 	headers_.optionalHeader->SizeOfImage += GetImageSectionSizeAlignment(mySectionHeader);
-
-	/*bool isAvailableSpace = AddSectionHeaderIfAvailable();
-	DWORD newFileBufferSize = 0;
-
-	DWORD newSectionSizeInFile = GetFileSectionSizeAlignment(mySectionHeader);
-	DWORD newSectionSizeInImage = GetImageSectionSizeAlignment(mySectionHeader);
-
-	if (!isAvailableSpace) {
-		AdjustHeadrs();
-		bool isAvailableAdjust = AddSectionHeaderIfAvailable();
-
-		// 因为是磁盘buffer，所以开辟新buffer时按VirtualSize和SizeOfRawData中较小的值开辟，且按磁盘对齐
-		// 若是映像buffer，应该按VirtualSize和SizeOfRawData中较大的值开辟，且按内存对齐
-		// 如果空间足够(无论是否移动头部)，newFileBufferSize = 原先的fileBufferSize + 新增区块的大小
-		// 如果移动头部后空间仍然不够，则newFileBufferSize = 原先的fileBufferSize + 新增区块的大小 + 一个区块表的大小
-		newFileBufferSize = isAvailableAdjust ? fileBufferSize_ + newSectionSizeInFile
-			: fileBufferSize_ + newSectionSizeInFile + IMAGE_SIZEOF_SECTION_HEADER;
-	}
-	else {
-		newFileBufferSize = fileBufferSize_ + newSectionSizeInFile;
-	}*/
-
-	// 增加SizeOfRawData == 0的区块不会影响程序的正常运行，但人为添加的这样的区块不具备实际意义
-	// 因为这样的区块在文件中并不分配磁盘空间，无法写入数据
-	// IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-	// DWORD newSectionRVA = lastSectionHeader->PointerToRawData + lastSectionHeader->SizeOfRawData;
-
-	/*MoveToNewFileBuffer(newFileBufferSize);
-	IMAGE_SECTION_HEADER* newSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections;
-	memcpy(newSectionHeader, &mySectionHeader, IMAGE_SIZEOF_SECTION_HEADER);
-
-	// 内存映像的大小需要考虑未初始化的数据
-	// 所以增加的大小应该为max(newSectionHeader->Misc.VirtualSize, newSectionHeader->SizeOfRawData)，并按内存对齐
-	headers_.optionalHeader->SizeOfImage += newSectionSizeInImage;
-	headers_.fileHeader->NumberOfSections += 1;
-
-	IMAGE_SECTION_HEADER* lastSection = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 2;
-	newSectionHeader->PointerToRawData = lastSection->PointerToRawData + lastSection->SizeOfRawData;
-	newSectionHeader->VirtualAddress = lastSection->VirtualAddress + headers_.optionalHeader->SectionAlignment
-		* ceil(static_cast<float>(max(lastSection->Misc.VirtualSize, lastSection->SizeOfRawData)) / static_cast<float>(headers_.optionalHeader->SectionAlignment));*/
 }
 
 // 为新的区块添加区块表，判断Header中的空闲空间是否可以加入区块表，如果不可以，则讲dosHeader之下的所有header抬高（占用dos stub的空间）
@@ -687,20 +648,23 @@ void AnalysePE::DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]) {
 
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
 
-	std::function<void()> f = nullptr;
+	std::function<void()> SetFreeSpace = nullptr;
 	DWORD needSize = 0;
 	if (lastSectionHeader->Misc.VirtualSize > lastSectionHeader->SizeOfRawData) {
 		needSize = injectSpaceSize;
-		f = [&]() {AddSection(needSize); };
+		SetFreeSpace = [&]() {AddSection(needSize); };
 	}
 	else{
-		DWORD freeSpaceSize = fileBufferSize_ - (lastSectionHeader->PointerToRawData + lastSectionHeader->Misc.VirtualSize);
+		DWORD freeSpaceSize = lastSectionHeader->SizeOfRawData - lastSectionHeader->Misc.VirtualSize;
+		// 错误的计算方式，会覆盖文件的数字签名、调试信息等内容
+		//DWORD freeSpaceSize = fileBufferSize_ - (lastSectionHeader->PointerToRawData + lastSectionHeader->Misc.VirtualSize);
 		if (freeSpaceSize < injectSpaceSize) {
 			needSize = injectSpaceSize - freeSpaceSize;
 		}
-		f = [&]() {EnlargeLastSection(needSize); };
+		SetFreeSpace = [&]() {EnlargeLastSection(needSize); };
+		SetSectionCharacter(*lastSectionHeader, IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE);
 	}
-	f();
+	SetFreeSpace();
 	MoveImport();
 	AddImport(tDllName, tFuncName);
 }
