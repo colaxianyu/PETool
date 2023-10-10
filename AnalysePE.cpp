@@ -1,6 +1,7 @@
 #include "AnalysePE.h"
 #include <time.h>
 #include <iostream>
+#include <cassert>
 
 void AnalysePE::Init(const TCHAR* tFilePath) {
 	char* cPath = nullptr;
@@ -9,31 +10,28 @@ void AnalysePE::Init(const TCHAR* tFilePath) {
 	cPath = nullptr;
 
 	bool isReadToBuffer = ReadFileToFileBuffer();
-	if (isReadToBuffer) {
-		SetHeaders();
+	if (!isReadToBuffer) {
+		return;
 	}
-
+	SetHeaders();
 }
 
 void AnalysePE::UnloadPeData() {
 	fileBuffer_.reset();
 	filePath_.reset();
 	fileBufferSize_ = 0;
+	headers_.Reset();
 }
 
 void AnalysePE::Update() {
 
 }
 
-DWORD AnalysePE::CalculateImageSize() {
-	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-	DWORD lastSectionEdgeRVA = lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader);
-	return headers_.optionalHeader->SizeOfImage >= lastSectionEdgeRVA ? headers_.optionalHeader->SizeOfImage : lastSectionEdgeRVA;
-}
-
 bool AnalysePE::ReadFileToFileBuffer() {
 	FILE* file = nullptr;
 	fopen_s(&file,filePath_.get(), "rb");
+
+	//assert(file != nullptr && "文件打开失败!");
 	if (file == nullptr) {
 		MessageBox(0, TEXT("文件打开失败!"), TEXT("ERROR"), MB_OK);
 		return false;
@@ -46,19 +44,14 @@ bool AnalysePE::ReadFileToFileBuffer() {
 	fseek(file, 0, SEEK_SET);
 	fileBuffer_ = unique_ptr<char>(new char[fileSize]);
 
-	if (fileBuffer_ == nullptr) {
-		MessageBox(0, TEXT("FileBuffer申请失败!"), TEXT("ERROR"), MB_OK);
-		fclose(file);
-		return false;
-	}
+	assert(fileBuffer_ != nullptr && "FileBuffer申请失败!");
+
 	fileBufferSize_ = fileSize;
 	// 将文件读入buffer中
 	DWORD readSize = fread(fileBuffer_.get(), fileSize, 1, file);
-	if (readSize == 0) {
-		MessageBox(0, TEXT("文件读取失败!"), TEXT("ERROR"), MB_OK);
-		fclose(file);
-		return false;
-	}
+
+	assert(readSize == 0 && "文件读入Buffer失败!");
+
 	fclose(file);
 	file = nullptr;
 	return true;
@@ -90,7 +83,7 @@ bool AnalysePE::SetHeaders() {
 	return true;
 }
 
-bool AnalysePE::IsHaveExport() {
+bool AnalysePE::HaveExport() {
 	if (headers_.optionalHeader->DataDirectory[0].Size != 0
 		&& headers_.optionalHeader->DataDirectory[0].VirtualAddress != 0) {
 		return true;

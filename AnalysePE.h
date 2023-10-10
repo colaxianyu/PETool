@@ -28,6 +28,14 @@ struct PeHeaders {
 		optionalHeader = nullptr;
 		sectionHeader = nullptr;
 	}
+
+	void Reset() {
+		dosHeader = nullptr;
+		ntHeader = nullptr;
+		fileHeader = nullptr;
+		optionalHeader = nullptr;
+		sectionHeader = nullptr;
+	}
 };
 
 /*
@@ -53,14 +61,13 @@ public:
 	void Init(const TCHAR* tFilePath);
 	void UnloadPeData();     
 	void Update();										// 用于更新header和imageBufferSize、fileBufferSize
-	DWORD CalculateImageSize();
 
 	bool IsPEFile();
 	bool ReadFileToFileBuffer();
 	bool SetHeaders();
 
 	// 导出表功能
-	bool IsHaveExport();
+	bool HaveExport();
 	IMAGE_EXPORT_DIRECTORY* GetExport();
 	WORD GetOrdinalTableIndex(DWORD value);
 	char* GetExportFuncName(DWORD index);
