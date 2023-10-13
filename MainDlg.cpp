@@ -195,11 +195,15 @@ void MainDlg::CreateAboutDlg() {
 void MainDlg::CreatePeEditDlg() {
     TCHAR fileName[FILENAME_MAX];
     memset(fileName, 0, FILENAME_MAX);
-    if (IsOpenFile(fileName)) {
-        peEditDlg_ = std::unique_ptr<PeEditDlg>(new PeEditDlg(hCurrentDlg_));
-        peEditDlg_->InitDlg();
-        peEditDlg_->SetFileName(fileName);
-        peEditDlg_->Plant();
+    if (GetOpenFileNameEx(fileName)) {
+        FileManage::GetFileManage().SetFileName(fileName);
+        if (FileManage::GetFileManage().OpenFile()) {
+            AnalysePE::GetAnalyse().Init();
+            peEditDlg_ = std::unique_ptr<PeEditDlg>(new PeEditDlg(hCurrentDlg_));
+            peEditDlg_->InitDlg();
+            peEditDlg_->SetFileName(fileName);
+            peEditDlg_->Plant();
+        }
     }
     return;
 }
@@ -221,7 +225,7 @@ DWORD MainDlg::GetPID(int rowIndex) {
     return pid;
 }
 
-BOOL MainDlg::IsOpenFile(TCHAR* fileName) {
+BOOL MainDlg::GetOpenFileNameEx(TCHAR* fileName) {
     OPENFILENAME openFile;
     memset(&openFile, 0, sizeof(openFile));
 
@@ -231,7 +235,7 @@ BOOL MainDlg::IsOpenFile(TCHAR* fileName) {
     openFile.lpstrFilter = formatFilter;
     openFile.lpstrFile = fileName;
     openFile.nMaxFile = MAX_PATH;
-
+    
     if (GetOpenFileName(&openFile) == FALSE) {
         return FALSE;
     }

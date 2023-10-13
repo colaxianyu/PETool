@@ -100,7 +100,7 @@ void ExportDlg::PlantFuncItem() {
     memset(&item, 0, sizeof(LV_ITEM));
     item.mask = LVIF_TEXT;
 
-    for (int i = 0; i < export_->NumberOfFunctions; i++) {
+    for (DWORD i = 0; i < export_->NumberOfFunctions; i++) {
         if (*(funcAddr + i) != 0) {
             item.iItem = i;
             item.iSubItem = 0;

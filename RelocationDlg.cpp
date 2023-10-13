@@ -150,7 +150,7 @@ void RelocationDlg::PlantBlockItemItem() {
 
     DWORD itemNum = (tempRelocation->SizeOfBlock - 8) / 2;
     WORD* blockItem = (WORD*)((DWORD)tempRelocation + 8);
-    for (int j = 1; j <= itemNum; j++, blockItem++) {
+    for (DWORD j = 1; j <= itemNum; j++, blockItem++) {
         item.iItem = j - 1;
         item.iSubItem = 0;
         TCHAR tIndex[5] = { 0 };

@@ -5,6 +5,7 @@
 #include "ListControl.h"
 #include "AboutDlg.h"
 #include "PeEdit.h"
+#include "FileManage.h"
 
 class MainDlg : public DialogEX
 {
@@ -30,7 +31,7 @@ public:
 
 	DWORD GetPID(int rowID);
 
-	BOOL IsOpenFile(TCHAR* fileName);
+	BOOL GetOpenFileNameEx(TCHAR* fileName);
 private:
 	HICON hIcon_;
 	std::unique_ptr<ListCrl> processList_;

@@ -1,6 +1,7 @@
 #include "PeEdit.h"
 #include "AnalysePE.h"
 #include "resource.h"
+#include "FileManage.h"
 #include <CommCtrl.h>
 #include <string>
 #include <Windows.h>
@@ -143,11 +144,9 @@ void PeEditDlg::CreateInjectImportDlg() {
 }
 
 void PeEditDlg::SaveFile() {
-    //AnalysePE::GetAnalyse().MoveImport();
-   // AnalysePE::GetAnalyse().AddSection(*(AnalysePE::GetAnalyse().GetHeaders().sectionHeader));
     OPENFILENAME openFile = { 0 };
     TCHAR tPath[MAX_PATH] = { 0 };
-    AnalysePE::GetAnalyse().GetFilePath(tPath);
+    FileManage::GetFileManage().GetFilePath(tPath);
 
     openFile.lStructSize = sizeof(OPENFILENAME);
     openFile.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
@@ -167,7 +166,7 @@ void PeEditDlg::SaveFile() {
         return;
     }
 
-    DWORD fileSize = AnalysePE::GetAnalyse().GetFileSzie();
+    DWORD fileSize = FileManage::GetFileManage().GetFileSize();
     DWORD writeSize = fwrite(AnalysePE::GetAnalyse().GetHeaders().dosHeader, sizeof(BYTE), fileSize, file);
     if (writeSize == 0) {
         MessageBox(0, TEXT("±£´æÊ§°Ü!"), TEXT("ERROR"), MB_OK);
@@ -184,7 +183,6 @@ LRESULT CALLBACK PeEditDlg::EditProc(HWND hEdit, UINT message, WPARAM wParam, LP
     switch (message)
     {
     case WM_INITDIALOG:
-        AnalysePE::GetAnalyse().Init(thisDlg_->fileName_);
         thisDlg_->SetCurrentDlgHWND(hEdit);
         thisDlg_->SetEditTitle();
         thisDlg_->SetPEMainInfo();
@@ -227,7 +225,7 @@ LRESULT CALLBACK PeEditDlg::EditProc(HWND hEdit, UINT message, WPARAM wParam, LP
         break;
     }
     case WM_CLOSE: 
-       AnalysePE::GetAnalyse().UnloadPeData();
+        AnalysePE::GetAnalyse().UnloadPeData();
         thisDlg_->CloseDlg();
         break;
     default:
