@@ -58,7 +58,7 @@ public:
 		return analyse;
 	}
 
-	void Init(const TCHAR* tFilePath);
+	void Init();
 	void UnloadPeData();     
 	void Update();										// 用于更新header和imageBufferSize、fileBufferSize
 
@@ -112,12 +112,10 @@ public:
 	void MoveToNewFileBuffer(const DWORD bufferSize);
 	void DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]);
 
-	void GetFilePath(TCHAR* tPath) { TCHAR* p = nullptr; CharToTchar(filePath_.get(), &p); memcpy(tPath, p, MAX_PATH); }
-	int GetFileSzie() { return fileBufferSize_; }
+	int GetFileBufferSzie() { return fileBufferSize_; }
 	PeHeaders& GetHeaders() { return headers_; };
 	
 private:
-	unique_ptr<char> filePath_ = nullptr;
 	unique_ptr<char> fileBuffer_ = nullptr;
 	DWORD fileBufferSize_ = 0;
 	PeHeaders headers_{ };

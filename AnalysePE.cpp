@@ -1,14 +1,10 @@
 #include "AnalysePE.h"
+#include "FileManage.h"
 #include <time.h>
 #include <iostream>
 #include <cassert>
 
-void AnalysePE::Init(const TCHAR* tFilePath) {
-	char* cPath = nullptr;
-	TcharToChar(tFilePath, &cPath);
-	filePath_ = unique_ptr<char>(cPath); 
-	cPath = nullptr;
-
+void AnalysePE::Init() {
 	bool isReadToBuffer = ReadFileToFileBuffer();
 	if (!isReadToBuffer) {
 		return;
@@ -18,7 +14,6 @@ void AnalysePE::Init(const TCHAR* tFilePath) {
 
 void AnalysePE::UnloadPeData() {
 	fileBuffer_.reset();
-	filePath_.reset();
 	fileBufferSize_ = 0;
 	headers_.Reset();
 }
@@ -28,32 +23,15 @@ void AnalysePE::Update() {
 }
 
 bool AnalysePE::ReadFileToFileBuffer() {
-	FILE* file = nullptr;
-	fopen_s(&file,filePath_.get(), "rb");
+	fileBufferSize_ = FileManage::GetFileManage().GetFileSize();
+	fileBuffer_ = unique_ptr<char>(new char[fileBufferSize_]);
 
-	//assert(file != nullptr && "文件打开失败!");
-	if (file == nullptr) {
-		MessageBox(0, TEXT("文件打开失败!"), TEXT("ERROR"), MB_OK);
+	FILE* tempFile = const_cast<FILE*>(FileManage::GetFileManage().GetFile());
+	DWORD readSize = fread(fileBuffer_.get(), fileBufferSize_, 1, tempFile);
+	if (readSize == 0) {
 		return false;
 	}
-
-	// 计算文件大小，并分配Buffer
-	DWORD fileSize = 0;
-	fseek(file, 0, SEEK_END);
-	fileSize = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	fileBuffer_ = unique_ptr<char>(new char[fileSize]);
-
-	assert(fileBuffer_ != nullptr && "FileBuffer申请失败!");
-
-	fileBufferSize_ = fileSize;
-	// 将文件读入buffer中
-	DWORD readSize = fread(fileBuffer_.get(), fileSize, 1, file);
-
-	assert(readSize == 0 && "文件读入Buffer失败!");
-
-	fclose(file);
-	file = nullptr;
+	tempFile = nullptr;
 	return true;
 }
 
@@ -104,7 +82,7 @@ WORD AnalysePE::GetOrdinalTableIndex(DWORD value) {
 	WORD* ordinalTable = (WORD*)((DWORD)headers_.dosHeader
 		+ RVAToFOA((DWORD)exportPtr->AddressOfNameOrdinals));
 
-	for (int i = 0; i < exportPtr->NumberOfNames; i++) {
+	for (DWORD i = 0; i < exportPtr->NumberOfNames; i++) {
 		if (*(ordinalTable + i) == value) {
 			return i;
 		}
@@ -156,7 +134,7 @@ IMAGE_BASE_RELOCATION* AnalysePE::GetRelocation() {
 IMAGE_BASE_RELOCATION* AnalysePE::GetRelocation(DWORD index) {
 	IMAGE_BASE_RELOCATION* tempRelocation = (IMAGE_BASE_RELOCATION*)((DWORD)headers_.dosHeader
 		+ RVAToFOA(headers_.optionalHeader->DataDirectory[5].VirtualAddress));
-	for (int i = 0; i < index; i++) {
+	for (DWORD i = 0; i < index; i++) {
 		tempRelocation = (IMAGE_BASE_RELOCATION*)((DWORD)tempRelocation
 			+ tempRelocation->SizeOfBlock);
 	}
@@ -338,7 +316,7 @@ void AnalysePE::SetSectionCharacter(IMAGE_SECTION_HEADER& secHeader, DWORD cha) 
 }
 
 void AnalysePE::EnlargeLastSection(DWORD enlargeSize) {
-	if (enlargeSize == 0) {
+	if (enlargeSize != 0) {
 		return;
 	}
 	DWORD oldSectionSize = (headers_.sectionHeader
@@ -355,8 +333,7 @@ void AnalysePE::EnlargeLastSection(DWORD enlargeSize) {
 	memset(tempBuffer, 0, fileBufferSize_ + alignmentSize);
 	memcpy(tempBuffer, fileBuffer_.get(), fileBufferSize_);
 	fileBufferSize_ += alignmentSize;
-	fileBuffer_.reset();
-	fileBuffer_ = unique_ptr<char>(tempBuffer);
+	fileBuffer_.reset(tempBuffer);
 
 	SetHeaders();
 	IMAGE_SECTION_HEADER* newLastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
@@ -394,9 +371,9 @@ void AnalysePE::AddImport(const TCHAR tDllName[], const TCHAR tFuncName[]) {
 	DWORD allImportSize = GetAllImportSize();
 	DWORD freeSpace = fileBufferSize_ - (headers_.sectionHeader
 		+ headers_.fileHeader->NumberOfSections - 1)->PointerToRawData;
-	if (freeSpace < 62) {
+	/*if (freeSpace < 62) {
 		EnlargeLastSection(400);
-	}
+	}*/
 	IMAGE_IMPORT_DESCRIPTOR* tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((DWORD)headers_.dosHeader
 		+ RVAToFOA(headers_.optionalHeader->DataDirectory[1].VirtualAddress));
 	while (tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0) {
@@ -529,8 +506,7 @@ void AnalysePE::AddSection(DWORD SectionSize) {
 	char* newFileBuffer = new char[fileBufferSize_ + mySectionHeader.SizeOfRawData];
 	memset(newFileBuffer, 0, fileBufferSize_ + mySectionHeader.SizeOfRawData);
 	memcpy(newFileBuffer, fileBuffer_.get(), fileBufferSize_);
-	fileBuffer_.reset();
-	fileBuffer_ = unique_ptr<char>(newFileBuffer);
+	fileBuffer_.reset(newFileBuffer);
 	fileBufferSize_ += mySectionHeader.SizeOfRawData;
 	SetHeaders();
 
@@ -561,8 +537,7 @@ void AnalysePE::AddSectionHeader(IMAGE_SECTION_HEADER* mySectionHeader) {
 			memcpy(newFileBuffer, fileBuffer_.get(), newHeaderSize);
 			memcpy(newFileBuffer + newHeaderSize, fileBuffer_.get() + headers_.optionalHeader->SizeOfHeaders
 				, fileBufferSize_ - headers_.optionalHeader->SizeOfHeaders);
-			fileBuffer_.reset();
-			fileBuffer_ = unique_ptr<char>(newFileBuffer);
+			fileBuffer_.reset(newFileBuffer);
 			SetHeaders();
 			headers_.optionalHeader->SizeOfHeaders = newHeaderSize;
 		}		
@@ -580,8 +555,7 @@ void AnalysePE::MoveToNewFileBuffer(const DWORD newBufferSize) {
 	memset(newFileBuffer, 0, newBufferSize);
 	memcpy_s(newFileBuffer, newBufferSize, fileBuffer_.get(), fileBufferSize_);
 	fileBufferSize_ = newBufferSize;
-	fileBuffer_.reset();	
-	fileBuffer_ = unique_ptr<char>((char*)newFileBuffer);
+	fileBuffer_.reset(newFileBuffer);
 	SetHeaders();
 }
 
