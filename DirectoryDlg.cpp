@@ -15,7 +15,9 @@ DirectoryDlg::DirectoryDlg(HWND hParent)
 }
 
 DirectoryDlg::~DirectoryDlg() {
-
+    exportDlg_.reset();
+    importDlg_.reset();
+    relocationDlg_.reset();
 }
 
 void DirectoryDlg::InitDlg() {

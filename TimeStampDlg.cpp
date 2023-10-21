@@ -3,6 +3,7 @@
 #include "AnalysePE.h"
 #include <time.h>
 #include <tchar.h>
+import Utils;
 
 extern HINSTANCE appInst;
 
@@ -34,7 +35,7 @@ void TimeStampDlg::SetTSDlgInfo() {
     SetDlgItemText(hCurrentDlg_, IDC_EDIT_TimeEncode, timeStamp);
 
     tm time;
-    AnalysePE::GetAnalyse().DecodeTimeStamp(ts, time);
+    DecodeTimeStamp(ts, time);
 
     char timeYMD[32] = { 0 };
     char timeHMS[32] = { 0 };

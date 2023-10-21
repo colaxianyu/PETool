@@ -1,10 +1,10 @@
 #include "PeEdit.h"
 #include "AnalysePE.h"
 #include "resource.h"
-#include "FileManage.h"
 #include <CommCtrl.h>
 #include <string>
 #include <Windows.h>
+import Utils;
 
 extern HINSTANCE appInst;
 
@@ -19,7 +19,13 @@ PeEditDlg::PeEditDlg(HWND hParent)
 }
 
 PeEditDlg::~PeEditDlg() {
-    
+    fileHeaderDlg_.reset();
+    optHeaderDlg_.reset();
+    secHeaderDlg_.reset();
+    dirHeaderDlg_.reset();
+    calcDlg_.reset();
+    timeCalcDlg_.reset();
+    injectImpDlg_.reset();
 }
 
 void PeEditDlg::InitDlg() {
@@ -32,6 +38,10 @@ void PeEditDlg::Plant() {
 
 void PeEditDlg::SetFileName(TCHAR* fileName) {
     wsprintfW(fileName_, L"%s", fileName);
+}
+
+void PeEditDlg::OpenFile(const TCHAR* filePath, const char* mode) {
+    fileManage_ = std::make_unique<FileManage>(filePath, mode);
 }
 
 void PeEditDlg::SetEditTitle() {
@@ -144,9 +154,12 @@ void PeEditDlg::CreateInjectImportDlg() {
 }
 
 void PeEditDlg::SaveFile() {
-    OPENFILENAME openFile = { 0 };
-    TCHAR tPath[MAX_PATH] = { 0 };
-    FileManage::GetFileManage().GetFilePath(tPath);
+    OPENFILENAME openFile = {0};
+    //TCHAR tPath[MAX_PATH] = { 0 };
+    //FileManage::GetFileManage().GetTcharFilePath(tPath);
+
+    TCHAR* tPath = nullptr;
+    CharToTchar(fileManage_->GetFilePath(), &tPath); 
 
     openFile.lStructSize = sizeof(OPENFILENAME);
     openFile.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
@@ -158,24 +171,9 @@ void PeEditDlg::SaveFile() {
     GetSaveFileName(&openFile);
 
     char* path = nullptr;
-    FILE* file = nullptr;
-    AnalysePE::GetAnalyse().TcharToChar(tPath, &path);
-    fopen_s(&file, path, "wb");
-    if (file == nullptr) {
-        MessageBox(0, TEXT("±£´æÊ§°Ü!"), TEXT("ERROR"), MB_OK);
-        return;
-    }
+    TcharToChar(tPath, &path);
+    fileManage_->SaveFile(path);
 
-    DWORD fileSize = FileManage::GetFileManage().GetFileSize();
-    DWORD writeSize = fwrite(AnalysePE::GetAnalyse().GetHeaders().dosHeader, sizeof(BYTE), fileSize, file);
-    if (writeSize == 0) {
-        MessageBox(0, TEXT("±£´æÊ§°Ü!"), TEXT("ERROR"), MB_OK);
-        fclose(file);
-        file = nullptr;
-        return;
-    }
-    fclose(file);
-    file = nullptr;
 }
 
 LRESULT CALLBACK PeEditDlg::EditProc(HWND hEdit, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -220,6 +218,7 @@ LRESULT CALLBACK PeEditDlg::EditProc(HWND hEdit, UINT message, WPARAM wParam, LP
         case IDOK:
             AnalysePE::GetAnalyse().UnloadPeData();
             thisDlg_->CloseDlg();
+            delete thisDlg_;
             break;
         }
         break;
@@ -227,6 +226,7 @@ LRESULT CALLBACK PeEditDlg::EditProc(HWND hEdit, UINT message, WPARAM wParam, LP
     case WM_CLOSE: 
         AnalysePE::GetAnalyse().UnloadPeData();
         thisDlg_->CloseDlg();
+        delete thisDlg_;
         break;
     default:
         return FALSE;

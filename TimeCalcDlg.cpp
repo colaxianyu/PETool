@@ -3,6 +3,7 @@
 #include "AnalysePE.h"
 #include <time.h>
 #include <unordered_set>
+import Utils;
 
 extern HINSTANCE appInst;
 
@@ -43,7 +44,7 @@ void TimeCalcDlg::InitEditInfo() {
 
     TCHAR timeBuffer[16] = { 0 };
     tm time;
-    AnalysePE::GetAnalyse().DecodeTimeStamp(timeStamp_, time);
+    DecodeTimeStamp(timeStamp_, time);
 
     char timeYMD[16] = { 0 };
     char timeHMS[16] = { 0 };

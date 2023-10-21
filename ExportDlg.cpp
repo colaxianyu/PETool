@@ -1,5 +1,6 @@
 #include "ExportDlg.h"
 #include "resource.h"
+import Utils;
 
 extern HINSTANCE appInst;
 
@@ -13,7 +14,8 @@ ExportDlg::ExportDlg(HWND hParent)
 }
 
 ExportDlg::~ExportDlg() {
-
+    funcList_.reset();
+    export_ = nullptr;
 }
 
 void ExportDlg::InitDlg() {
@@ -45,7 +47,7 @@ void ExportDlg::SetExportInfo() {
     TCHAR* name = nullptr;
     char* cName = (char*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
         + AnalysePE::GetAnalyse().RVAToFOA(export_->Name));
-    AnalysePE::GetAnalyse().CharToTchar(cName, &name);
+    CharToTchar(cName, &name);
     SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_NAME, name);
     cName = nullptr;
     name = nullptr;
@@ -129,7 +131,7 @@ void ExportDlg::PlantFuncItem() {
                 item.iSubItem = 3;
                 TCHAR* tFuncName = nullptr;
                 char* name = AnalysePE::GetAnalyse().GetExportFuncName(ordinalTableIndex);
-                AnalysePE::GetAnalyse().CharToTchar(name, &tFuncName);
+                CharToTchar(name, &tFuncName);
                 item.pszText = tFuncName;
                 ListView_SetItem(funcList_->GetList(), (DWORD)&item);
                 name = nullptr;

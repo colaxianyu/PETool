@@ -2,7 +2,7 @@
 #include "resource.h"
 #include "AnalysePE.h"
 #include <unordered_set>
-
+import Utils;
 extern HINSTANCE appInst;
 
 WNDPROC RvaOldProc;
@@ -90,20 +90,20 @@ void CalculateDlg::OnClickCalc() {
     if (IsDlgButtonChecked(hCurrentDlg_, IDC_RADIO_VA)) {
         SendMessage(GetDlgItem(hCurrentDlg_, IDC_EDIT_VA), WM_GETTEXT, 9, (LPARAM)editBuffer);
         DWORD VA = -1;
-        AnalysePE::GetAnalyse().TcharToDword(editBuffer, &VA, 16);
+        TcharToDword(editBuffer, &VA, 16);
         FromVACalc(VA);
 
     }
     else if (IsDlgButtonChecked(hCurrentDlg_, IDC_RADIO_RVA)) {
         SendMessage(GetDlgItem(hCurrentDlg_, IDC_EDIT_RVA), WM_GETTEXT, 9, (LPARAM)editBuffer);
         DWORD RVA = -1;
-        AnalysePE::GetAnalyse().TcharToDword(editBuffer, &RVA, 16);
+        TcharToDword(editBuffer, &RVA, 16);
         FromRVACalc(RVA);
     }
     else {
         SendMessage(GetDlgItem(hCurrentDlg_, IDC_EDIT_FOA), WM_GETTEXT, 9, (LPARAM)editBuffer);
         DWORD FOA = -1;
-        AnalysePE::GetAnalyse().TcharToDword(editBuffer, &FOA, 16);
+        TcharToDword(editBuffer, &FOA, 16);
         FromFOACalc(FOA);
     }
 }

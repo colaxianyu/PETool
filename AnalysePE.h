@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <memory>
 #include <functional>
+#include "FileManage.h"
 
 enum class PositionInPE : unsigned int{
 	inHead = 0,  inSection, outFile
@@ -10,9 +11,9 @@ enum class PositionInPE : unsigned int{
 using std::unique_ptr;
 using enum PositionInPE;
 
-/*
-*   PE结构头指针
-*/
+//
+//   PE结构头指针
+//
 
 struct PeHeaders {
 	IMAGE_DOS_HEADER* dosHeader;
@@ -38,10 +39,10 @@ struct PeHeaders {
 	}
 };
 
-/*
-*	PE Tool功能主体
-*/
-
+//
+//	PE Tool功能主体
+//
+class FileManage;
 class AnalysePE
 {
 private:
@@ -58,28 +59,42 @@ public:
 		return analyse;
 	}
 
-	void Init();
+	void Init(FileManage* const fileManage);
 	void UnloadPeData();     
-	void Update();										// 用于更新header和imageBufferSize、fileBufferSize
+	void Update();			// TODO								
 
 	bool IsPEFile();
-	bool ReadFileToFileBuffer();
+	bool ReadFileToFileBuffer(FileManage* const fileManage);
 	bool SetHeaders();
 
-	// 导出表功能
-	bool HaveExport();
+	bool HaveTable(DWORD index);
+	const DWORD GetAllTableSize();
+
+	// 读出导出表
 	IMAGE_EXPORT_DIRECTORY* GetExport();
+	DWORD GetExportSize();
+	//char* GetExportFAT();
+	//char* GetExportFNT();
+	//char* GetExportFOT();
 	WORD GetOrdinalTableIndex(DWORD value);
 	char* GetExportFuncName(DWORD index);
+	DWORD GetFATSize();
+	DWORD GetFNTSize();
+	DWORD GetFOTSize();
+	DWORD GetExportFuncNameSize();
 
-	// 输入表功能
+	// 读出输入表
 	IMAGE_IMPORT_DESCRIPTOR* GetImport();
 	DWORD GetAllImportSize();
+	DWORD GetINTSize(DWORD importIndex);
+	DWORD GetIATSize(DWORD importIndex);
+	DWORD GetByNameTableSize(DWORD importIndex);
 
-	// 重定位表功能
+	// 读出重定位表
 	bool IsHaveRelocation();
 	IMAGE_BASE_RELOCATION* GetRelocation();
 	IMAGE_BASE_RELOCATION* GetRelocation(DWORD index);
+	DWORD GetAllRelocationSize();
 
 	// 常用的工具
 	DWORD RVAToFOA(const DWORD RVA);
@@ -88,12 +103,8 @@ public:
 	PositionInPE PositonInfoFOA(const DWORD FOA);
 	DWORD InWhichSectionRVA(const DWORD RVA);
 	DWORD InWhichSectionFOA(const DWORD FOA);
-	void CharToTchar(const char* in, TCHAR** out);
-	void TcharToChar(const TCHAR* in, char** out);
-	void TcharToDword(const TCHAR* in, DWORD* out, int base);
 	void GetTcharSectionName(const DWORD secIndex, TCHAR** name);
 	void GetCharSectionName(const DWORD secIndex, char** name);
-	void DecodeTimeStamp(const time_t timeStamp, tm& timeFormat);
 	DWORD GetImageSectionSizeAlignment(const IMAGE_SECTION_HEADER& sectionHeader);
 	DWORD GetFileSectionSizeAlignment(const IMAGE_SECTION_HEADER& sectionHeader);
 	void SetSectionCharacter(IMAGE_SECTION_HEADER& secHeader, DWORD cha);
@@ -112,9 +123,28 @@ public:
 	void MoveToNewFileBuffer(const DWORD bufferSize);
 	void DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]);
 
+	// 将所有的表移动到新增的节中
+	void MoveAllTable();
+
+	void MoveExport(DWORD& moveAddress);
+	void MoveExportFAT(DWORD& moveAddress);					// 移动导出函数地址表
+	void MoveExportFNT(DWORD& moveAddress);					// 移动导出函数名称表
+	void MoveExportFOT(DWORD& moveAddress);					// 移动导出函数序号表
+	void MoveExportFuncName(DWORD& moveAddress);			// 移动导出函数的名称
+
+	void MoveImport(DWORD& moveAddress);					// 移动所有导入表
+	void MoveINT(DWORD& moveAddress);						// 移动所有导入名称表
+	void MoveIAT(DWORD& moveAddress);						// TODO：移动所有导入地址表
+	void MoveByNameTable(DWORD& moveAddress);				// 移动所有的导入函数名称表
+
+	void MoveRelocation(DWORD& moveAddress);
+
+	// Test：用于移动文件末尾的签名信息等
+	bool HaveInfo();
+	DWORD GetInfoBuffer(char** buffer);						// 返回buffer的size
+
 	int GetFileBufferSzie() { return fileBufferSize_; }
 	PeHeaders& GetHeaders() { return headers_; };
-	
 private:
 	unique_ptr<char> fileBuffer_ = nullptr;
 	DWORD fileBufferSize_ = 0;

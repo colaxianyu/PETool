@@ -2,6 +2,7 @@
 #include "resource.h"
 #include <Tlhelp32.h>
 #include <WtsApi32.h>
+import Utils;
 
 #pragma comment(lib, "WtsApi32.lib")
 
@@ -21,7 +22,10 @@ MainDlg::MainDlg(HWND hParent)
 }
 
 MainDlg::~MainDlg() {
-        
+    processList_.reset();
+    moduleList_.reset();
+    aboutDlg_.reset();
+    peEditDlg_.reset();
 }
 
 void MainDlg::InitDlg() {
@@ -51,7 +55,7 @@ void MainDlg::Plant() {
 
 void MainDlg::CloseDlg() {
     DestroyWindow(hCurrentDlg_);
-    exit(0);
+    ExitProcess(0);
 }
 
 void MainDlg::InitProcessList() {
@@ -195,15 +199,19 @@ void MainDlg::CreateAboutDlg() {
 void MainDlg::CreatePeEditDlg() {
     TCHAR fileName[FILENAME_MAX];
     memset(fileName, 0, FILENAME_MAX);
+    
     if (GetOpenFileNameEx(fileName)) {
-        FileManage::GetFileManage().SetFileName(fileName);
-        if (FileManage::GetFileManage().OpenFile()) {
-            AnalysePE::GetAnalyse().Init();
-            peEditDlg_ = std::unique_ptr<PeEditDlg>(new PeEditDlg(hCurrentDlg_));
-            peEditDlg_->InitDlg();
-            peEditDlg_->SetFileName(fileName);
-            peEditDlg_->Plant();
+        peEditDlg_ = std::unique_ptr<PeEditDlg>(new PeEditDlg(hCurrentDlg_));
+        peEditDlg_->OpenFile(fileName, "rb");
+        if (!peEditDlg_->GetFileManage()->IsOpenFile()) {
+            peEditDlg_->CloseDlg();
+            peEditDlg_.reset();
+            return;
         }
+        AnalysePE::GetAnalyse().Init(peEditDlg_->GetFileManage());
+        peEditDlg_->InitDlg();
+        peEditDlg_->SetFileName(fileName);
+        peEditDlg_->Plant();
     }
     return;
 }
@@ -221,7 +229,7 @@ DWORD MainDlg::GetPID(int rowIndex) {
 
 
     DWORD pid;
-    AnalysePE::GetAnalyse().TcharToDword(pidBuffer, &pid, 10);
+    TcharToDword(pidBuffer, &pid, 10);
     return pid;
 }
 

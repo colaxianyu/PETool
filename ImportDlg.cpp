@@ -1,6 +1,7 @@
 #include "ImportDlg.h"
 #include "resource.h"
 #include <string>
+import Utils;
 
 extern HINSTANCE appInst;
 
@@ -14,7 +15,9 @@ ImportDlg::ImportDlg(HWND hParent)
 }
 
 ImportDlg::~ImportDlg() {
-
+    mainList_.reset();
+    funcList_.reset();
+    import_ = nullptr;
 }
 
 void ImportDlg::InitDlg() {
@@ -67,7 +70,7 @@ void ImportDlg::PlantMainItem() {
         char* dllName = (char*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
             + AnalysePE::GetAnalyse().RVAToFOA(tempImport->Name));
         TCHAR* tDllName = nullptr;
-        AnalysePE::GetAnalyse().CharToTchar(dllName, &tDllName);
+        CharToTchar(dllName, &tDllName);
         item.pszText = tDllName;
         SendMessage(mainList_->GetList(), LVM_INSERTITEM, 0, (DWORD)&item);
 
@@ -155,7 +158,7 @@ void ImportDlg::PlantFuncItem() {
         item.iSubItem = 0;
         char* APIName = tempByName->Name;
         TCHAR* tAPIName = nullptr;
-        AnalysePE::GetAnalyse().CharToTchar(APIName, &tAPIName);
+        CharToTchar(APIName, &tAPIName);
         item.pszText = tAPIName;
         SendMessage(funcList_->GetList(), LVM_INSERTITEM, 0, (DWORD)&item);
 
@@ -201,7 +204,7 @@ DWORD ImportDlg::GetFirstThunkFromMainList(DWORD rowID) {
 
 
     DWORD firstThunk = 0;
-    AnalysePE::GetAnalyse().TcharToDword(firstThunkBuffer, &firstThunk, 16);
+    TcharToDword(firstThunkBuffer, &firstThunk, 16);
     return firstThunk;
 }
 

@@ -21,8 +21,8 @@ public:
 	
 private:
 	static ExportDlg* thisDlg_;
-	std::unique_ptr<ListCrl> funcList_;
-	IMAGE_EXPORT_DIRECTORY* export_;
+	std::unique_ptr<ListCrl> funcList_ = nullptr;
+	IMAGE_EXPORT_DIRECTORY* export_ = nullptr;
 
 	void SetThisDlg() { thisDlg_ = this; }
 

@@ -16,7 +16,7 @@ public:
 	void PlantSectionColumn();
 	void PlantSectionItem();
 private:
-	std::unique_ptr<ListCrl> sectionList_;
+	std::unique_ptr<ListCrl> sectionList_ = nullptr;
 
 	static SecHeaderDlg* thisDlg_;
 	void SetThisDlg() { thisDlg_ = this; }

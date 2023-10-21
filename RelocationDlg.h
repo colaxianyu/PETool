@@ -24,10 +24,10 @@ public:
 	DWORD GetRelocationTableIndex(DWORD rowID);
 private:
 	static RelocationDlg* thisDlg_;
-	std::unique_ptr<ListCrl> blockList_;
-	std::unique_ptr<ListCrl> blockItemList_;
+	std::unique_ptr<ListCrl> blockList_ = nullptr;
+	std::unique_ptr<ListCrl> blockItemList_ = nullptr;
 
-	IMAGE_BASE_RELOCATION* relocation_;
+	IMAGE_BASE_RELOCATION* relocation_ = nullptr;
 
 	void SetThisDlg() { thisDlg_ = this; }
 

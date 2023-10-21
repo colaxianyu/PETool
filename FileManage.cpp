@@ -1,42 +1,63 @@
 #include "FileManage.h"
-#include "AnalysePE.h"
-#include <string>
+#include <iostream>
+using namespace std;
 
-void FileManage::Reset() {
-	filePath_.reset();
-	file_.reset();
-	fileSize_ = 0;
-}
-
-void FileManage::SetFileName(TCHAR* tFilePath) {
-	char* cPath = nullptr;
-	AnalysePE::GetAnalyse().TcharToChar(tFilePath, &cPath);
-	filePath_ = unique_ptr<char>(cPath);
-	cPath = nullptr;
-}
-
-bool FileManage::OpenFile() {
-	FILE* file = nullptr;
-	errno_t e = fopen_s(&file, filePath_.get(), "rb");
-	if (e != 0) {
-		return false;
+void FileManageDetail::CloseFile(FILE* fp) {
+	if (fp != nullptr) {
+		fclose(fp);
 	}
-	file_ = unique_ptr<FILE>(file);
+}
+void FileManageDetail::ReleasePath(char* path) {
+	if (path != nullptr) {
+		delete[] path;
+	}
+}
 
+FileManage::FileManage(const char* filePath, const char* mode){
+	if (file_ != nullptr) {
+		return;
+	}
+
+	FILE* tempFile = nullptr;
+	errno_t e = fopen_s(&tempFile, filePath, mode);
+	if (e != 0) {
+		return;
+	}
+	file_ = FileManageDetail::PFile(tempFile, FileManageDetail::CloseFile);
+
+	char* tempFilePath = new char[strlen(filePath) + 1];
+	memcpy(tempFilePath, filePath, strlen(filePath) + 1);
+	filePath_ = FileManageDetail::PFilePath(tempFilePath, FileManageDetail::ReleasePath);
 	fseek(file_.get(), 0, SEEK_END);
 	fileSize_ = ftell(file_.get());
 	fseek(file_.get(), 0, SEEK_SET);
-	return true;
 }
 
-bool FileManage::CloseFile() {
-	fclose(file_.get());
-	file_.reset();
-	return true;
+bool FileManage::IsOpenFile() {
+	if (file_ == nullptr) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
-void FileManage::GetFilePath(TCHAR* tPath) {
-	TCHAR* p = nullptr; 
-	AnalysePE::GetAnalyse().CharToTchar(filePath_.get(), &p); 
-	memcpy(tPath, p, MAX_PATH);
+bool FileManage::SaveFile(const char* savePath) {
+	FILE* file = nullptr;
+	fopen_s(&file, savePath, "wb");
+	if (file == nullptr) {
+		MessageBox(0, TEXT("±£¥Ê ß∞‹!"), TEXT("ERROR"), MB_OK);
+		return false;
+	}
+
+	DWORD fileBufferSize = AnalysePE::GetAnalyse().GetFileBufferSzie();
+	DWORD writeSize = fwrite(AnalysePE::GetAnalyse().GetHeaders().dosHeader, sizeof(BYTE), fileBufferSize, file);
+	if (writeSize == 0) {
+		MessageBox(0, TEXT("±£¥Ê ß∞‹!"), TEXT("ERROR"), MB_OK);
+		fclose(file);
+		file = nullptr;
+		return false;
+	}
+	fclose(file);
+	return true;
 }

@@ -25,10 +25,10 @@ public:
 	DWORD GetFirstThunkFromMainList(DWORD rowID);
 private:
 	static ImportDlg* thisDlg_;
-	std::unique_ptr<ListCrl> mainList_;
-	std::unique_ptr<ListCrl> funcList_;
+	std::unique_ptr<ListCrl> mainList_ = nullptr;
+	std::unique_ptr<ListCrl> funcList_ = nullptr;
 
-	IMAGE_IMPORT_DESCRIPTOR* import_;
+	IMAGE_IMPORT_DESCRIPTOR* import_ = nullptr;
 
 	void SetThisDlg() { thisDlg_ = this; }
 

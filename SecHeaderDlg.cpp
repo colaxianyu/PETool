@@ -15,7 +15,7 @@ SecHeaderDlg::SecHeaderDlg(HWND hParent)
 }
 
 SecHeaderDlg::~SecHeaderDlg() {
-
+    sectionList_.reset();
 }
 
 void SecHeaderDlg::InitDlg() {

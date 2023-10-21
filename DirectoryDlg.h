@@ -20,9 +20,9 @@ public:
 
 	void SetDirHeaderInfo();
 private:
-	std::unique_ptr<ExportDlg> exportDlg_;
-	std::unique_ptr<ImportDlg> importDlg_;
-	std::unique_ptr<RelocationDlg> relocationDlg_;
+	std::unique_ptr<ExportDlg> exportDlg_ = nullptr;
+	std::unique_ptr<ImportDlg> importDlg_ = nullptr;
+	std::unique_ptr<RelocationDlg> relocationDlg_ = nullptr;
 
 	static DirectoryDlg* thisDlg_;
 	void SetThisDlg() { thisDlg_ = this; }

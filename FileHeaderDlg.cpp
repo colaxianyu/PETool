@@ -12,7 +12,7 @@ FileHeaderDlg::FileHeaderDlg(HWND hParent)
 }
 
 FileHeaderDlg::~FileHeaderDlg() {
-    
+    timeStampDlg_.reset();
 }
 
 void FileHeaderDlg::InitDlg() {

@@ -34,10 +34,10 @@ public:
 	BOOL GetOpenFileNameEx(TCHAR* fileName);
 private:
 	HICON hIcon_;
-	std::unique_ptr<ListCrl> processList_;
-	std::unique_ptr<ListCrl> moduleList_;
-	std::unique_ptr<AboutDlg> aboutDlg_;
-	std::unique_ptr<PeEditDlg> peEditDlg_;
+	std::unique_ptr<ListCrl> processList_ = nullptr;
+	std::unique_ptr<ListCrl> moduleList_ = nullptr;
+	std::unique_ptr<AboutDlg> aboutDlg_ = nullptr;
+	std::unique_ptr<PeEditDlg> peEditDlg_ = nullptr;
 
 	static MainDlg* thisDlg_;
 	void SetThisDlg() { thisDlg_ = this; }

@@ -7,6 +7,7 @@
 #include "CalculateDlg.h"
 #include "TimeCalcDlg.h"
 #include "InjectImportDlg.h"
+#include "FileManage.h"
 
 class PeEditDlg : public DialogEX
 {
@@ -18,6 +19,7 @@ public:
 	virtual void Plant() override;
 
 	void SetFileName(TCHAR* fileName);
+	void OpenFile(const TCHAR* filePath, const char* mdoe);
 	void SetEditTitle();
 	void SetPEMainInfo();
 	
@@ -30,16 +32,18 @@ public:
 	void CreateInjectImportDlg();
 
 	void SaveFile();
+	FileManage* const GetFileManage() { return fileManage_.get(); }
 private:
 	TCHAR fileName_[FILENAME_MAX];
+	unique_ptr<FileManage> fileManage_ = nullptr;
 
-	std::unique_ptr<FileHeaderDlg> fileHeaderDlg_;
-	std::unique_ptr<OptHeaderDlg> optHeaderDlg_;
-	std::unique_ptr<SecHeaderDlg> secHeaderDlg_;
-	std::unique_ptr<DirectoryDlg> dirHeaderDlg_;
-	std::unique_ptr<CalculateDlg> calcDlg_;
-	std::unique_ptr<TimeCalcDlg> timeCalcDlg_;
-	std::unique_ptr<InjectImportDlg> injectImpDlg_;
+	std::unique_ptr<FileHeaderDlg> fileHeaderDlg_ = nullptr;
+	std::unique_ptr<OptHeaderDlg> optHeaderDlg_ = nullptr;
+	std::unique_ptr<SecHeaderDlg> secHeaderDlg_ = nullptr;
+	std::unique_ptr<DirectoryDlg> dirHeaderDlg_ = nullptr;
+	std::unique_ptr<CalculateDlg> calcDlg_ = nullptr;
+	std::unique_ptr<TimeCalcDlg> timeCalcDlg_ = nullptr;
+	std::unique_ptr<InjectImportDlg> injectImpDlg_ = nullptr;
 
 	static PeEditDlg* thisDlg_;
 	void SetThisDlg() { thisDlg_ = this; }

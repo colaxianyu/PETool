@@ -1,6 +1,7 @@
 #include "RelocationDlg.h"
 #include "resource.h"
 #include <string>
+import Utils;
 
 extern HINSTANCE appInst;
 
@@ -14,7 +15,9 @@ RelocationDlg::RelocationDlg(HWND hParent)
 }
 
 RelocationDlg::~RelocationDlg() {
-
+    blockList_.reset();
+    blockItemList_.reset();
+    relocation_ = nullptr;
 }
 
 void RelocationDlg::InitDlg() {
@@ -37,7 +40,7 @@ void RelocationDlg::InitBlockList() {
 void RelocationDlg::PlantBlockColumn() {
     std::vector<widthAndName> items;
     items.push_back(widthAndName(50, TEXT("Index")));
-    items.push_back(widthAndName(80, TEXT("Section")));
+    items.push_back(widthAndName(100, TEXT("Section")));
     items.push_back(widthAndName(80, TEXT("RVA")));
     items.push_back(widthAndName(110, TEXT("Size Of Block")));
     items.push_back(widthAndName(120, TEXT("Items(HEX/DEC)")));
@@ -74,7 +77,7 @@ void RelocationDlg::PlantBlockItem() {
         sName += sectionName;
         sName += "\")";
         TCHAR* tSectionName = nullptr;
-        AnalysePE::GetAnalyse().CharToTchar(sName.c_str(), &tSectionName);
+        CharToTchar(sName.c_str(), &tSectionName);
         item.pszText = tSectionName;
         ListView_SetItem(blockList_->GetList(), (DWORD)&item);
 
@@ -105,11 +108,11 @@ void RelocationDlg::PlantBlockItem() {
         sprintf_s(buffer, "%d", itemNum);
         sItem += buffer;
         sItem += 'd';
-        AnalysePE::GetAnalyse().CharToTchar(sItem.c_str(), &tItem);
+        CharToTchar(sItem.c_str(), &tItem);
         item.pszText = tItem;
         ListView_SetItem(blockList_->GetList(), (DWORD)&item);
 
-        tempRelocation = (IMAGE_BASE_RELOCATION*)((DWORD)(tempRelocation++) + itemNum * 2);
+        tempRelocation = (IMAGE_BASE_RELOCATION*)((DWORD)(tempRelocation) + tempRelocation->SizeOfBlock);
     }
 }
 
@@ -208,7 +211,7 @@ void RelocationDlg::PlantBlockItemItem() {
             item.iSubItem = 3;
             std::string typeInfo = "HIGHTLOW(0)";
             TCHAR* tType = nullptr;
-            AnalysePE::GetAnalyse().CharToTchar(typeInfo.c_str(), &tType);
+            CharToTchar(typeInfo.c_str(), &tType);
             item.pszText = tType;
             ListView_SetItem(blockItemList_->GetList(), (DWORD)&item);
 
@@ -233,7 +236,7 @@ DWORD RelocationDlg::GetRelocationTableIndex(DWORD rowID) {
 
 
     DWORD index = 0;
-    AnalysePE::GetAnalyse().TcharToDword(indexBuffer, &index, 10);
+    TcharToDword(indexBuffer, &index, 10);
     return index - 1;
 }
 

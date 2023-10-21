@@ -15,7 +15,7 @@ public:
 
 	void CreateTimeDlg();
 private:
-	std::unique_ptr<TimeStampDlg> timeStampDlg_;
+	std::unique_ptr<TimeStampDlg> timeStampDlg_ = nullptr;
 
 	static FileHeaderDlg* thisDlg_;
 	void SetThisDlg() { thisDlg_ = this; }

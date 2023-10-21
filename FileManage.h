@@ -1,35 +1,42 @@
 #pragma once
 #include <memory>
 #include <Windows.h>
-using std::unique_ptr;
+#include <string>
+#include <functional>
+#include "AnalysePE.h"
+import Utils;
 
-class FileManage {
-private:
-	FileManage() = default;
-	~FileManage() = default;
+using std::unique_ptr;
+using std::string;
+using std::function;
+
+namespace FileManageDetail {
+	extern void CloseFile(FILE* fp);
+	extern void ReleasePath(char* path);
+	using PFile = unique_ptr<FILE, function<void(FILE*)>>;
+	using PFilePath = unique_ptr<char, function<void(char*)>>;
+}
+
+class FileManage{
 public:
 	FileManage(const FileManage&) = delete;
-	FileManage(FileManage&&) = delete;
-	FileManage& operator=(const FileManage&) = delete;
-	FileManage& operator=(FileManage&&) = delete;
+	FileManage operator=(const FileManage&) = delete;
 
-	static FileManage& GetFileManage() {
-		static FileManage fileManage;
-		return fileManage;
-	}
+	FileManage(const char* filePath, const char* mode);
+	FileManage(const string& filePath, const char* mode) : FileManage(filePath.c_str(), mode) {};
+	FileManage(const TCHAR* filePath, const char* mode) : FileManage(TcharToString(filePath), mode) {};
 
-	void Reset();
-	void SetFileName(TCHAR* tFilePath);
-	bool OpenFile();
-	bool CloseFile();
+	~FileManage() = default;
 
-	const FILE* GetFile() { return file_.get(); }
-	const char* GetFilePath() { return filePath_.get(); };
-	const DWORD GetFileSize() { return fileSize_; };
-	void GetFilePath(TCHAR* tPath);
-	
+	bool IsOpenFile();
+	bool SaveFile(const char* savePath);
+
+	FILE* const GetFile() { return file_.get(); }
+	char* const GetFilePath() { return filePath_.get(); }
+	DWORD GetFileSize() { return fileSize_; }
+
 private:
-	unique_ptr<char> filePath_ = nullptr;
-	unique_ptr<FILE> file_ = nullptr;
+	unique_ptr<FILE, function<void(FILE*)>> file_ = nullptr;
+	unique_ptr<char, function<void(char*)>> filePath_ = nullptr;
 	DWORD fileSize_ = 0;
 };

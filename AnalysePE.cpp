@@ -1,11 +1,10 @@
 #include "AnalysePE.h"
-#include "FileManage.h"
 #include <time.h>
 #include <iostream>
-#include <cassert>
+import Utils;
 
-void AnalysePE::Init() {
-	bool isReadToBuffer = ReadFileToFileBuffer();
+void AnalysePE::Init(FileManage*  fileManage) {
+	bool isReadToBuffer = ReadFileToFileBuffer(fileManage);
 	if (!isReadToBuffer) {
 		return;
 	}
@@ -22,11 +21,14 @@ void AnalysePE::Update() {
 
 }
 
-bool AnalysePE::ReadFileToFileBuffer() {
-	fileBufferSize_ = FileManage::GetFileManage().GetFileSize();
+bool AnalysePE::ReadFileToFileBuffer(FileManage* const fileManage) {
+	//fileBufferSize_ = FileManage::GetFileManage().GetFileSize();
+	fileBufferSize_ = fileManage->GetFileSize();
+
 	fileBuffer_ = unique_ptr<char>(new char[fileBufferSize_]);
 
-	FILE* tempFile = const_cast<FILE*>(FileManage::GetFileManage().GetFile());
+	//FILE* tempFile = const_cast<FILE*>(FileManage::GetFileManage().GetFile());
+	FILE* tempFile = fileManage->GetFile();
 	DWORD readSize = fread(fileBuffer_.get(), fileBufferSize_, 1, tempFile);
 	if (readSize == 0) {
 		return false;
@@ -61,9 +63,12 @@ bool AnalysePE::SetHeaders() {
 	return true;
 }
 
-bool AnalysePE::HaveExport() {
-	if (headers_.optionalHeader->DataDirectory[0].Size != 0
-		&& headers_.optionalHeader->DataDirectory[0].VirtualAddress != 0) {
+bool AnalysePE::HaveTable(DWORD index) {
+	if (index < 0 || index > 15) {
+		return false;
+	}
+	if (headers_.optionalHeader->DataDirectory[index].Size != 0
+		&& headers_.optionalHeader->DataDirectory[index].VirtualAddress != 0) {
 		return true;
 	}
 	else {
@@ -71,9 +76,28 @@ bool AnalysePE::HaveExport() {
 	}
 }
 
+const DWORD AnalysePE::GetAllTableSize() {
+	DWORD exportSize = GetExportSize() + GetFATSize() + GetFNTSize() + GetFOTSize() + GetExportFuncNameSize();
+	DWORD importSize = 0;
+	DWORD importTable = GetAllImportSize() / sizeof(IMAGE_IMPORT_DESCRIPTOR);
+	for (int i = 0; i < (GetAllImportSize() / sizeof(IMAGE_IMPORT_DESCRIPTOR)); i++) {
+		importSize += GetIATSize(i) + GetINTSize(i) + GetByNameTableSize(i);
+	}
+	importSize += GetAllImportSize();
+	DWORD relocationSize = GetAllRelocationSize();
+	DWORD allSize = headers_.optionalHeader->SectionAlignment
+		* ceil(static_cast<float>(importSize + exportSize + relocationSize) / static_cast<float>(headers_.optionalHeader->SectionAlignment));
+
+	return allSize;
+}
+
 IMAGE_EXPORT_DIRECTORY* AnalysePE::GetExport() {
 	return (IMAGE_EXPORT_DIRECTORY*)((DWORD)headers_.dosHeader
 		+ RVAToFOA(headers_.optionalHeader->DataDirectory[0].VirtualAddress));
+}
+
+DWORD AnalysePE::GetExportSize() {
+	return sizeof(IMAGE_EXPORT_DIRECTORY);
 }
 
 WORD AnalysePE::GetOrdinalTableIndex(DWORD value) {
@@ -100,6 +124,34 @@ char* AnalysePE::GetExportFuncName(DWORD index) {
 	return name;
 }
 
+DWORD AnalysePE::GetFATSize() {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	//DWORD* FAT = (DWORD*)((DWORD)headers_.dosHeader + RVAToFOA(exportTable->AddressOfFunctions));
+	return exportTable->NumberOfFunctions * sizeof(DWORD);
+}
+
+DWORD AnalysePE::GetFNTSize() {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	return exportTable->NumberOfNames * sizeof(DWORD);
+}
+
+DWORD AnalysePE::GetFOTSize() {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	return exportTable->NumberOfNames * sizeof(WORD);
+}
+
+DWORD AnalysePE::GetExportFuncNameSize() {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	DWORD* FNT = (DWORD*)((DWORD)headers_.dosHeader + RVAToFOA(exportTable->AddressOfNames));
+	char* funcName = (char*)((DWORD)headers_.dosHeader + RVAToFOA(*FNT));
+	DWORD funcNameSize = 0;
+	for (DWORD i = 0; i < exportTable->NumberOfNames; i++) {
+		funcNameSize += (strlen(funcName) + 1);
+		funcName = (char*)((DWORD)headers_.dosHeader + RVAToFOA(*(++FNT)));
+	}
+	return funcNameSize;
+}
+
 IMAGE_IMPORT_DESCRIPTOR* AnalysePE::GetImport() {
 	return (IMAGE_IMPORT_DESCRIPTOR*)((DWORD)headers_.dosHeader
 		+ RVAToFOA(headers_.optionalHeader->DataDirectory[1].VirtualAddress));
@@ -109,11 +161,50 @@ DWORD AnalysePE::GetAllImportSize() {
 	DWORD importNum = 0;
 	IMAGE_IMPORT_DESCRIPTOR* tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((DWORD)headers_.dosHeader +
 		RVAToFOA(headers_.optionalHeader->DataDirectory[1].VirtualAddress));
-	for (int i = 0; tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0; i++, tempImport++) {
+	for (; tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0;tempImport++) {
 		importNum++;
 	}
+	// 通过目录表得到的size比实际size大，因为目录表中的计算方式是通过起始位置计算的，那样会计算到用0填充的部分
 	DWORD allImportSize = importNum * sizeof(IMAGE_IMPORT_DESCRIPTOR);
 	return allImportSize;
+}
+
+DWORD AnalysePE::GetINTSize(DWORD importIndex) {
+	if (importIndex < 0 || importIndex >= headers_.optionalHeader->DataDirectory[1].Size) {
+		return 0;
+	}
+	IMAGE_IMPORT_DESCRIPTOR* import = GetImport() + importIndex;
+
+	DWORD size = 0;
+
+	IMAGE_THUNK_DATA * first = (IMAGE_THUNK_DATA*)((DWORD)headers_.dosHeader + RVAToFOA(import->OriginalFirstThunk));
+	while (first->u1.Ordinal != 0) {
+		size++;
+		first++;
+	}
+	import++;
+
+	return size * sizeof(IMAGE_THUNK_DATA);
+}
+DWORD AnalysePE::GetIATSize(DWORD importIndex) {
+	return GetINTSize(importIndex);
+}
+
+DWORD AnalysePE::GetByNameTableSize(DWORD importIndex) {
+	if (importIndex < 0 || importIndex >= headers_.optionalHeader->DataDirectory[1].Size) {
+		return 0;
+	}
+
+	IMAGE_IMPORT_DESCRIPTOR* import = GetImport() + importIndex;
+	IMAGE_THUNK_DATA* INT = (IMAGE_THUNK_DATA*)((DWORD)headers_.dosHeader + RVAToFOA(import->OriginalFirstThunk));
+	IMAGE_IMPORT_BY_NAME* first = (IMAGE_IMPORT_BY_NAME*)((DWORD)headers_.dosHeader + RVAToFOA(INT->u1.Function));
+	DWORD byNameTableSize = 0;
+	for (const DWORD* tempINT = (DWORD*)INT; *tempINT != 0; tempINT++) {
+		if ((*tempINT & 0x10000000) == 0) {
+			byNameTableSize = byNameTableSize + sizeof(WORD) + strlen(first->Name) + 1;
+		}
+	}
+	return byNameTableSize;
 }
 
 bool AnalysePE::IsHaveRelocation() {
@@ -141,25 +232,17 @@ IMAGE_BASE_RELOCATION* AnalysePE::GetRelocation(DWORD index) {
 	return tempRelocation;
 }
 
-void AnalysePE::CharToTchar(const char* in, TCHAR** out) {
-	DWORD lenth = MultiByteToWideChar(CP_ACP, 0, in, strlen(in) + 1, nullptr, 0);
-	TCHAR* temp = new TCHAR[sizeof(TCHAR) * lenth];
-	MultiByteToWideChar(CP_ACP, 0, in, strlen(in) + 1, temp, lenth);
-	*out = temp;
-	temp = nullptr;
-}
-
-void AnalysePE::TcharToChar(const TCHAR* in, char** out) {
-	DWORD lenth = WideCharToMultiByte(CP_ACP, 0, in, -1, nullptr, 0, nullptr, FALSE);
-	char* temp = new char[sizeof(char) * lenth];
-	WideCharToMultiByte(CP_ACP, 0, in, -1, temp, lenth, NULL, FALSE);
-	*out = temp;
-	temp = nullptr;
-}
-
-void AnalysePE::TcharToDword(const TCHAR* in, DWORD* out, int base) {
-	TCHAR* end;
-	*out = wcstol(in, &end, base);
+DWORD AnalysePE::GetAllRelocationSize() {
+	if (!HaveTable(5)) {
+		return 0;
+	}
+	DWORD size= 0;
+	IMAGE_BASE_RELOCATION* temp = GetRelocation();
+	for (DWORD i = 0; temp->VirtualAddress != 0 && temp->SizeOfBlock != 0; i++) {
+		size += temp->SizeOfBlock;
+		temp = (IMAGE_BASE_RELOCATION*)((DWORD)temp + temp->SizeOfBlock);
+	}
+	return size;
 }
 
 DWORD AnalysePE::RVAToFOA(const DWORD RVA){
@@ -209,13 +292,17 @@ DWORD AnalysePE::FOAToRVA(const DWORD FOA) {
 PositionInPE AnalysePE::PositonInfoRVA(const DWORD RVA) {
 	PositionInPE Pos;
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-
 	if (RVA < headers_.sectionHeader->VirtualAddress) {
 		Pos = inHead;
 	}
-	else if (RVA >= headers_.optionalHeader->SizeOfImage) {
+	// TODO：SizeOfImage的值并不一定准确，例如SizeOfImage = lastSection->RVA + lastSection->VSize，此时未对齐
+	// 而lastSection->RVA + lastSection->VSize之后可能还有内容，考虑边界的是否应该改为max(SizeOfImage, lastSection->RVA + 内存对齐(VSize))
+	else if (RVA >= max(headers_.optionalHeader->SizeOfImage, lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader))) {
 		Pos = outFile;
 	}
+	/*else if (RVA >= headers_.optionalHeader->SizeOfImage) {
+		Pos = outFile;
+	}*/
 	else {
 		Pos = inSection;
 	}
@@ -284,17 +371,6 @@ void AnalysePE::GetCharSectionName(const DWORD secIndex, char** name) {
 		cTemp[i] = headers_.sectionHeader[secIndex].Name[i];
 	}
 	*name = cTemp;
-}
-
-void AnalysePE::DecodeTimeStamp(const time_t timeStamp, tm& timeFormat) {
-	tm time;
-	errno_t err = localtime_s(&time, &timeStamp);
-	if (err == 0) {
-		timeFormat = time;
-	}
-	else {
-		MessageBox(0, TEXT("Decode Time Stamp Fail"), TEXT("ERROR"), MB_OK);
-	}
 }
 
 // 内存映像中section的实际大小，取二者中最大的，然后进行内存对齐
@@ -367,13 +443,10 @@ void AnalysePE::MoveImport() {
 void AnalysePE::AddImport(const TCHAR tDllName[], const TCHAR tFuncName[]) {
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
 
-	//MoveImport();
 	DWORD allImportSize = GetAllImportSize();
 	DWORD freeSpace = fileBufferSize_ - (headers_.sectionHeader
 		+ headers_.fileHeader->NumberOfSections - 1)->PointerToRawData;
-	/*if (freeSpace < 62) {
-		EnlargeLastSection(400);
-	}*/
+
 	IMAGE_IMPORT_DESCRIPTOR* tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((DWORD)headers_.dosHeader
 		+ RVAToFOA(headers_.optionalHeader->DataDirectory[1].VirtualAddress));
 	while (tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0) {
@@ -480,16 +553,24 @@ void AnalysePE::AnalysePE::AdjustHeadrs() {
 }
 
 void AnalysePE::AddSection(DWORD SectionSize) {
+	// 判断最后一个区块后是否还有信息
+	bool haveInfo = HaveInfo();
+	DWORD infoSize = 0;
+	char* buffer = nullptr;
+	if (haveInfo) {
+		infoSize = GetInfoBuffer(&buffer);
+	}
+
 	IMAGE_SECTION_HEADER mySectionHeader{0};
-	
+
 	// 初始化自定义的区块表，其中PointerToRawData需要实际添加后才可确定值，故由AddSectionHeader()函数完成
 	std::string name = ".mySec";
 	for (int i = 0; name[i] != 0 && i < IMAGE_SIZEOF_SHORT_NAME; i++) {
 		mySectionHeader.Name[i] = name[i];
 	}
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-	mySectionHeader.VirtualAddress = lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader);
-	mySectionHeader.Misc.VirtualSize = 0;															
+	mySectionHeader.VirtualAddress = lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader); 
+	mySectionHeader.Misc.VirtualSize = 0;
 	DWORD fileAlignmentSectionSize = headers_.optionalHeader->FileAlignment
 		* ceil(static_cast<float>(SectionSize) / static_cast<float>(headers_.optionalHeader->FileAlignment));
 	mySectionHeader.SizeOfRawData = fileAlignmentSectionSize;
@@ -497,22 +578,30 @@ void AnalysePE::AddSection(DWORD SectionSize) {
 
 	// 确定自定义Section在文件中的位置，即PointerToRawData，为了防止最后一个Section是一个完全未初始化的Section(即SizeOfRawData和PointerToRawData都为0)
 	// 故需要从LastSection向前遍历，找到第一个PointerToRawData不为0的Section，将自定义Section复制到该节之后
-	for (int i = headers_.fileHeader->NumberOfSections - 1; i >=0; i--) {
+	for (int i = headers_.fileHeader->NumberOfSections - 1; i >= 0; i--) {
 		if ((headers_.sectionHeader + i)->PointerToRawData != 0 && (headers_.sectionHeader + i)->SizeOfRawData != 0) {
 			mySectionHeader.PointerToRawData = (headers_.sectionHeader + i)->PointerToRawData + GetFileSectionSizeAlignment(*(headers_.sectionHeader + i));
 			break;
 		}
 	}
+
 	char* newFileBuffer = new char[fileBufferSize_ + mySectionHeader.SizeOfRawData];
 	memset(newFileBuffer, 0, fileBufferSize_ + mySectionHeader.SizeOfRawData);
-	memcpy(newFileBuffer, fileBuffer_.get(), fileBufferSize_);
+	memcpy(newFileBuffer, fileBuffer_.get(), haveInfo ? fileBufferSize_ - infoSize : fileBufferSize_);
+
 	fileBuffer_.reset(newFileBuffer);
 	fileBufferSize_ += mySectionHeader.SizeOfRawData;
 	SetHeaders();
 
+	DWORD infoAddress = (DWORD)headers_.dosHeader + mySectionHeader.PointerToRawData + mySectionHeader.SizeOfRawData;
+	if (haveInfo) {
+		memcpy((char*)infoAddress, buffer, infoSize);
+	}
+
 	AddSectionHeader(&mySectionHeader);
 	headers_.fileHeader->NumberOfSections++;
-	headers_.optionalHeader->SizeOfImage += GetImageSectionSizeAlignment(mySectionHeader);
+	headers_.optionalHeader->SizeOfImage = mySectionHeader.VirtualAddress + GetImageSectionSizeAlignment(mySectionHeader);
+	//headers_.optionalHeader->SizeOfImage += GetImageSectionSizeAlignment(mySectionHeader);
 }
 
 // 为新的区块添加区块表，判断Header中的空闲空间是否可以加入区块表，如果不可以，则讲dosHeader之下的所有header抬高（占用dos stub的空间）
@@ -540,11 +629,11 @@ void AnalysePE::AddSectionHeader(IMAGE_SECTION_HEADER* mySectionHeader) {
 			fileBuffer_.reset(newFileBuffer);
 			SetHeaders();
 			headers_.optionalHeader->SizeOfHeaders = newHeaderSize;
+			headers_.optionalHeader->SizeOfImage += headerSizeNoAlignment;
 		}		
 	}
 	IMAGE_SECTION_HEADER* temp = (IMAGE_SECTION_HEADER*)headers_.sectionHeader + headers_.fileHeader->NumberOfSections;
 	memcpy(temp, mySectionHeader, IMAGE_SIZEOF_SECTION_HEADER);
-	
 }
 
 void AnalysePE::MoveToNewFileBuffer(const DWORD newBufferSize) {
@@ -591,4 +680,183 @@ void AnalysePE::DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]) {
 	SetFreeSpace();
 	MoveImport();
 	AddImport(tDllName, tFuncName);
+}
+
+void AnalysePE::MoveAllTable() {
+	DWORD newSectionSize = GetAllTableSize();
+	AddSection(newSectionSize); 
+	
+	DWORD newSectionAddr =	(DWORD)headers_.dosHeader + 
+		(headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1)->PointerToRawData;
+	
+	
+	//MoveExport(newSectionAddr);
+	//char* buffer = new char[fileBufferSize_];
+	//memcpy(buffer2, fileBuffer_.get(), fileBufferSize_);
+	//SetHeaders();
+	//fileBufferSize_ += size;
+	//IMAGE_SECTION_HEADER* last = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
+	//memset((char*)((DWORD)headers_.dosHeader + last->PointerToRawData), 0, size);
+	
+	//char* p = (char*)((DWORD)headers_.dosHeader + last->PointerToRawData + last->SizeOfRawData);
+	//memcpy(p, buffer, size);
+
+	MoveImport(newSectionAddr);
+	MoveRelocation(newSectionAddr);
+}
+
+void AnalysePE::MoveExport(DWORD& moveAddress) {
+	if (!HaveTable(0)) {
+		return;
+	}
+	IMAGE_EXPORT_DIRECTORY* oldExportTable = GetExport();
+	DWORD exportSize = GetExportSize();
+	memcpy((char*)moveAddress, oldExportTable, exportSize);
+	DWORD exportRAV = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+	headers_.optionalHeader->DataDirectory[0].VirtualAddress = exportRAV;
+	moveAddress += exportSize;
+
+	IMAGE_EXPORT_DIRECTORY* newExportTable = GetExport();	
+	char* oldExportName = (char*)((DWORD)headers_.dosHeader + RVAToFOA(newExportTable->Name));
+	memcpy((char*)moveAddress, oldExportName, strlen(oldExportName));
+	newExportTable->Name = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+	moveAddress += (strlen(oldExportName) + 1);
+
+	MoveExportFAT(moveAddress);
+	MoveExportFNT(moveAddress);
+	MoveExportFOT(moveAddress);
+	MoveExportFuncName(moveAddress);
+}
+
+void AnalysePE::MoveExportFAT(DWORD& moveAddress) {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	char* oldFAT = (char*)((DWORD)headers_.dosHeader + RVAToFOA(exportTable->AddressOfFunctions));
+	DWORD FATSize = GetFATSize();
+	memcpy((char*)moveAddress, oldFAT, FATSize);
+	exportTable->AddressOfFunctions = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+	moveAddress += FATSize;
+}
+
+void AnalysePE::MoveExportFNT(DWORD& moveAddress) {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	char* oldFNT = (char*)((DWORD)headers_.dosHeader + RVAToFOA(exportTable->AddressOfNames));
+	DWORD FNTSize = GetFNTSize();
+	memcpy((char*)moveAddress, oldFNT, FNTSize);
+	exportTable->AddressOfNames = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+	moveAddress += FNTSize;
+}
+
+void AnalysePE::MoveExportFOT(DWORD& moveAddress) {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	char* oldFOT = (char*)((DWORD)headers_.dosHeader + RVAToFOA(exportTable->AddressOfNameOrdinals));
+	DWORD FOTSize = GetFOTSize();
+	memcpy((char*)moveAddress, oldFOT, FOTSize);
+	exportTable->AddressOfNameOrdinals = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+	moveAddress += FOTSize;
+}
+
+void AnalysePE::MoveExportFuncName(DWORD& moveAddress) {
+	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
+	DWORD* FNT = (DWORD*)((DWORD)headers_.dosHeader + RVAToFOA(exportTable->AddressOfNames));
+	char* oldFuncName = (char*)((DWORD)headers_.dosHeader + RVAToFOA(*FNT));
+	DWORD funcNameSize = GetExportFuncNameSize();
+	memcpy((char*)moveAddress, oldFuncName, funcNameSize);
+	for (int i = 0; i < exportTable->NumberOfNames; i++) {
+		*FNT = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+		FNT++;
+		moveAddress = moveAddress + strlen((char*)moveAddress) + 1;
+	}
+}
+
+void AnalysePE::MoveImport(DWORD& MoveAddress) {
+	if (!HaveTable(1)) {
+		return;
+	}
+	IMAGE_IMPORT_DESCRIPTOR* firstImport = (IMAGE_IMPORT_DESCRIPTOR*)((DWORD)headers_.dosHeader
+		+ RVAToFOA(headers_.optionalHeader->DataDirectory[1].VirtualAddress));
+
+	DWORD importSize = headers_.optionalHeader->DataDirectory[1].Size;
+	memcpy((char*)MoveAddress, firstImport, importSize);
+	DWORD importRVA = FOAToRVA(MoveAddress - (DWORD)headers_.dosHeader);
+	headers_.optionalHeader->DataDirectory[1].VirtualAddress = importRVA;
+	IMAGE_IMPORT_DESCRIPTOR* firstnewImport = (IMAGE_IMPORT_DESCRIPTOR*)MoveAddress;
+	MoveAddress += importSize;
+
+	for (IMAGE_IMPORT_DESCRIPTOR* temp = firstnewImport; temp->FirstThunk != 0 && temp->OriginalFirstThunk != 0; temp++) {
+		char* name = (char*)((DWORD)headers_.dosHeader + RVAToFOA(temp->Name));
+		DWORD nameLen = strlen(name) + 1;
+		memcpy((char*)MoveAddress, name, nameLen);
+		temp->Name = FOAToRVA(MoveAddress - (DWORD)headers_.dosHeader);
+		MoveAddress += nameLen;
+	}
+	MoveINT(MoveAddress);
+	MoveByNameTable(MoveAddress);
+	//MoveIAT(MoveAddress);
+}
+
+void AnalysePE::MoveINT(DWORD& moveAddress) {
+	IMAGE_IMPORT_DESCRIPTOR* firstImport = GetImport();
+	int index = 0;
+	for (IMAGE_IMPORT_DESCRIPTOR* temp = firstImport; temp->FirstThunk != 0 && temp->OriginalFirstThunk != 0; temp++, index++) {
+		DWORD INTSize = GetINTSize(index);
+		IMAGE_THUNK_DATA* INT = (IMAGE_THUNK_DATA*)((DWORD)headers_.dosHeader + RVAToFOA(temp->OriginalFirstThunk));
+		memcpy((char*)moveAddress, INT, INTSize);
+		temp->OriginalFirstThunk = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+		moveAddress += (INTSize + sizeof(IMAGE_THUNK_DATA));
+	}
+}
+
+void AnalysePE::MoveIAT(DWORD& moveAddress) {
+	// 因为PE中间接调用写的是IAT表中的内容，移动IAT表需要修改程序中所有的间接调用的位置，过于麻烦
+	// 暂时没想到一个好的方法解决该问题
+}
+
+void AnalysePE::MoveByNameTable(DWORD& moveAddress) {
+	IMAGE_IMPORT_DESCRIPTOR* firstImport = GetImport();
+	int index = 0;
+	for (IMAGE_IMPORT_DESCRIPTOR* temp = firstImport; temp->FirstThunk != 0 && temp->OriginalFirstThunk != 0; temp++, index++) {
+		DWORD byNameTableSize = GetByNameTableSize(index);
+		IMAGE_THUNK_DATA* INT = (IMAGE_THUNK_DATA*)((DWORD)headers_.dosHeader + RVAToFOA(temp->OriginalFirstThunk));
+		IMAGE_THUNK_DATA* IAT = (IMAGE_THUNK_DATA*)((DWORD)headers_.dosHeader + RVAToFOA(temp->FirstThunk));
+		IMAGE_IMPORT_BY_NAME* firstByNameTable = (IMAGE_IMPORT_BY_NAME*)((DWORD)headers_.dosHeader + RVAToFOA(*(DWORD*)INT));
+		memcpy((char*)moveAddress, firstByNameTable, byNameTableSize);
+		INT->u1.AddressOfData = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+		IAT->u1.AddressOfData = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+		moveAddress += (byNameTableSize + 1);
+	}
+}
+
+void AnalysePE::MoveRelocation(DWORD& moveAddress) {
+	if (!HaveTable(5)) {
+		return;
+	}
+
+	DWORD allRelocationSize = GetAllRelocationSize();
+	IMAGE_BASE_RELOCATION* oldRelocation = GetRelocation();
+	memcpy((char*)moveAddress, oldRelocation, allRelocationSize);
+	headers_.optionalHeader->DataDirectory[5].VirtualAddress = FOAToRVA(moveAddress - (DWORD)headers_.dosHeader);
+	moveAddress += allRelocationSize;
+}
+
+
+bool AnalysePE::HaveInfo() {
+	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
+	if (fileBufferSize_ > (lastSectionHeader->PointerToRawData + lastSectionHeader->SizeOfRawData)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+DWORD AnalysePE::GetInfoBuffer(char** buffer) {
+	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
+	DWORD size = fileBufferSize_ - (lastSectionHeader->PointerToRawData + lastSectionHeader->SizeOfRawData);
+	char* tempBuffer = new char[size];
+	char* infoAddress = (char*)((DWORD)headers_.dosHeader + lastSectionHeader->PointerToRawData + lastSectionHeader->SizeOfRawData);
+
+	memcpy(tempBuffer, infoAddress, size);
+	*buffer = tempBuffer;
+	tempBuffer = nullptr;
+	return size;
+
 }
