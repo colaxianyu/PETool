@@ -24,7 +24,6 @@ PeEditDlg::~PeEditDlg() {
     secHeaderDlg_.reset();
     dirHeaderDlg_.reset();
     calcDlg_.reset();
-    timeCalcDlg_.reset();
     injectImpDlg_.reset();
 }
 
@@ -141,12 +140,6 @@ void PeEditDlg::CreateCalcDlg() {
     calcDlg_->Plant();
 }
 
-void PeEditDlg::CreateTimeCalcDlg() {
-    timeCalcDlg_ = std::unique_ptr<TimeCalcDlg>(new TimeCalcDlg(hCurrentDlg_));
-    timeCalcDlg_->InitDlg();
-    timeCalcDlg_->Plant();
-}
-
 void PeEditDlg::CreateInjectImportDlg() {
     injectImpDlg_ = std::unique_ptr<InjectImportDlg>(new InjectImportDlg(hCurrentDlg_));
     injectImpDlg_->InitDlg();
@@ -205,9 +198,6 @@ LRESULT CALLBACK PeEditDlg::EditProc(HWND hEdit, UINT message, WPARAM wParam, LP
             break;
         case IDC_BUTTON_CALCFOA:
             thisDlg_->CreateCalcDlg();
-            break;
-        case IDC_BUTTON_TIMECALC:
-            thisDlg_->CreateTimeCalcDlg();
             break;
         case IDC_BUTTON_INJECT:
             thisDlg_->CreateInjectImportDlg();
