@@ -12,7 +12,6 @@
 #define IDD_DIALOG_DIRECTORY            108
 #define IDD_DIALOG_CALCULATE            109
 #define IDD_DIALOG_TIMESTAMP            125
-#define IDD_DIALOG_TIMECALC             127
 #define IDD_DIALOG_EXPORT               129
 #define IDD_DIALOG_RELOCATION           131
 #define IDD_DIALOG_IMPORT               133
@@ -56,7 +55,6 @@
 #define IDC_BUTTON_DETAILDATA           1044
 #define IDC_BUTTON_DATAEXCHANGE         1045
 #define IDC_BUTTON_DETAILCHA            1045
-#define IDC_BUTTON_TIMECALC             1045
 #define IDC_BUTTON_COMPARE              1046
 #define IDC_BUTTON_SAVE                 1047
 #define IDC_EDIT_OPTMAGIC               1048
@@ -100,11 +98,8 @@
 #define IDC_EDIT_RESOURCESIZE           1084
 #define IDC_EDIT_TimeHMS                1084
 #define IDC_EDIT_EXCEPTIONRVA           1085
-#define IDC_EDIT_STAMP                  1085
 #define IDC_EDIT_EXCEPTIONSIZE          1086
-#define IDC_EDIT_YMD                    1086
 #define IDC_EDIT_SECURITYRVA            1087
-#define IDC_EDIT_HMS                    1087
 #define IDC_EDIT_SECURITYSIZE           1088
 #define IDC_EDIT_EXP_CHA                1088
 #define IDC_EDIT_RELOCATIONRVA          1089
@@ -152,7 +147,6 @@
 #define IDC_RADIO_VA                    1115
 #define IDC_LIST_IMP_FUNC               1115
 #define IDC_RADIO_RVA                   1116
-#define IDC_BUTTON_CACLTIME             1116
 #define IDC_RADIO_FOA                   1117
 #define IDC_BUTTON_DLLSELECT            1117
 #define IDC_BUTTON_CALC                 1118
