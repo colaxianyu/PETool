@@ -19,7 +19,7 @@ public:
 	virtual void Plant() override;
 
 	void SetFileName(TCHAR* fileName);
-	void OpenFile(const TCHAR* filePath, const char* mdoe);
+	void OpenFile(const TCHAR* filePath, const char* mdoe = "rb");
 	void SetEditTitle();
 	void SetPEMainInfo();
 	

@@ -202,7 +202,7 @@ void MainDlg::CreatePeEditDlg() {
     
     if (GetOpenFileNameEx(fileName)) {
         peEditDlg_ = std::unique_ptr<PeEditDlg>(new PeEditDlg(hCurrentDlg_));
-        peEditDlg_->OpenFile(fileName, "rb");
+        peEditDlg_->OpenFile(fileName);
         if (!peEditDlg_->GetFileManage()->IsOpenFile()) {
             peEditDlg_->CloseDlg();
             peEditDlg_.reset();
