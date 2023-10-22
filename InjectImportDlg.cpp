@@ -31,8 +31,7 @@ void InjectImportDlg::SelectDll() {
     TCHAR tFuncName[260] = { 0 };
     SendMessage(GetDlgItem(hCurrentDlg_, IDC_EDIT_IMJECTFUNC), WM_GETTEXT, 260, (LPARAM)tFuncName);
 
-    //AnalysePE::GetAnalyse().DllInject(tDllName, tFuncName);
-    AnalysePE::GetAnalyse().MoveAllTable();
+    AnalysePE::GetAnalyse().DllInject(tDllName, tFuncName);
 }
 
 LRESULT CALLBACK InjectImportDlg::InjectImportProc(HWND hInject, UINT message, WPARAM wParam, LPARAM lParam) {
