@@ -10,7 +10,6 @@
 
 class PeEditDlg : public DialogEX
 {
-	//friend class FileHeader;
 public:
 	PeEditDlg(HWND hParent = nullptr);
 	virtual ~PeEditDlg() override;

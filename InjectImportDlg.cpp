@@ -49,15 +49,15 @@ LRESULT CALLBACK InjectImportDlg::InjectImportProc(HWND hInject, UINT message, W
         case IDC_BUTTON_DLLSELECT:
             thisDlg_->SelectDll();
             break;
+        case IDOK:
+            thisDlg_->CloseDlg();
+            break;
         default:
             break;
         }
         break;
     }
     case WM_CLOSE:
-        thisDlg_->CloseDlg();
-        break;
-    case IDOK:
         thisDlg_->CloseDlg();
         break;
     default:
