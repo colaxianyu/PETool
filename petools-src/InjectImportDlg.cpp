@@ -32,6 +32,7 @@ void InjectImportDlg::SelectDll() {
     SendMessage(GetDlgItem(hCurrentDlg_, IDC_EDIT_IMJECTFUNC), WM_GETTEXT, 260, (LPARAM)tFuncName);
 
     AnalysePE::GetAnalyse().DllInject(tDllName, tFuncName);
+    MessageBox(0, L"注入成功", TEXT("成功"), MB_OK);
 }
 
 LRESULT CALLBACK InjectImportDlg::InjectImportProc(HWND hInject, UINT message, WPARAM wParam, LPARAM lParam) {

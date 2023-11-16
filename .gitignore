@@ -9,7 +9,7 @@ x64/
 
 # ignore
 *.ico
-*.vcxproj
-*.filters
-*.user
-*.manifast
+petools-src/*.vcxproj
+petools-src/*.filters
+petools-src/*.user
+petools-src/*.manifast

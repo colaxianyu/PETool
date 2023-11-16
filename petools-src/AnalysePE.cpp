@@ -1,7 +1,11 @@
 #include "AnalysePE.h"
 #include <time.h>
 #include <iostream>
+#include <vector>
 import Utils;
+using std::vector;
+using std::cout;
+using std::endl;
 
 void AnalysePE::Init(FileManage*  fileManage) {
 	bool isReadToBuffer = ReadFileToFileBuffer(fileManage);
@@ -22,7 +26,6 @@ void AnalysePE::Update() {
 }
 
 bool AnalysePE::ReadFileToFileBuffer(FileManage* const fileManage) {
-	//fileBufferSize_ = FileManage::GetFileManage().GetFileSize();
 	fileBufferSize_ = fileManage->GetFileSize();
 
 	fileBuffer_ = unique_ptr<char>(new char[fileBufferSize_]);
@@ -150,6 +153,76 @@ DWORD AnalysePE::GetExportFuncNameSize() {
 		funcName = (char*)((DWORD)headers_.dosHeader + RVAToFOA(*(++FNT)));
 	}
 	return funcNameSize;
+}
+
+IMAGE_RESOURCE_DIRECTORY* AnalysePE::GetResource() {
+	return (IMAGE_RESOURCE_DIRECTORY*)((DWORD)headers_.dosHeader
+		+ RVAToFOA(headers_.optionalHeader->DataDirectory[2].VirtualAddress));
+}
+
+void DisplayResource(IMAGE_RESOURCE_DIRECTORY_ENTRY* resourceEntry) {
+	IMAGE_RESOURCE_DIRECTORY* resourceTable = AnalysePE::GetAnalyse().GetResource();
+	IMAGE_RESOURCE_DATA_ENTRY* data = (IMAGE_RESOURCE_DATA_ENTRY*)((DWORD)resourceTable + resourceEntry->OffsetToDirectory);
+	cout << "RVA is: " << std::hex <<data->OffsetToData << "   " << "Size is: " << std::hex << data->Size << endl;
+}
+
+void GetAppName() {
+	IMAGE_RESOURCE_DIRECTORY* resourceTable = AnalysePE::GetAnalyse().GetResource();
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* stringTableEntry = nullptr;
+	for (int i = 1; i <= (resourceTable->NumberOfIdEntries + resourceTable->NumberOfNamedEntries); i++) {
+		stringTableEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)resourceTable + sizeof(IMAGE_RESOURCE_DIRECTORY) * i);
+		if (stringTableEntry->Id == 6) {
+			break;
+		}
+	}
+	IMAGE_RESOURCE_DIRECTORY* firstDir = (IMAGE_RESOURCE_DIRECTORY*)((DWORD)resourceTable + stringTableEntry->OffsetToDirectory);
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* firstEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)firstDir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+
+	IMAGE_RESOURCE_DIRECTORY* secondDir = (IMAGE_RESOURCE_DIRECTORY*)((DWORD)resourceTable + firstEntry->OffsetToDirectory);
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* secondEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)secondDir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+
+	IMAGE_RESOURCE_DATA_ENTRY* stringData = (IMAGE_RESOURCE_DATA_ENTRY*)((DWORD)resourceTable + secondEntry->OffsetToDirectory);
+	char* index = (char*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
+		+ AnalysePE::GetAnalyse().RVAToFOA(stringData->OffsetToData));
+	for (index; *index == 0; index++) {
+
+	}
+	DWORD nameAddr = (DWORD)index;
+	WORD* name = (WORD*)index;
+	string s;
+	for (name; *name != 0; name++) {
+		s.push_back(*name);
+	}
+	cout << s << endl;
+	TCHAR other2[] = L"cloud23456";
+	string other = "cloud23456";
+	memcpy((char*)nameAddr, other2, 20);
+}
+
+void AnalysePE::AnalyseResource(IMAGE_RESOURCE_DIRECTORY* resourceDir) {
+	HANDLE h = GetModuleHandleA(nullptr);
+	IMAGE_DOS_HEADER* dosh = (IMAGE_DOS_HEADER*)h;
+	cout << "handle is: " << std::hex <<(DWORD)h << "dosh is: " << dosh << endl;;
+	cout << "MZ: " << dosh->e_magic;
+	GetAppName();
+	IMAGE_RESOURCE_DIRECTORY* resourceTable = AnalysePE::GetAnalyse().GetResource();
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* resourceEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)resourceDir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+	if (!resourceEntry->DataIsDirectory) {
+		DisplayResource(resourceEntry);
+		return;
+	}
+	else {
+		cout << "-------------------------------" << endl;
+		IMAGE_RESOURCE_DIRECTORY_ENTRY* resourceEntry1 = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)resourceDir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+		DWORD number = resourceDir->NumberOfIdEntries + resourceDir->NumberOfNamedEntries;
+		for (int i = 1; i <= number; i++) {
+			cout << "ID: " << (resourceEntry->NameIsString ? NULL : resourceEntry->Id) << endl;
+			AnalyseResource((IMAGE_RESOURCE_DIRECTORY*)((DWORD)resourceTable + resourceEntry->OffsetToDirectory));
+			resourceEntry++;
+		}
+		cout << "-------------------------------" << endl;
+		return;
+	}
 }
 
 IMAGE_IMPORT_DESCRIPTOR* AnalysePE::GetImport() {
@@ -552,7 +625,7 @@ void AnalysePE::AnalysePE::AdjustHeadrs() {
 	memset(headers_.sectionHeader + headers_.fileHeader->NumberOfSections, 0, freeSpaceSize);
 }
 
-void AnalysePE::AddSection(DWORD SectionSize) {
+void AnalysePE::AddSection(DWORD SectionSize, bool needAlignment) {
 	// 判断最后一个区块后是否还有信息
 	bool haveInfo = HaveInfo();
 	DWORD infoSize = 0;
@@ -569,11 +642,17 @@ void AnalysePE::AddSection(DWORD SectionSize) {
 		mySectionHeader.Name[i] = name[i];
 	}
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
-	mySectionHeader.VirtualAddress = lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader); 
-	mySectionHeader.Misc.VirtualSize = 0;
-	DWORD fileAlignmentSectionSize = headers_.optionalHeader->FileAlignment
-		* ceil(static_cast<float>(SectionSize) / static_cast<float>(headers_.optionalHeader->FileAlignment));
-	mySectionHeader.SizeOfRawData = fileAlignmentSectionSize;
+	mySectionHeader.VirtualAddress = lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader); 	
+	DWORD fileSectionSize = 0;
+	if (needAlignment) {
+		fileSectionSize = headers_.optionalHeader->FileAlignment
+			* ceil(static_cast<float>(SectionSize) / static_cast<float>(headers_.optionalHeader->FileAlignment));
+	}
+	else {
+		fileSectionSize = SectionSize;
+	}
+	mySectionHeader.Misc.VirtualSize = fileSectionSize;
+	mySectionHeader.SizeOfRawData = fileSectionSize;
 	mySectionHeader.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 
 	// 确定自定义Section在文件中的位置，即PointerToRawData，为了防止最后一个Section是一个完全未初始化的Section(即SizeOfRawData和PointerToRawData都为0)
@@ -601,7 +680,6 @@ void AnalysePE::AddSection(DWORD SectionSize) {
 	AddSectionHeader(&mySectionHeader);
 	headers_.fileHeader->NumberOfSections++;
 	headers_.optionalHeader->SizeOfImage = mySectionHeader.VirtualAddress + GetImageSectionSizeAlignment(mySectionHeader);
-	//headers_.optionalHeader->SizeOfImage += GetImageSectionSizeAlignment(mySectionHeader);
 }
 
 // 为新的区块添加区块表，判断Header中的空闲空间是否可以加入区块表，如果不可以，则讲dosHeader之下的所有header抬高（占用dos stub的空间）
@@ -665,7 +743,7 @@ void AnalysePE::DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]) {
 	DWORD needSize = 0;
 	if (lastSectionHeader->Misc.VirtualSize > lastSectionHeader->SizeOfRawData) {
 		needSize = injectSpaceSize;
-		SetFreeSpace = [&]() {AddSection(needSize); };
+		SetFreeSpace = [&]() {AddSection(needSize, false); };
 	}
 	else{
 		DWORD freeSpaceSize = lastSectionHeader->SizeOfRawData - lastSectionHeader->Misc.VirtualSize;
@@ -682,9 +760,17 @@ void AnalysePE::DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]) {
 	AddImport(tDllName, tFuncName);
 }
 
+void AnalysePE::EncodeProcess(char* buffer, DWORD size) {
+	char* index = buffer;
+	for (int i = 0; i < size; i++) {
+		*index = ~*index;
+		index++;
+	}
+}
+
 void AnalysePE::MoveAllTable() {
 	DWORD newSectionSize = GetAllTableSize();
-	AddSection(newSectionSize); 
+	AddSection(newSectionSize, false); 
 	
 	DWORD newSectionAddr =	(DWORD)headers_.dosHeader + 
 		(headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1)->PointerToRawData;

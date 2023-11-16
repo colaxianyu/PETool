@@ -26,6 +26,7 @@ MainDlg::~MainDlg() {
     moduleList_.reset();
     aboutDlg_.reset();
     peEditDlg_.reset();
+    protectorDlg_.reset();
 }
 
 void MainDlg::InitDlg() {
@@ -216,6 +217,12 @@ void MainDlg::CreatePeEditDlg() {
     return;
 }
 
+void MainDlg::CreateProtectorDlg() {
+    protectorDlg_ = std::unique_ptr<ProtectorDlg>(new ProtectorDlg(hCurrentDlg_));
+    protectorDlg_->InitDlg();
+    protectorDlg_->Plant();
+}
+
 
 DWORD MainDlg::GetPID(int rowIndex) {
     TCHAR pidBuffer[pidLen] = { 0 };
@@ -264,6 +271,9 @@ LRESULT CALLBACK MainDlg::MianProc(HWND hMain, UINT message, WPARAM wParam, LPAR
             break;
         case IDC_BUTTON_ABOUT:
             thisDlg_->CreateAboutDlg();
+            break;
+        case IDC_BUTTON_PROTECT:
+            thisDlg_->CreateProtectorDlg();
             break;
         case IDC_BUTTON_QUIT:
             thisDlg_->CloseDlg();

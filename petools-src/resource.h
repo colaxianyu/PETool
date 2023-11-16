@@ -16,6 +16,7 @@
 #define IDD_DIALOG_RELOCATION           131
 #define IDD_DIALOG_IMPORT               133
 #define IDD_DIALOG_INJECTIMPORT         135
+#define IDD_DIALOG_PROTECTOR            139
 #define IDC_STATIC1                     1001
 #define IDC_BUTTON_PEVIEW               1002
 #define IDC_BUTTON_ABOUT                1003
@@ -29,6 +30,8 @@
 #define IDC_BUTTON_DIRECTORIES          1011
 #define IDC_EDIT_ENTRY                  1012
 #define IDC_EDIT_IMAGEBASE              1013
+#define IDC_EDIT_ENTRY2                 1013
+#define IDC_EDIT_RAWPROCESS             1013
 #define IDC_EDIT_IMAGESIZE              1014
 #define IDC_EDIT_OPTHEADERSIZE          1015
 #define IDC_EDIT_CODEBASE               1016
@@ -152,14 +155,20 @@
 #define IDC_BUTTON_CALC                 1118
 #define IDC_EDIT_INJECTDLL              1118
 #define IDC_EDIT_IMJECTFUNC             1119
+#define IDC_BUTTON_PROTECTOR            1121
+#define IDC_BUTTON_RAWPROCESS           1123
+#define IDC_BUTTON3                     1124
+#define IDC_BUTTON_ENCODE               1124
+#define IDC_BUTTON_PROTECTPROCESS       1124
+#define IDC_EDIT_PROTECTOR              1125
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1121
+#define _APS_NEXT_CONTROL_VALUE         1126
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

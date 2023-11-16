@@ -6,6 +6,7 @@
 #include "AboutDlg.h"
 #include "PeEdit.h"
 #include "FileManage.h"
+#include "ProtectorDlg.h"
 
 class MainDlg : public DialogEX
 {
@@ -28,6 +29,7 @@ public:
 
 	void CreateAboutDlg();
 	void CreatePeEditDlg();
+	void CreateProtectorDlg();
 
 	DWORD GetPID(int rowID);
 
@@ -38,6 +40,7 @@ private:
 	std::unique_ptr<ListCrl> moduleList_ = nullptr;
 	std::unique_ptr<AboutDlg> aboutDlg_ = nullptr;
 	std::unique_ptr<PeEditDlg> peEditDlg_ = nullptr;
+	std::unique_ptr<ProtectorDlg> protectorDlg_ = nullptr;
 
 	static MainDlg* thisDlg_;
 	void SetThisDlg() { thisDlg_ = this; }

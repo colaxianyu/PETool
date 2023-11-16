@@ -83,6 +83,10 @@ public:
 	DWORD GetFOTSize();
 	DWORD GetExportFuncNameSize();
 
+	// 读出资源表
+	IMAGE_RESOURCE_DIRECTORY* GetResource();
+	void AnalyseResource(IMAGE_RESOURCE_DIRECTORY*);
+
 	// 读出输入表
 	IMAGE_IMPORT_DESCRIPTOR* GetImport();
 	DWORD GetAllImportSize();
@@ -118,10 +122,13 @@ public:
 	void AddImport(const TCHAR tDllName[], const TCHAR tFuncName[]);
 	bool AddSectionHeaderIfAvailable();
 	void AdjustHeadrs();
-	void AddSection(DWORD SectionSize);
+	void AddSection(DWORD SectionSize, bool needAlignment);
 	void AddSectionHeader(IMAGE_SECTION_HEADER* mySectionHeader);
 	void MoveToNewFileBuffer(const DWORD bufferSize);
 	void DllInject(const TCHAR tDllName[], const TCHAR tFuncName[]);
+
+	// 加壳相关
+	void EncodeProcess(char* buffer, DWORD size);
 
 	// 将所有的表移动到新增的节中
 	void MoveAllTable();
