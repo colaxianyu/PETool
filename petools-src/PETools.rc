@@ -71,10 +71,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 10, "宋体", 400, 0, 0x86
 BEGIN
-    LTEXT           "colaxianyu@github.com",IDC_STATIC_COPYRIGHT,89,74,89,11
-    LTEXT           "PE工具，版本 0.1",IDC_STATIC,60,11,63,8
-    LTEXT           "版权所有(c) 2023",IDC_STATIC,9,74,63,8
-    LTEXT           "本程序仅供学习使用",IDC_STATIC,57,43,69,8
+    LTEXT           "colaxianyu@github.com",IDC_STATIC_COPYRIGHT,48,72,89,11
+    LTEXT           "PE工具     v1.0",IDC_STATIC,61,11,60,8
+    LTEXT           "本程序仅供学习交流使用",IDC_STATIC,50,43,84,8
 END
 
 IDD_DIALOG_PEEDIT DIALOGEX 0, 0, 348, 174

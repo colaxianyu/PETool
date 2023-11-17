@@ -91,7 +91,6 @@ void ProtectorDlg::ReadProtectorToBuffer() {
  
 void ProtectorDlg::ReadRawProcessToBuffer() {
     DWORD rawProcessSize = rawProcess_->GetFileSize();
-    std::cout<< std::hex << rawProcessSize;
     rawProcessBuffer_ = unique_ptr<char>(new char[rawProcessSize]);
 
     FILE* tempFile = rawProcess_->GetFile();

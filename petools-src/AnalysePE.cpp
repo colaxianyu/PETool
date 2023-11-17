@@ -202,8 +202,6 @@ void GetAppName() {
 void AnalysePE::AnalyseResource(IMAGE_RESOURCE_DIRECTORY* resourceDir) {
 	HANDLE h = GetModuleHandleA(nullptr);
 	IMAGE_DOS_HEADER* dosh = (IMAGE_DOS_HEADER*)h;
-	cout << "handle is: " << std::hex <<(DWORD)h << "dosh is: " << dosh << endl;;
-	cout << "MZ: " << dosh->e_magic;
 	GetAppName();
 	IMAGE_RESOURCE_DIRECTORY* resourceTable = AnalysePE::GetAnalyse().GetResource();
 	IMAGE_RESOURCE_DIRECTORY_ENTRY* resourceEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)resourceDir + sizeof(IMAGE_RESOURCE_DIRECTORY));
