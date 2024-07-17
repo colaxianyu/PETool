@@ -49,4 +49,4 @@ PETool
 
 ## 使用许可
 
-[MIT](LICENSE) © Richard Littauer
+[MIT](LICENSE) © colaxianyu
