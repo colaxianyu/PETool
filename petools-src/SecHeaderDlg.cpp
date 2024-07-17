@@ -1,7 +1,16 @@
-#include "SecHeaderDlg.h"
+module;
+
 #include "resource.h"
-#include "AnalysePE.h"
 #include <windows.h>
+#include <CommCtrl.h>
+
+module SecHeaderDlg;
+
+import AnalysePE;
+
+using std::array;
+using std::wstring;
+using petools::show::ItemWidthAndName;
 
 extern HINSTANCE appInst;
 extern int cmdShow;
@@ -15,11 +24,16 @@ SecHeaderDlg::SecHeaderDlg(HWND hParent)
 }
 
 SecHeaderDlg::~SecHeaderDlg() {
-    sectionList_.reset();
+
 }
 
 void SecHeaderDlg::InitDlg() {
 	SetThisDlg();
+}
+
+void SecHeaderDlg::CloseDlg() {
+	sectionList_.reset();
+	EndDialog(hCurrentDlg_, 0);
 }
 
 void SecHeaderDlg::Plant() {
@@ -35,14 +49,15 @@ void SecHeaderDlg::InitSectionList() {
 }
 
 void SecHeaderDlg::PlantSectionColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(40, TEXT("#")));
-    items.push_back(widthAndName(70, TEXT("Name")));
-    items.push_back(widthAndName(110, TEXT("Virtual Size")));
-    items.push_back(widthAndName(120, TEXT("Virtual Offset")));
-    items.push_back(widthAndName(80, TEXT("Raw Size")));
-    items.push_back(widthAndName(90, TEXT("Raw Offset")));
-    items.push_back(widthAndName(120, TEXT("Characteristics")));
+    array<ItemWidthAndName<DWORD, wstring>, 7> items = { {
+		{ 40, L"#" },
+		{ 70, L"Name" },
+		{ 110, L"Virtual Size"},
+		{ 120, L"Virtual Offset"},
+		{ 80, L"Raw Size"},
+        { 90, L"Raw Offset" },
+		{ 120, L"Characteristics"}
+	} };
 
     for (int i = 0; i < items.size(); i++) {
         sectionList_->SetColumn(items[i], i);
@@ -57,60 +72,42 @@ void SecHeaderDlg::PlantSectionItem() {
 
     IMAGE_SECTION_HEADER* tempSecHeader = AnalysePE::GetAnalyse().GetHeaders().sectionHeader;
 
-    int row = 0;
-    do {
+    DWORD index = 0;
+    auto SetSectionHexText = [&](HWND hDlg, DWORD row, DWORD value = 0) {
+        TCHAR text[32] = { 0 };
         item.iItem = row;
-        item.iSubItem = 0;
-        TCHAR indexBuffer[100] = { 0 };
-        wsprintf(indexBuffer, L"%d", row + 1);
-        item.pszText = indexBuffer;
-        SendMessage(sectionList_->GetList(), LVM_INSERTITEM, 0, (DWORD)&item);
+        item.iSubItem = index;
 
-        item.iItem = row;
-        item.iSubItem = 1;
-        TCHAR* nameBuffer = nullptr;
-        AnalysePE::GetAnalyse().GetTcharSectionName(row, &nameBuffer);
-        item.pszText = nameBuffer;
-        ListView_SetItem(sectionList_->GetList(), (DWORD)&item);
+        if (index == 0) {
+            wsprintf(text, L"%d", row + 1);
+            item.pszText = text;
+            SendMessage(hDlg, LVM_INSERTITEM, 0, (DWORD)&item);
+        }
+        else if (index == 1) {
+            TCHAR* nameBuffer = nullptr;
+            AnalysePE::GetAnalyse().GetTcharSectionName(row, &nameBuffer);
+            item.pszText = nameBuffer;
+            ListView_SetItem(hDlg, &item);
+        }
+        else {
+            wsprintfW(text, L"%08X", value); 
+            item.pszText = text;
+            ListView_SetItem(hDlg, &item);
+        }
+        
+        index++;
+	};
 
-        item.iItem = row;
-        item.iSubItem = 2;
-        TCHAR virtualSizeBuffer[9] = { 0 };
-        wsprintf(virtualSizeBuffer, L"%08X", tempSecHeader->Misc.VirtualSize);
-        item.pszText = virtualSizeBuffer;
-        ListView_SetItem(sectionList_->GetList(), (DWORD)&item);
-
-        item.iItem = row;
-        item.iSubItem = 3;
-        TCHAR rvaBuffer[9] = { 0 };
-        wsprintf(rvaBuffer, L"%08X", tempSecHeader->VirtualAddress);
-        item.pszText = rvaBuffer;
-        ListView_SetItem(sectionList_->GetList(), (DWORD)&item);
-
-        item.iItem = row;
-        item.iSubItem = 4;
-        TCHAR rawSizeBuffer[9] = { 0 };
-        wsprintf(rawSizeBuffer, L"%08X", tempSecHeader->SizeOfRawData);
-        item.pszText = rawSizeBuffer;
-        ListView_SetItem(sectionList_->GetList(), (DWORD)&item);
-
-        item.iItem = row;
-        item.iSubItem = 5;
-        TCHAR foaBuffer[9] = { 0 };
-        wsprintf(foaBuffer, L"%08X", tempSecHeader->PointerToRawData);
-        item.pszText = foaBuffer;
-        ListView_SetItem(sectionList_->GetList(), (DWORD)&item);
-
-        item.iItem = row;
-        item.iSubItem = 6;
-        TCHAR chaBuffer[9] = { 0 };
-        wsprintf(chaBuffer, L"%08X", tempSecHeader->Characteristics);
-        item.pszText = chaBuffer;
-        ListView_SetItem(sectionList_->GetList(), (DWORD)&item);
-
-        row++;
-        tempSecHeader++;
-    } while (tempSecHeader->Name != 0 && tempSecHeader->Characteristics != 0);
+    for (int row = 0; tempSecHeader->Name != 0 && tempSecHeader->Characteristics != 0; row++, tempSecHeader++) {
+        SetSectionHexText(sectionList_->GetList(), row);
+        SetSectionHexText(sectionList_->GetList(), row);
+        SetSectionHexText(sectionList_->GetList(), row, tempSecHeader->Misc.VirtualSize);
+        SetSectionHexText(sectionList_->GetList(), row, tempSecHeader->VirtualAddress);
+        SetSectionHexText(sectionList_->GetList(), row, tempSecHeader->SizeOfRawData);
+        SetSectionHexText(sectionList_->GetList(), row, tempSecHeader->PointerToRawData);
+        SetSectionHexText(sectionList_->GetList(), row, tempSecHeader->Characteristics);
+        index = 0;
+    }
 }
 
 LRESULT CALLBACK SecHeaderDlg::SectionProc(HWND hSec, UINT message, WPARAM wParam, LPARAM lParam) {

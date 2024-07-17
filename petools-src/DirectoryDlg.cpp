@@ -1,8 +1,16 @@
-#include "DirectoryDlg.h"
+module;
 
-#include "AboutDlg.h"
 #include "resource.h"
-#include "AnalysePE.h"
+#include <windows.h>
+#include <typeinfo>
+
+module DirectoryDlg;
+
+import AnalysePE;
+import STL;
+
+using std::wstring;
+using std::array;
 
 extern HINSTANCE appInst;
 
@@ -15,9 +23,7 @@ DirectoryDlg::DirectoryDlg(HWND hParent)
 }
 
 DirectoryDlg::~DirectoryDlg() {
-    exportDlg_.reset();
-    importDlg_.reset();
-    relocationDlg_.reset();
+
 }
 
 void DirectoryDlg::InitDlg() {
@@ -28,141 +34,67 @@ void DirectoryDlg::Plant() {
     DialogBox(appInst, MAKEINTRESOURCE(idTemplate_), hParentDlg_, (DLGPROC)DirProc);
 }
 
+void DirectoryDlg::CloseDlg() {
+	for (auto& dlg : dlg_list_) {
+        auto name = typeid(*dlg).name();
+        dlg.reset();
+	}
+    EndDialog(hCurrentDlg_, 0);
+}
+
 void DirectoryDlg::CreateExpertDlg() {
-   // if(AnalysePE::GetAnalyse().IsHaveExport()){
-        exportDlg_ = std::unique_ptr<ExportDlg>(new ExportDlg(hCurrentDlg_));
-        exportDlg_->InitDlg();
-        exportDlg_->Plant();
-    //}
-    //else {
-        //MessageBox(hCurrentDlg_, L"No Export", L"ERROR", MB_ICONERROR);
-    //}
+    CreateDlg<ExportDlg>(hCurrentDlg_, dlg_list_, L"No Export Descriptor",  []() -> bool {
+        return AnalysePE::GetAnalyse().IsHaveExport();
+        });
 }
 
 void DirectoryDlg::CreateImportDlg() {
-    importDlg_ = std::unique_ptr<ImportDlg>(new ImportDlg(hCurrentDlg_));
-    importDlg_->InitDlg();
-    importDlg_->Plant();
+    CreateDlg<ImportDlg>(hCurrentDlg_, dlg_list_, L"No Import Descriptor",  []() -> bool {
+        return AnalysePE::GetAnalyse().IsHaveImport();
+        });
 }
 
 void DirectoryDlg::CreateRelocationDlg() {
-    relocationDlg_ = std::unique_ptr<RelocationDlg>(new RelocationDlg(hCurrentDlg_));
-    relocationDlg_->InitDlg();
-    relocationDlg_->Plant();
+    CreateDlg<RelocationDlg>(hCurrentDlg_, dlg_list_, L"No Relocation Descriptor",  []() -> bool {
+        return AnalysePE::GetAnalyse().IsHaveRelocation();
+        });
 }
 
 void DirectoryDlg::SetDirHeaderInfo() {
-        TCHAR exportRva[9] = { 0 };
-        TCHAR exportSize[9] = { 0 };
-        wsprintfW(exportRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[0].VirtualAddress);
-        wsprintfW(exportSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[0].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXPORTRAV, exportRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXPORTSIZE, exportSize);
+    struct DirectoryInfo {
+        DWORD rva_id_;
+        DWORD size_id_;
+        DWORD directory_index_;
 
-        TCHAR importRva[9] = { 0 };
-        TCHAR importSize[9] = { 0 };
-        wsprintfW(importRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[1].VirtualAddress);
-        wsprintfW(importSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[1].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_IMPORTRAV, importRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_IMPORTSIZE, importSize);
+    };
 
-        TCHAR resRva[9] = { 0 };
-        TCHAR resSize[9] = { 0 };
-        wsprintfW(resRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[2].VirtualAddress);
-        wsprintfW(resSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[2].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RESOURCERVA, resRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RESOURCESIZE, resSize);
+    array<DirectoryInfo, 16> dir_info = { {
+        {IDC_EDIT_EXPORTRAV, IDC_EDIT_EXPORTSIZE, 0},
+        {IDC_EDIT_IMPORTRAV, IDC_EDIT_IMPORTSIZE, 1},
+        {IDC_EDIT_RESOURCERVA, IDC_EDIT_RESOURCESIZE, 2},
+        {IDC_EDIT_EXCEPTIONRVA, IDC_EDIT_EXCEPTIONSIZE, 3},
+        {IDC_EDIT_SECURITYRVA, IDC_EDIT_SECURITYSIZE, 4},
+        {IDC_EDIT_RELOCATIONRVA, IDC_EDIT_RELOCATIONSIZE, 5},
+        {IDC_EDIT_DEBUGRVA, IDC_EDIT_DEBUGSIZE, 6},
+        {IDC_EDIT_ASDRVA, IDC_EDIT_ASDSIZE, 7},
+        {IDC_EDIT_RVAGPRVA, IDC_EDIT_RVAGPSIZE, 8},
+        {IDC_EDIT_TLSRVA, IDC_EDIT_TLSSIZE, 9},
+        {IDC_EDIT_LOADRVA, IDC_EDIT_LOADSIZE, 10},
+        {IDC_EDIT_BOUNDRVA, IDC_EDIT_BOUNDSIZE, 11},
+        {IDC_EDIT_IATRVA, IDC_EDIT_IATSIZE, 12},
+        {IDC_EDIT_DELAYRVA, IDC_EDIT_DELAYSIZE, 13},
+        {IDC_EDIT_COMRVA, IDC_EDIT_COMSIZE, 14},
+        {IDC_EDIT_RESERVEDRVA, IDC_EDIT_RESERVEDSIZE, 15}
+    } };
 
-        TCHAR exceptRva[9] = { 0 };
-        TCHAR exceptSize[9] = { 0 };
-        wsprintfW(exceptRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[3].VirtualAddress);
-        wsprintfW(exceptSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[3].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXCEPTIONRVA, exceptRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXCEPTIONSIZE, exceptSize);
-
-        TCHAR securityRva[9] = { 0 };
-        TCHAR securitySize[9] = { 0 };
-        wsprintfW(securityRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[4].VirtualAddress);
-        wsprintfW(securitySize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[4].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_SECURITYRVA, securityRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_SECURITYSIZE, securitySize);
-
-        TCHAR relocateRva[9] = { 0 };
-        TCHAR relocateSize[9] = { 0 };
-        wsprintfW(relocateRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[5].VirtualAddress);
-        wsprintfW(relocateSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[5].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RELOCATIONRVA, relocateRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RELOCATIONSIZE, relocateSize);
-
-        TCHAR debugRva[9] = { 0 };
-        TCHAR debugSize[9] = { 0 };
-        wsprintfW(debugRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[6].VirtualAddress);
-        wsprintfW(debugSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[6].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_DEBUGRVA, debugRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_DEBUGSIZE, debugSize);
-
-        TCHAR archDataRva[9] = { 0 };
-        TCHAR archDataSize[9] = { 0 };
-        wsprintfW(archDataRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[7].VirtualAddress);
-        wsprintfW(archDataSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[7].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_ASDRVA, archDataRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_ASDSIZE, archDataSize);
-
-        TCHAR GPRva[9] = { 0 };
-        TCHAR GPSize[9] = { 0 };
-        wsprintfW(GPRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[8].VirtualAddress);
-        wsprintfW(GPSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[8].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RVAGPRVA, GPRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RVAGPSIZE, GPSize);
-
-        TCHAR TLSRva[9] = { 0 };
-        TCHAR TLSSize[9] = { 0 };
-        wsprintfW(TLSRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[9].VirtualAddress);
-        wsprintfW(TLSSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[9].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_TLSRVA, TLSRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_TLSSIZE, TLSSize);
-
-        TCHAR loadRva[9] = { 0 };
-        TCHAR loadSize[9] = { 0 };
-        wsprintfW(loadRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[10].VirtualAddress);
-        wsprintfW(loadSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[10].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_LOADRVA, loadRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_LOADSIZE, loadSize);
-
-        TCHAR boundRva[9] = { 0 };
-        TCHAR boundSize[9] = { 0 };
-        wsprintfW(boundRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[11].VirtualAddress);
-        wsprintfW(boundSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[11].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_BOUNDRVA, boundRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_BOUNDSIZE, boundSize);
-
-        TCHAR IATRva[9] = { 0 };
-        TCHAR IATSize[9] = { 0 };
-        wsprintfW(IATRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[12].VirtualAddress);
-        wsprintfW(IATSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[12].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_IATRVA, IATRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_IATSIZE, IATSize);
-
-        TCHAR delayRva[9] = { 0 };
-        TCHAR delaySize[9] = { 0 };
-        wsprintfW(delayRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[13].VirtualAddress);
-        wsprintfW(delaySize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[13].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_DELAYRVA, delayRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_DELAYSIZE, delaySize);
-
-        TCHAR COMRva[9] = { 0 };
-        TCHAR COMSize[9] = { 0 };
-        wsprintfW(COMRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[14].VirtualAddress);
-        wsprintfW(COMSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[14].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_COMRVA, COMRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_COMSIZE, COMSize);
-
-        TCHAR reserveRva[9] = { 0 };
-        TCHAR reserveSize[9] = { 0 };
-        wsprintfW(reserveRva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[15].VirtualAddress);
-        wsprintfW(reserveSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[15].Size);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RESERVEDRVA, reserveRva);
-        SetDlgItemText(hCurrentDlg_, IDC_EDIT_RESERVEDSIZE, reserveSize);
+    for (const auto& info : dir_info) {
+        TCHAR rva[9] = { 0 };
+        TCHAR size[9] = { 0 };
+        wsprintfW(rva, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[info.directory_index_].VirtualAddress);
+        wsprintfW(size, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DataDirectory[info.directory_index_].Size);
+        SetDlgItemText(hCurrentDlg_, info.rva_id_, rva);
+        SetDlgItemText(hCurrentDlg_, info.size_id_, size);
+    }
 }
 
 LRESULT CALLBACK DirectoryDlg::DirProc(HWND hDir, UINT message, WPARAM wParam, LPARAM lParam) {

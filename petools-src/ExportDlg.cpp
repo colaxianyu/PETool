@@ -1,76 +1,67 @@
-#include "ExportDlg.h"
+module;
+
 #include "resource.h"
-import Utils;
+#include <windows.h>
+#include <commctrl.h>
+
+module ExportDlg;
+
+import STL;
+import AnalysePE;
+
+using petools::show::ItemWidthAndName;
+using petools::show::SetDlgItemText_t;
+using petools::CharToTchar;
+using std::array;
+using std::wstring;
 
 extern HINSTANCE appInst;
 
 ExportDlg* ExportDlg::thisDlg_ = nullptr;
 
 ExportDlg::ExportDlg(HWND hParent)
-    : DialogEX(IDD_DIALOG_EXPORT, hParent),
-    export_(nullptr)
+    : DialogEX(IDD_DIALOG_EXPORT, hParent)
 {
 
 }
 
 ExportDlg::~ExportDlg() {
-    funcList_.reset();
-    export_ = nullptr;
+
 }
 
 void ExportDlg::InitDlg() {
     SetThisDlg();
-    SetExportPtr();
 }
 
 void ExportDlg::Plant() {
     DialogBox(appInst, MAKEINTRESOURCE(idTemplate_), hParentDlg_, (DLGPROC)ExportProc);
 }
 
+void ExportDlg::CloseDlg() {
+    funcList_.reset();
+	EndDialog(hCurrentDlg_, 0);
+}
+
 void ExportDlg::SetExportInfo() {
-    TCHAR characteristic[33] = { 0 };
-    wsprintfW(characteristic, L"%08X", export_->Characteristics);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_CHA, characteristic);
+    IMAGE_EXPORT_DIRECTORY* temp_export = AnalysePE::GetAnalyse().GetExport();
 
-    TCHAR timeDateStamp[9] = {0};
-    wsprintfW(timeDateStamp, L"%08X", export_->TimeDateStamp);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_TIME, timeDateStamp);
-
-    TCHAR base[9] = { 0 };
-    wsprintfW(base, L"%08X", export_->Base);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_BASE, base);
-
-    TCHAR nameOffset[9] = { 0 };
-    wsprintfW(nameOffset, L"%08X", export_->Name);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_NAMEOFFSET, nameOffset);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_CHA, temp_export->Characteristics, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_TIME, temp_export->TimeDateStamp, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_BASE, temp_export->Base, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_NAMEOFFSET, temp_export->Name, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_NUMFUNC, temp_export->NumberOfFunctions, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_NUMNAME, temp_export->NumberOfNames, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_ADDRFUNC, temp_export->AddressOfFunctions, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_ADDRNAME, temp_export->AddressOfNames, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_EXP_ADDRORD, temp_export->AddressOfNameOrdinals, 8);
 
     TCHAR* name = nullptr;
     char* cName = (char*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
-        + AnalysePE::GetAnalyse().RVAToFOA(export_->Name));
+        + AnalysePE::GetAnalyse().RVAToFOA(temp_export->Name));
     CharToTchar(cName, &name);
     SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_NAME, name);
     cName = nullptr;
     name = nullptr;
-
-    TCHAR numFunc[9] = { 0 };
-    wsprintfW(numFunc, L"%08X", export_->NumberOfFunctions);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_NUMFUNC, numFunc);
-
-    TCHAR numFuncName[9] = { 0 };
-    wsprintfW(numFuncName, L"%08X", export_->NumberOfNames);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_NUMNAME, numFuncName);
-
-    TCHAR addrFunc[9] = { 0 };
-    wsprintfW(addrFunc, L"%08X", export_->AddressOfFunctions);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_ADDRFUNC, addrFunc);
-
-    TCHAR addrFuncName[9] = { 0 };
-    wsprintfW(addrFuncName, L"%08X", export_->AddressOfNames);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_ADDRNAME, addrFuncName);
-
-    TCHAR addrOrdinal[9] = { 0 };
-    wsprintfW(addrOrdinal, L"%08X", export_->AddressOfNameOrdinals);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_EXP_ADDRORD, addrOrdinal);
 }
 
 void ExportDlg::InitFuncList() {
@@ -82,32 +73,35 @@ void ExportDlg::InitFuncList() {
 }
 
 void ExportDlg::PlantFuncColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(90, TEXT("Ordinal")));
-    items.push_back(widthAndName(70, TEXT("RVA")));
-    items.push_back(widthAndName(90, TEXT("Offset")));
-    items.push_back(widthAndName(390, TEXT("Function Name")));
 
-    for (int i = 0; i < items.size(); i++) {
+    array<ItemWidthAndName<DWORD, std::wstring>, 4> items = { {
+        { 90, L"Ordinal" },
+        { 70, L"RVA" },
+        { 90, L"Offset" },
+        { 390, L"Function Name" }
+    } };
+
+    for (size_t i = 0; i < items.size(); i++) {
         funcList_->SetColumn(items[i], i);
         SendMessage(funcList_->GetList(), LVM_INSERTCOLUMN, i, funcList_->GetColumnAddr());
     }
 }
 
 void ExportDlg::PlantFuncItem() {
+    IMAGE_EXPORT_DIRECTORY* temp_export = AnalysePE::GetAnalyse().GetExport();
     DWORD* funcAddr = (DWORD*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
-        + AnalysePE::GetAnalyse().RVAToFOA(export_->AddressOfFunctions));
+        + AnalysePE::GetAnalyse().RVAToFOA(temp_export->AddressOfFunctions));
         
     LV_ITEM item;
     memset(&item, 0, sizeof(LV_ITEM));
     item.mask = LVIF_TEXT;
 
-    for (DWORD i = 0; i < export_->NumberOfFunctions; i++) {
+    for (DWORD i = 0; i < temp_export->NumberOfFunctions; i++) {
         if (*(funcAddr + i) != 0) {
             item.iItem = i;
             item.iSubItem = 0;
             TCHAR ordinal[5] = { 0 };
-            wsprintf(ordinal, L"%04X", i + export_->Base);
+            wsprintf(ordinal, L"%04X", i + temp_export->Base);
             item.pszText = ordinal;
             SendMessage(funcList_->GetList(), LVM_INSERTITEM, 0, (DWORD)&item);
 

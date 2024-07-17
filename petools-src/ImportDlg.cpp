@@ -1,36 +1,48 @@
-#include "ImportDlg.h"
+module;
+
 #include "resource.h"
-#include <string>
-import Utils;
+#include <windows.h>
+#include <commctrl.h>
+
+#define WM_DELETE_DLG (WM_APP + 1)
+
+module ImportDlg;
+
+import STL;
+import AnalysePE;
+
+using petools::show::ItemWidthAndName;
+using petools::CharToTchar;
+using petools::TcharToDword;
+using std::array;
+using std::wstring;
 
 extern HINSTANCE appInst;
 
 ImportDlg* ImportDlg::thisDlg_ = nullptr;
 
 ImportDlg::ImportDlg(HWND hParent)
-    : DialogEX(IDD_DIALOG_IMPORT, hParent),
-    import_(nullptr)
+    : DialogEX(IDD_DIALOG_IMPORT, hParent)
 {
 
 }
 
 ImportDlg::~ImportDlg() {
-    mainList_.reset();
-    funcList_.reset();
-    import_ = nullptr;
+
 }
 
 void ImportDlg::InitDlg() {
     SetThisDlg();
-    SetImportPtr();
-}
-
-void ImportDlg::SetImportPtr() {
-    import_ = AnalysePE::GetAnalyse().GetImport();
 }
 
 void ImportDlg::Plant() {
     DialogBox(appInst, MAKEINTRESOURCE(idTemplate_), hParentDlg_, (DLGPROC)ImportProc);
+}
+
+void ImportDlg::CloseDlg() {
+	funcList_.reset();
+	mainList_.reset();
+	EndDialog(hCurrentDlg_, 0);
 }
 
 void ImportDlg::InitMainList() {
@@ -42,28 +54,29 @@ void ImportDlg::InitMainList() {
 }
 
 void ImportDlg::PlantMainColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(120, TEXT("Dll Name")));
-    items.push_back(widthAndName(160, TEXT("Original First Thunk")));
-    items.push_back(widthAndName(120, TEXT("Time Date Stamp")));
-    items.push_back(widthAndName(120, TEXT("Forwarder Chain")));
-    items.push_back(widthAndName(80, TEXT("Name")));
-    items.push_back(widthAndName(100, TEXT("First Thunk")));
+    array<ItemWidthAndName<DWORD, wstring>, 6> items = { {
+        { 120, L"Dll Name" },
+        { 160, L"Original First Thunk" },
+        { 120, L"Time Date Stamp" },
+        { 120, L"Forwarder Chain" },
+        { 80, L"Name" },
+        { 100, L"First Thunk" }
+    } };
 
-    for (int i = 0; i < items.size(); i++) {
+    for (size_t i = 0; i < items.size(); i++) {
         mainList_->SetColumn(items[i], i);
         SendMessage(mainList_->GetList(), LVM_INSERTCOLUMN, i, mainList_->GetColumnAddr());
     }
 }
 
 void ImportDlg::PlantMainItem() {
-    IMAGE_IMPORT_DESCRIPTOR* tempImport = import_;
+    IMAGE_IMPORT_DESCRIPTOR* tempImport = AnalysePE::GetAnalyse().GetImport();;
 
     LV_ITEM item;
     memset(&item, 0, sizeof(LV_ITEM));
     
 
-    for (int i = 0; tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0; i++, tempImport++) {
+    for (int i = 0; tempImport->OriginalFirstThunk != 0; i++, tempImport++) {
         item.mask = LVIF_TEXT;
         item.iItem = i;
         item.iSubItem = 0;     
@@ -120,14 +133,15 @@ void ImportDlg::InitFuncList() {
 }
 
 void ImportDlg::PlantFuncColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(320, TEXT("API Name")));
-    items.push_back(widthAndName(80, TEXT("Thunk RVA")));
-    items.push_back(widthAndName(100, TEXT("Thunk Offset")));
-    items.push_back(widthAndName(100, TEXT("Thunk Value")));
-    items.push_back(widthAndName(80, TEXT("Hint")));
+    array<ItemWidthAndName<DWORD, wstring>, 5> items = { {
+		{ 320, L"API Name" },
+		{ 80, L"Thunk RVA" },
+		{ 100, L"Thunk Offset" },
+		{ 100, L"Thunk Value" },
+		{ 80, L"Hint" }
+	} };
 
-    for (int i = 0; i < items.size(); i++) {
+    for (size_t i = 0; i < items.size(); i++) {
         funcList_->SetColumn(items[i], i);
         SendMessage(funcList_->GetList(), LVM_INSERTCOLUMN, i, funcList_->GetColumnAddr());
     }

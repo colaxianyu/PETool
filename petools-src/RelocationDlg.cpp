@@ -1,32 +1,47 @@
-#include "RelocationDlg.h"
+module;
+
 #include "resource.h"
-#include <string>
-import Utils;
+#include <windows.h>
+#include <commctrl.h>
+#include <cstdio>
+
+module RelocationDlg;
+
+import STL;
+import AnalysePE;
+
+using petools::show::ItemWidthAndName;
+using petools::CharToTchar;
+using petools::TcharToDword;
+using std::array;
+using std::wstring;
 
 extern HINSTANCE appInst;
 
 RelocationDlg* RelocationDlg::thisDlg_ = nullptr;
 
 RelocationDlg::RelocationDlg(HWND hParent)
-    : DialogEX(IDD_DIALOG_RELOCATION, hParent),
-    relocation_(nullptr)
+    : DialogEX(IDD_DIALOG_RELOCATION, hParent)
 {
 
 }
 
 RelocationDlg::~RelocationDlg() {
-    blockList_.reset();
-    blockItemList_.reset();
-    relocation_ = nullptr;
+
 }
 
 void RelocationDlg::InitDlg() {
     SetThisDlg();
-    SetRelocationPtr();
 }
 
 void RelocationDlg::Plant() {
     DialogBox(appInst, MAKEINTRESOURCE(idTemplate_), hParentDlg_, (DLGPROC)RelocationProc);
+}
+
+void RelocationDlg::CloseDlg() {
+	blockList_.reset();
+	blockItemList_.reset();
+	EndDialog(hCurrentDlg_, 0);
 }
 
 void RelocationDlg::InitBlockList() {
@@ -38,21 +53,22 @@ void RelocationDlg::InitBlockList() {
 }
 
 void RelocationDlg::PlantBlockColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(50, TEXT("Index")));
-    items.push_back(widthAndName(100, TEXT("Section")));
-    items.push_back(widthAndName(80, TEXT("RVA")));
-    items.push_back(widthAndName(110, TEXT("Size Of Block")));
-    items.push_back(widthAndName(120, TEXT("Items(HEX/DEC)")));
+    array<ItemWidthAndName<DWORD, wstring>, 5> items = { {
+		{ 50, L"Index" },
+		{ 100, L"Section" },
+		{ 80, L"RVA" },
+		{ 110, L"Size Of Block" },
+		{ 120, L"Items(HEX/DEC)" }
+	} };
 
-    for (int i = 0; i < items.size(); i++) {
+    for (size_t i = 0; i < items.size(); i++) {
         blockList_->SetColumn(items[i], i);
         SendMessage(blockList_->GetList(), LVM_INSERTCOLUMN, i, blockList_->GetColumnAddr());
     }
 }
 
 void RelocationDlg::PlantBlockItem() {
-    IMAGE_BASE_RELOCATION* tempRelocation = relocation_;
+    IMAGE_BASE_RELOCATION* tempRelocation = AnalysePE::GetAnalyse().GetRelocation();
 
     LV_ITEM item;
     memset(&item, 0, sizeof(LV_ITEM));
@@ -124,14 +140,15 @@ void RelocationDlg::InitBlockItemList() {
 }
 
 void RelocationDlg::PlantBlockItemColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(50, TEXT("Index")));
-    items.push_back(widthAndName(80, TEXT("RVA")));
-    items.push_back(widthAndName(80, TEXT("Offset")));
-    items.push_back(widthAndName(100, TEXT("Type")));
-    items.push_back(widthAndName(120, TEXT("Relocation Data")));
+    array<ItemWidthAndName<DWORD, wstring>, 5> items = { {
+            { 50, L"Index" },
+            { 80, L"RVA" },
+            { 80, L"Offset" },
+            { 100, L"Type" },
+            { 120, L"Relocation Data"}
+    } };
 
-    for (int i = 0; i < items.size(); i++) {
+    for (size_t i = 0; i < items.size(); i++) {
         blockItemList_->SetColumn(items[i], i);
         SendMessage(blockItemList_->GetList(), LVM_INSERTCOLUMN, i, blockItemList_->GetColumnAddr());
     }
