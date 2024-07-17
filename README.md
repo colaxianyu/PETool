@@ -31,9 +31,22 @@ PETool
 
 ## 效果展示
 
-[![PETool主界面](图片URL)]
+### PETool主界面
+![PETool主界面](https://github.com/colaxianyu/PETool/blob/master/example/PETool_Main.png)
 
+### PETool Section解析
+![PETool Section解析](https://github.com/colaxianyu/PETool/blob/master/example/PETool_Section.png)
+
+### PETool加壳界面
+![PETool protect](https://github.com/colaxianyu/PETool/blob/master/example/PETool_Protect.png)
+
+### 傀儡进程展示
+![fake_process](https://github.com/colaxianyu/PETool/blob/master/example/fake.png)
 
 ## 开发人员
 
 [colaxianyu](https://github.com/colaxianyu)
+
+## 使用许可
+
+[MIT](LICENSE) © Richard Littauer
