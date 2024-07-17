@@ -18,14 +18,20 @@ PETool基于c++20开发，请确保你的编译器支持c++20 ()
 
 ```c++
 PETool
+├── example                       // 一些展示图片
 ├── executable
-│   ├── fake.exe          // 一个加壳后的程序，用于演示加壳的功能
-│   ├── PETools.exe       // PETool主体
-│   ├── Protector.exe     // 傀儡程序，作为壳源
-│   └── realProc.exe      // 目标程序    
-├── petools-src           // PETool的源代码
-└── protector-src         // 傀儡程序的源代码
+│   ├── example_protect.exe       // 用于演示加壳功能的程序，资源管理器中的进程名称为fake.exe，但运行的内容为realProc.exe 
+│   ├── fake.exe                  // 傀儡程序，可独立运行，Protector.exe默认指定该程序为傀儡进程，即目标程序会套上fake.exe的名称运行
+│   ├── PETools.exe               // PETool主体
+│   ├── Protector.exe             // 加壳程序，用于实现具体的加壳功能，无法独立运行
+│   └── realProc.exe              // 目标程序    
+├── petools-src                   // PETool的源代码
+└── protector-src                 // 加壳程序的源代码
 ```
+
+## 效果展示
+
+[![PETool主界面](图片URL)]
 
 
 ## 开发人员
