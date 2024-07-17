@@ -1,17 +1,31 @@
-#include "MainDlg.h"
+module;
+
 #include "resource.h"
+#include <windows.h>
 #include <Tlhelp32.h>
 #include <WtsApi32.h>
-import Utils;
-
+#include <CommCtrl.h>
 #pragma comment(lib, "WtsApi32.lib")
 
-const DWORD pidLen = 8;
-const DWORD addressLen = 10;
+
+module MainDlg;
+
+import AnalysePE;
+import STL;
+
+constexpr DWORD pidLen = 8;
+constexpr DWORD addressLen = 10;
 
 extern HINSTANCE appInst;
 extern int cmdShow;
-static TCHAR formatFilter[50] = TEXT("*.exe;*.dll;*.scr;*.drv;*.sys");
+
+using std::vector;
+using std::array;
+using std::wstring;
+using petools::config::filename_max;
+using petools::config::formatFilter;
+using petools::show::ItemWidthAndName;
+using petools::TcharToDword;
 
 MainDlg* MainDlg::thisDlg_ = nullptr;
 
@@ -22,11 +36,7 @@ MainDlg::MainDlg(HWND hParent)
 }
 
 MainDlg::~MainDlg() {
-    processList_.reset();
-    moduleList_.reset();
-    aboutDlg_.reset();
-    peEditDlg_.reset();
-    protectorDlg_.reset();
+
 }
 
 void MainDlg::InitDlg() {
@@ -37,7 +47,7 @@ void MainDlg::InitDlg() {
     {
         return;
     }
-
+    
     InitProcessList();
     InitModuleList(); 
 }
@@ -55,6 +65,12 @@ void MainDlg::Plant() {
 }
 
 void MainDlg::CloseDlg() {
+    for (auto& dlg : dlg_list_) {
+        auto name = typeid(*dlg).name();
+        dlg.reset();
+    }
+    processList_.reset();
+    moduleList_.reset();
     DestroyWindow(hCurrentDlg_);
     ExitProcess(0);
 }
@@ -72,14 +88,14 @@ void MainDlg::InitModuleList() {
 }
 
 void MainDlg::PlantProcessColumn() {
+    array<ItemWidthAndName<DWORD, wstring>, 4> items = { {
+		{ 190, L"Process" },
+		{ 70, L"PID" },
+		{ 90, L"Image Base" },
+		{ 90, L"Image Size" }
+	} };
 
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(190, TEXT("进程")));
-    items.push_back(widthAndName(70, TEXT("PID")));
-    items.push_back(widthAndName(90, TEXT("镜像基址")));
-    items.push_back(widthAndName(90, TEXT("镜像大小")));
-
-    for (int i = 0; i < items.size(); i++) {
+    for (size_t i = 0; i < items.size(); i++) {
         processList_->SetColumn(items[i], i);
         SendMessage(processList_->GetList(), LVM_INSERTCOLUMN, i, processList_->GetColumnAddr());
     }
@@ -143,10 +159,13 @@ void MainDlg::PlantProcessItem() {
 }
 
 void MainDlg::PlantModuleColumn() {
-    std::vector<widthAndName> items;
-    items.push_back(widthAndName(370, TEXT("模块名称")));
-    items.push_back(widthAndName(90, TEXT("模块大小")));
-    for (int i = 0; i < items.size(); i++) {
+
+    array<ItemWidthAndName<DWORD, wstring>, 2> items = { {
+		{ 370, L"Module Name" },
+		{ 90, L"Module Size" }
+	} };
+
+    for (size_t i = 0; i < items.size(); i++) {
         moduleList_->SetColumn(items[i], i);
         SendMessage(moduleList_->GetList(), LVM_INSERTCOLUMN, i, moduleList_->GetColumnAddr());
     }
@@ -192,35 +211,34 @@ void MainDlg::PlantModuleItem() {
 }
 
 void MainDlg::CreateAboutDlg() {
-    aboutDlg_ = std::unique_ptr<AboutDlg>(new AboutDlg(hCurrentDlg_));
-    aboutDlg_->InitDlg();
-    aboutDlg_->Plant();
+    CreateDlg<AboutDlg>(hCurrentDlg_, dlg_list_);
 }
 
 void MainDlg::CreatePeEditDlg() {
-    TCHAR fileName[FILENAME_MAX];
-    memset(fileName, 0, FILENAME_MAX);
+    TCHAR fileName[filename_max];
+    memset(fileName, 0, filename_max);
     
+    std::unique_ptr<PeEditDlg> peEditDlg;
     if (GetOpenFileNameEx(fileName)) {
-        peEditDlg_ = std::unique_ptr<PeEditDlg>(new PeEditDlg(hCurrentDlg_));
-        peEditDlg_->OpenFile(fileName);
-        if (!peEditDlg_->GetFileManage()->IsOpenFile()) {
-            peEditDlg_->CloseDlg();
-            peEditDlg_.reset();
+        peEditDlg = std::make_unique<PeEditDlg>(hCurrentDlg_);
+        peEditDlg->OpenFile(fileName);
+        if (!peEditDlg->GetFileManage()->IsOpenFile()) {
+            peEditDlg->CloseDlg();
+            peEditDlg.reset();
             return;
         }
-        AnalysePE::GetAnalyse().Init(peEditDlg_->GetFileManage());
-        peEditDlg_->InitDlg();
-        peEditDlg_->SetFileName(fileName);
-        peEditDlg_->Plant();
+
+        AnalysePE::GetAnalyse().Init(peEditDlg->GetFileManage()->GetFile(), peEditDlg->GetFileManage()->GetFileSize());
+        peEditDlg->InitDlg();
+        peEditDlg->SetFileName(fileName);
+        peEditDlg->Plant();
+        dlg_list_.push_back(std::move(peEditDlg));
     }
     return;
 }
 
 void MainDlg::CreateProtectorDlg() {
-    protectorDlg_ = std::unique_ptr<ProtectorDlg>(new ProtectorDlg(hCurrentDlg_));
-    protectorDlg_->InitDlg();
-    protectorDlg_->Plant();
+    CreateDlg<ProtectorDlg>(hCurrentDlg_, dlg_list_);
 }
 
 
@@ -234,10 +252,10 @@ DWORD MainDlg::GetPID(int rowIndex) {
     item.cchTextMax = pidLen;
     SendMessage(processList_->GetList(), LVM_GETITEMTEXT, rowIndex, (DWORD)&item);
 
-
     DWORD pid;
     TcharToDword(pidBuffer, &pid, 10);
     return pid;
+    return 0;
 }
 
 BOOL MainDlg::GetOpenFileNameEx(TCHAR* fileName) {
