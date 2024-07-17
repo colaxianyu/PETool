@@ -1,5 +1,6 @@
-#include "PeApplication.h"
-#include "MainDlg.h"
+module;
+
+module PeApplication;
 
 HINSTANCE appInst;
 int cmdShow;
@@ -10,7 +11,7 @@ void PeApplication::InitApp(HINSTANCE hInstance, int nCmdShow) {
 }
 
 void PeApplication::CreateMainDlg() {
-    mainDlg_ = std::make_shared<MainDlg>();
+    mainDlg_ = std::make_unique<MainDlg>();
     mainDlg_->InitDlg();
     mainDlg_->Plant();
 }

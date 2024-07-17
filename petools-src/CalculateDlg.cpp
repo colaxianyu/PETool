@@ -1,8 +1,18 @@
-#include "CalculateDlg.h"
+module;
+
 #include "resource.h"
-#include "AnalysePE.h"
-#include <unordered_set>
-import Utils;
+#include <windows.h>
+
+module CalculateDlg;
+
+import STL;
+import AnalysePE;
+
+using std::unordered_set;
+using petools::TcharToChar;
+using petools::TcharToDword;
+using enum PositionInPE;
+
 extern HINSTANCE appInst;
 
 WNDPROC RvaOldProc;
@@ -18,7 +28,7 @@ CalculateDlg::CalculateDlg(HWND hParent)
 }
 
 CalculateDlg::~CalculateDlg() {
-
+    
 }
 
 void CalculateDlg::InitDlg() {
@@ -161,47 +171,6 @@ void CalculateDlg::FromVACalc(DWORD VA) {
     default:
         return;
     }
-
-
-   /* DWORD secIndex = AnalysePE::GetAnalyse().InWhichSectionRVA(RVA);
-    if (secIndex == outFile) {
-        MessageBox(0, TEXT("Out Of File!"), TEXT("Error"), MB_OK);
-    }
-    else if (secIndex == inHead) {
-        TCHAR* locateName = const_cast<TCHAR*>(TEXT("Header"));
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_LOCATE), locateName);
-
-        TCHAR RVABuffer[9] = { 0 };
-        wsprintfW(RVABuffer, L"%08X", RVA);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_RVA), RVABuffer);
-
-        TCHAR FOABuffer[9] = { 0 };
-        wsprintfW(FOABuffer, L"%08X", RVA);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_FOA), FOABuffer);
-
-        TCHAR VABuffer[9] = { 0 };
-        wsprintfW(VABuffer, L"%08X", VA);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_VA), VABuffer);
-    }
-    else {
-        TCHAR* locateName = nullptr;
-        AnalysePE::GetAnalyse().GetTcharSectionName(secIndex, &locateName);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_LOCATE), locateName);
-
-        TCHAR RVABuffer[9] = { 0 };
-        wsprintfW(RVABuffer, L"%08X", RVA);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_RVA), RVABuffer);
-
-        DWORD FOA = -1;
-        FOA = AnalysePE::GetAnalyse().RVAToFOA(RVA);
-        TCHAR FOABuffer[9] = { 0 };
-        wsprintfW(FOABuffer, L"%08X", FOA);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_FOA), FOABuffer);
-
-        TCHAR VABuffer[9] = { 0 };
-        wsprintfW(VABuffer, L"%08X", VA);
-        SetWindowText(GetDlgItem(hCurrentDlg_, IDC_EDIT_VA), VABuffer);
-    }*/
 }
 
 void CalculateDlg::FromRVACalc(DWORD RVA) {

@@ -1,14 +1,21 @@
-#include "AnalysePE.h"
-#include <time.h>
-#include <iostream>
-#include <vector>
-import Utils;
-using std::vector;
-using std::cout;
-using std::endl;
+module;
 
-void AnalysePE::Init(FileManage*  fileManage) {
-	bool isReadToBuffer = ReadFileToFileBuffer(fileManage);
+#include <windows.h>
+#include <string>
+#include <memory>
+
+module AnalysePE;
+
+import STL;
+
+using std::string;
+using std::cout;
+using std::format;
+using petools::TcharToChar;
+using petools::CharToTchar;
+
+void AnalysePE::Init(std::fstream& file, DWORD fileSize){
+	bool isReadToBuffer = ReadFileToFileBuffer(file, fileSize);
 	if (!isReadToBuffer) {
 		return;
 	}
@@ -21,22 +28,14 @@ void AnalysePE::UnloadPeData() {
 	headers_.Reset();
 }
 
-void AnalysePE::Update() {
+bool AnalysePE::ReadFileToFileBuffer(std::fstream& file, DWORD fileSize) {
+	fileBufferSize_ = fileSize;
+	fileBuffer_ = std::make_unique<char[]>(fileSize);
+	file.read(fileBuffer_.get(), fileSize);
 
-}
-
-bool AnalysePE::ReadFileToFileBuffer(FileManage* const fileManage) {
-	fileBufferSize_ = fileManage->GetFileSize();
-
-	fileBuffer_ = unique_ptr<char>(new char[fileBufferSize_]);
-
-	//FILE* tempFile = const_cast<FILE*>(FileManage::GetFileManage().GetFile());
-	FILE* tempFile = fileManage->GetFile();
-	DWORD readSize = fread(fileBuffer_.get(), fileBufferSize_, 1, tempFile);
-	if (readSize == 0) {
+	if (file.fail()) {
 		return false;
 	}
-	tempFile = nullptr;
 	return true;
 }
 
@@ -83,7 +82,7 @@ const DWORD AnalysePE::GetAllTableSize() {
 	DWORD exportSize = GetExportSize() + GetFATSize() + GetFNTSize() + GetFOTSize() + GetExportFuncNameSize();
 	DWORD importSize = 0;
 	DWORD importTable = GetAllImportSize() / sizeof(IMAGE_IMPORT_DESCRIPTOR);
-	for (int i = 0; i < (GetAllImportSize() / sizeof(IMAGE_IMPORT_DESCRIPTOR)); i++) {
+	for (DWORD i = 0; i < (GetAllImportSize() / sizeof(IMAGE_IMPORT_DESCRIPTOR)); i++) {
 		importSize += GetIATSize(i) + GetINTSize(i) + GetByNameTableSize(i);
 	}
 	importSize += GetAllImportSize();
@@ -109,7 +108,7 @@ WORD AnalysePE::GetOrdinalTableIndex(DWORD value) {
 	WORD* ordinalTable = (WORD*)((DWORD)headers_.dosHeader
 		+ RVAToFOA((DWORD)exportPtr->AddressOfNameOrdinals));
 
-	for (DWORD i = 0; i < exportPtr->NumberOfNames; i++) {
+	for (WORD i = 0; i < exportPtr->NumberOfNames; i++) {
 		if (*(ordinalTable + i) == value) {
 			return i;
 		}
@@ -137,7 +136,7 @@ DWORD AnalysePE::GetFNTSize() {
 	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
 	return exportTable->NumberOfNames * sizeof(DWORD);
 }
-
+//
 DWORD AnalysePE::GetFOTSize() {
 	IMAGE_EXPORT_DIRECTORY* exportTable = GetExport();
 	return exportTable->NumberOfNames * sizeof(WORD);
@@ -155,6 +154,16 @@ DWORD AnalysePE::GetExportFuncNameSize() {
 	return funcNameSize;
 }
 
+bool AnalysePE::IsHaveExport() {
+	if (headers_.optionalHeader->DataDirectory[0].Size != 0
+		&& headers_.optionalHeader->DataDirectory[0].VirtualAddress != 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 IMAGE_RESOURCE_DIRECTORY* AnalysePE::GetResource() {
 	return (IMAGE_RESOURCE_DIRECTORY*)((DWORD)headers_.dosHeader
 		+ RVAToFOA(headers_.optionalHeader->DataDirectory[2].VirtualAddress));
@@ -163,7 +172,8 @@ IMAGE_RESOURCE_DIRECTORY* AnalysePE::GetResource() {
 void DisplayResource(IMAGE_RESOURCE_DIRECTORY_ENTRY* resourceEntry) {
 	IMAGE_RESOURCE_DIRECTORY* resourceTable = AnalysePE::GetAnalyse().GetResource();
 	IMAGE_RESOURCE_DATA_ENTRY* data = (IMAGE_RESOURCE_DATA_ENTRY*)((DWORD)resourceTable + resourceEntry->OffsetToDirectory);
-	cout << "RVA is: " << std::hex <<data->OffsetToData << "   " << "Size is: " << std::hex << data->Size << endl;
+	//cout << "RVA is: " << std::hex <<data->OffsetToData << "   " << "Size is: " << std::hex << data->Size;
+	cout << format("RVA is: {:x}, Size is {:x}", data->OffsetToData, data->Size);
 }
 
 void GetAppName() {
@@ -193,7 +203,7 @@ void GetAppName() {
 	for (name; *name != 0; name++) {
 		s.push_back(*name);
 	}
-	cout << s << endl;
+	cout << s << "\n";
 	TCHAR other2[] = L"cloud23456";
 	string other = "cloud23456";
 	memcpy((char*)nameAddr, other2, 20);
@@ -210,15 +220,15 @@ void AnalysePE::AnalyseResource(IMAGE_RESOURCE_DIRECTORY* resourceDir) {
 		return;
 	}
 	else {
-		cout << "-------------------------------" << endl;
+		cout << "-------------------------------\n";
 		IMAGE_RESOURCE_DIRECTORY_ENTRY* resourceEntry1 = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((DWORD)resourceDir + sizeof(IMAGE_RESOURCE_DIRECTORY));
 		DWORD number = resourceDir->NumberOfIdEntries + resourceDir->NumberOfNamedEntries;
 		for (int i = 1; i <= number; i++) {
-			cout << "ID: " << (resourceEntry->NameIsString ? NULL : resourceEntry->Id) << endl;
+			cout << "ID: " << (resourceEntry->NameIsString ? NULL : resourceEntry->Id) << "\n";
 			AnalyseResource((IMAGE_RESOURCE_DIRECTORY*)((DWORD)resourceTable + resourceEntry->OffsetToDirectory));
 			resourceEntry++;
 		}
-		cout << "-------------------------------" << endl;
+		cout << "-------------------------------\n";
 		return;
 	}
 }
@@ -278,6 +288,16 @@ DWORD AnalysePE::GetByNameTableSize(DWORD importIndex) {
 	return byNameTableSize;
 }
 
+bool AnalysePE::IsHaveImport() {
+	if (headers_.optionalHeader->DataDirectory[1].Size != 0
+		&& headers_.optionalHeader->DataDirectory[1].VirtualAddress != 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 bool AnalysePE::IsHaveRelocation() {
 	if (headers_.optionalHeader->DataDirectory[5].Size != 0
 		&& headers_.optionalHeader->DataDirectory[5].VirtualAddress != 0) {
@@ -320,12 +340,12 @@ DWORD AnalysePE::RVAToFOA(const DWORD RVA){
 	DWORD FOA = 0;
 	PositionInPE pos = PositonInfoRVA(RVA);
 	switch (pos) {
-	case inHead:
+	case PositionInPE::inHead:
 	{
 		FOA = RVA;
 		return FOA;
 	}
-	case inSection:
+	case PositionInPE::inSection:
 	{
 		DWORD sectionIndex = InWhichSectionRVA(RVA);
 		IMAGE_SECTION_HEADER a = headers_.sectionHeader[sectionIndex];
@@ -343,12 +363,12 @@ DWORD AnalysePE::FOAToRVA(const DWORD FOA) {
 	PositionInPE pos = PositonInfoFOA(FOA);
 
 	switch (pos) {
-	case inHead:
+	case PositionInPE::inHead:
 	{
 		RVA = FOA;
 		return RVA;
 	}
-	case inSection:
+	case PositionInPE::inSection:
 	{
 		DWORD sectionIndex = InWhichSectionFOA(FOA);
 		RVA = FOA - headers_.sectionHeader[sectionIndex].PointerToRawData
@@ -364,18 +384,18 @@ PositionInPE AnalysePE::PositonInfoRVA(const DWORD RVA) {
 	PositionInPE Pos;
 	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
 	if (RVA < headers_.sectionHeader->VirtualAddress) {
-		Pos = inHead;
+		Pos = PositionInPE::inHead;
 	}
 	// TODO：SizeOfImage的值并不一定准确，例如SizeOfImage = lastSection->RVA + lastSection->VSize，此时未对齐
 	// 而lastSection->RVA + lastSection->VSize之后可能还有内容，考虑边界的是否应该改为max(SizeOfImage, lastSection->RVA + 内存对齐(VSize))
 	else if (RVA >= max(headers_.optionalHeader->SizeOfImage, lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader))) {
-		Pos = outFile;
+		Pos = PositionInPE::outFile;
 	}
 	/*else if (RVA >= headers_.optionalHeader->SizeOfImage) {
 		Pos = outFile;
 	}*/
 	else {
-		Pos = inSection;
+		Pos = PositionInPE::inSection;
 	}
 	return Pos;
 }
@@ -384,15 +404,15 @@ PositionInPE AnalysePE::PositonInfoFOA(const DWORD FOA) {
 	PositionInPE Pos;
 
 	if (FOA < headers_.optionalHeader->SizeOfHeaders) {
-		Pos = inHead;
+		Pos = PositionInPE::inHead;
 	}
 	else if (DWORD lastSectionIndex = headers_.fileHeader->NumberOfSections - 1; 
 		FOA >= headers_.sectionHeader[lastSectionIndex].PointerToRawData
 		+ headers_.sectionHeader[lastSectionIndex].SizeOfRawData) {
-		Pos = outFile;
+		Pos = PositionInPE::outFile;
 	}
 	else {
-		Pos = inSection;
+		Pos = PositionInPE::inSection;
 	}
 	return Pos;
 }
@@ -608,7 +628,7 @@ bool AnalysePE::AddSectionHeaderIfAvailable() {
 	return true;
 }
 
-void AnalysePE::AnalysePE::AdjustHeadrs() {
+void AnalysePE::AdjustHeadrs() {
 	headers_.dosHeader->e_lfanew = sizeof(*headers_.dosHeader);
 
 	DWORD moveHeadersSize = sizeof(headers_.ntHeader->Signature) + IMAGE_SIZEOF_FILE_HEADER

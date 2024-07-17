@@ -1,7 +1,11 @@
-#include "InjectImportDlg.h"
+module;
+
 #include "resource.h"
-#include "AnalysePE.h"
-#include <string>
+#include <windows.h>
+
+module InjectImportDlg;
+
+import AnalysePE;
 
 extern HINSTANCE appInst;
 

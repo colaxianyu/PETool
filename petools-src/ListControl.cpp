@@ -1,5 +1,9 @@
-#include "ListControl.h"
-#pragma comment(lib, "comctl32.lib")
+module;
+
+#include <windows.h>
+#include <CommCtrl.h>
+
+module ListControl;
 
 ListCrl::ListCrl(HWND hList, std::function<void()> plantColumn, std::function<void()> plantItem)
 	: hList_(hList),
@@ -17,11 +21,3 @@ void ListCrl::Init(UINT columnMask, UINT itemMask) {
 	column_.fmt = LVCFMT_CENTER;
 	item_.mask = itemMask;
 }
-
-void ListCrl::SetColumn(widthAndName& items, int col) {
-	column_.pszText = const_cast<LPWSTR>(items.second);
-	column_.cx = items.first;
-	column_.iSubItem = col;
-}
-
-

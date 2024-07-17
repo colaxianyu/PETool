@@ -1,63 +1,56 @@
-#include "FileManage.h"
-#include <iostream>
-using namespace std;
+module;
 
-void FileManageDetail::CloseFile(FILE* fp) {
-	if (fp != nullptr) {
-		fclose(fp);
-	}
-}
+#include <windows.h>
+#include <iostream>
+
+module FileManage;
+
+import STL;
+
+using std::format;
+using std::fstream;
+
 void FileManageDetail::ReleasePath(char* path) {
 	if (path != nullptr) {
 		delete[] path;
+		std::cout << format("path released!\n");
 	}
 }
 
 FileManage::FileManage(const char* filePath, const char* mode){
-	if (file_ != nullptr) {
-		return;
-	}
+	file_.open(filePath, std::fstream::in | std::fstream::out | std::fstream::binary);
 
-	FILE* tempFile = nullptr;
-	errno_t e = fopen_s(&tempFile, filePath, mode);
-	if (e != 0) {
+	if (!file_.is_open()) {
 		return;
 	}
-	file_ = FileManageDetail::PFile(tempFile, FileManageDetail::CloseFile);
 
 	char* tempFilePath = new char[strlen(filePath) + 1];
 	memcpy(tempFilePath, filePath, strlen(filePath) + 1);
-	filePath_ = FileManageDetail::PFilePath(tempFilePath, FileManageDetail::ReleasePath);
-	fseek(file_.get(), 0, SEEK_END);
-	fileSize_ = ftell(file_.get());
-	fseek(file_.get(), 0, SEEK_SET);
+	filePath_ = FileManageDetail::filePathPointer(tempFilePath, FileManageDetail::ReleasePath);
+
+	std::streampos currentPos = file_.tellg();
+	file_.seekg(0, std::ios::end);
+	std::streamsize size = file_.tellg();
+	fileSize_ = static_cast<DWORD>(size);
+	file_.seekg(currentPos);
 }
 
-bool FileManage::IsOpenFile() {
-	if (file_ == nullptr) {
-		return false;
-	}
-	else {
-		return true;
-	}
-}
+void FileManage::SaveAsFile(const char* file_buffer, DWORD file_szie, const char* path) {
+    if (path == nullptr || file_buffer == nullptr) {
+        MessageBox(0, TEXT("Invalid path or file buffer"), TEXT("ERROR"), MB_OK);
+        return;
+    }
 
-bool FileManage::SaveFile(const char* savePath) {
-	FILE* file = nullptr;
-	fopen_s(&file, savePath, "wb");
-	if (file == nullptr) {
-		MessageBox(0, TEXT("±£¥Ê ß∞‹!"), TEXT("ERROR"), MB_OK);
-		return false;
-	}
+    fstream outFile(path, std::ios::out | std::ios::binary);
+    if (!outFile.is_open()) {
+        MessageBox(0, TEXT("Failed to open file for writing"), TEXT("ERROR"), MB_OK);
+        return;
+    }
 
-	DWORD fileBufferSize = AnalysePE::GetAnalyse().GetFileBufferSzie();
-	DWORD writeSize = fwrite(AnalysePE::GetAnalyse().GetHeaders().dosHeader, sizeof(BYTE), fileBufferSize, file);
-	if (writeSize == 0) {
-		MessageBox(0, TEXT("±£¥Ê ß∞‹!"), TEXT("ERROR"), MB_OK);
-		fclose(file);
-		file = nullptr;
-		return false;
-	}
-	fclose(file);
-	return true;
+    outFile.write(file_buffer, file_szie);
+    if (!outFile) {
+        MessageBox(0, TEXT("Failed to write to fileg"), TEXT("ERROR"), MB_OK);
+    }
+    outFile.close();
 }
+                                                                                                      

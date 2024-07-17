@@ -1,6 +1,15 @@
-#include "OptHeaderDlg.h"
+module;
+
 #include "resource.h"
-#include "AnalysePE.h"
+#include <windows.h>
+
+module OptHeaderDlg;
+
+import STL;
+import AnalysePE;
+
+using petools::show::SetDlgItemText_t;
+
 
 extern HINSTANCE appInst;
 
@@ -27,125 +36,36 @@ void OptHeaderDlg::Plant() {
 }
 
 void OptHeaderDlg::SetOptHeaderInfo() {
-    TCHAR magic[10] = { 0 };
-    wsprintfW(magic, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Magic);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMAGIC, magic);
-
-    TCHAR majorLink[10] = { 0 };
-    wsprintfW(majorLink, L"%02X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorLinkerVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMAJORLINK, majorLink);
-
-    TCHAR minorLink[10] = { 0 };
-    wsprintfW(minorLink, L"%02X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorLinkerVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMINORLINK, minorLink);
-
-    TCHAR codeSize[10] = { 0 };
-    wsprintfW(codeSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfCode);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTCODESIZE, codeSize);
-
-    TCHAR initDataSize[10] = { 0 };
-    wsprintfW(initDataSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfInitializedData);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTINITDATA, initDataSize);
-
-    TCHAR uninitDataSize[10] = { 0 };
-    wsprintfW(uninitDataSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfUninitializedData);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTUNINITDATA, uninitDataSize);
-
-    TCHAR entry[10] = { 0 };
-    wsprintfW(entry, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->AddressOfEntryPoint);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTENTRY, entry);
-
-    TCHAR codeBase[10] = { 0 };
-    wsprintfW(codeBase, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->BaseOfCode);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTCODEBASE, codeBase);
-
-    TCHAR dataBase[10] = { 0 };
-    wsprintfW(dataBase, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->BaseOfData);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTDATABASE, dataBase);
-
-    TCHAR imageBase[10] = { 0 };
-    wsprintfW(imageBase, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->ImageBase);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTIMAGEBASE, imageBase);
-
-    TCHAR secAlign[10] = { 0 };
-    wsprintfW(secAlign, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SectionAlignment);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTSECALIGN, secAlign);
-
-    TCHAR fileAlign[10] = { 0 };
-    wsprintfW(fileAlign, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->FileAlignment);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTFILEALIGN, fileAlign);
-
-    TCHAR majorOS[10] = { 0 };
-    wsprintfW(majorOS, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorOperatingSystemVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMAJOROS, majorOS);
-
-    TCHAR minorOs[10] = { 0 };
-    wsprintfW(minorOs, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorOperatingSystemVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMINOROS, minorOs);
-
-    TCHAR majorImage[10] = { 0 };
-    wsprintfW(majorImage, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorImageVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMAJORIMAGE, majorImage);
-
-    TCHAR minorImage[10] = { 0 };
-    wsprintfW(minorImage, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorImageVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMINORIMAGE, minorImage);
-
-    TCHAR majorSubSys[10] = { 0 };
-    wsprintfW(majorSubSys, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorSubsystemVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMAJORSUBSYS, majorSubSys);
-
-    TCHAR minorSubSys[10] = { 0 };
-    wsprintfW(minorSubSys, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorSubsystemVersion);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTMINORSUBSYS, minorSubSys);
-
-    TCHAR win32Version[10] = { 0 };
-    wsprintfW(win32Version, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Win32VersionValue);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTWINVERSION, win32Version);
-
-    TCHAR imageSize[10] = { 0 };
-    wsprintfW(imageSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfImage);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTIMAGESIZE, imageSize);
-
-    TCHAR headersSize[10] = { 0 };
-    wsprintfW(headersSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeaders);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTHEADERSSIZE, headersSize);
-
-    TCHAR check[10] = { 0 };
-    wsprintfW(check, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->CheckSum);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTCHECK, check);
-
-    TCHAR subSys[10] = { 0 };
-    wsprintfW(subSys, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Subsystem);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTSUBSYS, subSys);
-
-    TCHAR dllCha[10] = { 0 };
-    wsprintfW(dllCha, L"%04X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DllCharacteristics);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTDLLCHA, dllCha);
-
-    TCHAR stackResSize[10] = { 0 };
-    wsprintfW(stackResSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfStackReserve);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTSTACKRES, stackResSize);
-
-    TCHAR stackComSize[10] = { 0 };
-    wsprintfW(stackComSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfStackCommit);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTSTACKCOM, stackComSize);
-
-    TCHAR heapResSize[10] = { 0 };
-    wsprintfW(heapResSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeapReserve);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTHEAPRES, heapResSize);
-
-    TCHAR heapComSize[10] = { 0 };
-    wsprintfW(heapComSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeapCommit);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTHEAPCOM, heapComSize);
-
-    TCHAR loaderFlags[10] = { 0 };
-    wsprintfW(loaderFlags, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->LoaderFlags);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTFLAGS, loaderFlags);
-
-    TCHAR rvaAndSize[10] = { 0 };
-    wsprintfW(rvaAndSize, L"%08X", AnalysePE::GetAnalyse().GetHeaders().optionalHeader->NumberOfRvaAndSizes);
-    SetDlgItemText(hCurrentDlg_, IDC_EDIT_OPTRVAANDSIZE, rvaAndSize);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMAGIC, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Magic, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMAJORLINK, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorLinkerVersion, 2);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMINORLINK, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorLinkerVersion, 2);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTCODESIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfCode, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTINITDATA, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfInitializedData, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTUNINITDATA, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfUninitializedData, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTENTRY, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->AddressOfEntryPoint, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTCODEBASE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->BaseOfCode, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTDATABASE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->BaseOfData, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTIMAGEBASE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->ImageBase, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTSECALIGN, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SectionAlignment, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTFILEALIGN, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->FileAlignment, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMAJOROS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorOperatingSystemVersion, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMINOROS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorOperatingSystemVersion, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMAJORIMAGE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorImageVersion, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMINORIMAGE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorImageVersion, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMAJORSUBSYS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MajorSubsystemVersion, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTMINORSUBSYS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->MinorSubsystemVersion, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTWINVERSION, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Win32VersionValue, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTIMAGESIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfImage, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTHEADERSSIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeaders, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTCHECK, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->CheckSum, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTSUBSYS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Subsystem, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTDLLCHA, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->DllCharacteristics, 4);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTSTACKRES, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfStackReserve, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTSTACKCOM, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfStackCommit, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTHEAPRES, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeapReserve, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTHEAPCOM, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeapCommit, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTFLAGS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->LoaderFlags, 8);
+    SetDlgItemText_t(hCurrentDlg_, IDC_EDIT_OPTRVAANDSIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->NumberOfRvaAndSizes, 8);
 }
 
 LRESULT CALLBACK OptHeaderDlg::OptHeaderProc(HWND hOpt, UINT message, WPARAM wParam, LPARAM lParam) {

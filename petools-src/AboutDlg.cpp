@@ -1,5 +1,9 @@
-#include "AboutDlg.h"
+module;
+
 #include "resource.h"
+#include <windows.h>
+
+module AboutDlg;
 
 extern HINSTANCE appInst;
 

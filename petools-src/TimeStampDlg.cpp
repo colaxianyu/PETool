@@ -1,9 +1,17 @@
-#include "TimeStampDlg.h"
+module;
+
 #include "resource.h"
-#include "AnalysePE.h"
-#include <time.h>
-#include <tchar.h>
-import Utils;
+#include <windows.h>
+
+module TimeStampDlg;
+
+import STL;
+import AnalysePE;
+
+using std::format;
+using std::string;
+using std::time_t;
+using petools::DecodeTimeStamp;
 
 extern HINSTANCE appInst;
 
@@ -16,7 +24,7 @@ TimeStampDlg::TimeStampDlg(HWND hParent)
 }
 
 TimeStampDlg::~TimeStampDlg() {
-		
+
 }
 
 void TimeStampDlg::InitDlg() {
@@ -34,26 +42,16 @@ void TimeStampDlg::SetTSDlgInfo() {
     wsprintfW(timeStamp, L"%08X", ts);
     SetDlgItemText(hCurrentDlg_, IDC_EDIT_TimeEncode, timeStamp);
 
-    tm time;
-    DecodeTimeStamp(ts, time);
+    string timeYMD;
+    string timeHMS;
+    DecodeTimeStamp(ts, timeYMD, timeHMS);
 
-    char timeYMD[32] = { 0 };
-    char timeHMS[32] = { 0 };
-    strftime(timeYMD, 32, "%Y-%m-%d", &time);
-    strftime(timeHMS, 32, "%H:%M:%S", &time);
 
     TCHAR ymd[32] = { 0 };
-    TCHAR hms[32] = { 0 };    
-    wsprintfW(ymd, L"%08S", timeYMD);
-    wsprintfW(hms, L"%08S", timeHMS);
+    TCHAR hms[32] = { 0 };
+    wsprintfW(ymd, L"%08S", timeYMD.c_str());
+    wsprintfW(hms, L"%08S", timeHMS.c_str());
 
-    /*TCHAR* y = const_cast<TCHAR*>(TEXT("Äê"));
-    TCHAR* m = const_cast<TCHAR*>(TEXT("ÔÂ"));
-    TCHAR* d = const_cast<TCHAR*>(TEXT("ÈÕ"));
-    ymd[4] = *y;
-    ymd[7] = *m;
-    ymd[10] = *d;*/
-    
     SetDlgItemText(hCurrentDlg_, IDC_EDIT_TimeYMD, ymd);
     SetDlgItemText(hCurrentDlg_, IDC_EDIT_TimeHMS, hms);
 }
