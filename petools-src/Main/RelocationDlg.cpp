@@ -1,0 +1,294 @@
+//module;
+//
+//#include "resource.h"
+//#include <windows.h>
+//#include <commctrl.h>
+//#include <cstdio>
+//
+//module RelocationDlg;
+//
+//import STL;
+//import AnalysePE;
+//
+//using petools::show::ItemWidthAndName;
+//using petools::CharToTchar;
+//using petools::TcharToDword;
+//using std::array;
+//using std::wstring;
+//
+//extern HINSTANCE app_inst;
+//
+//RelocationDlg* RelocationDlg::this_dlg_ = nullptr;
+//
+//RelocationDlg::RelocationDlg(HWND h_parent)
+//    : DialogEX(IDD_DIALOG_RELOCATION, h_parent)
+//{
+//
+//}
+//
+//RelocationDlg::~RelocationDlg() {
+//
+//}
+//
+//void RelocationDlg::init_dlg() {
+//    set_this_dlg();
+//}
+//
+//void RelocationDlg::plant() {
+//    DialogBox(app_inst, MAKEINTRESOURCE(id_template_), h_parent_dlg_, (DLGPROC)RelocationProc);
+//}
+//
+//void RelocationDlg::close_dlg() {
+//	blockList_.reset();
+//	blockItemList_.reset();
+//	EndDialog(h_current_dlg_, 0);
+//}
+//
+//void RelocationDlg::InitBlockList() {
+//    blockList_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(h_current_dlg_, IDC_LIST_RELO_BLOCK)
+//        , [&]() {plantBlockColumn(); }, [&]() {plantBlockItem(); }));
+//    blockList_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+//    blockList_->plant_column();
+//    blockList_->plant_item();
+//}
+//
+//void RelocationDlg::plantBlockColumn() {
+//    array<ItemWidthAndName<DWORD, wstring>, 5> items = { {
+//		{ 50, L"Index" },
+//		{ 100, L"Section" },
+//		{ 80, L"RVA" },
+//		{ 110, L"Size Of Block" },
+//		{ 120, L"Items(HEX/DEC)" }
+//	} };
+//
+//    for (size_t i = 0; i < items.size(); i++) {
+//        blockList_->SetColumn(items[i], i);
+//        SendMessage(blockList_->get_list_handle(), LVM_INSERTCOLUMN, i, blockList_->get_column_addr());
+//    }
+//}
+//
+//void RelocationDlg::plantBlockItem() {
+//    IMAGE_BASE_RELOCATION* tempRelocation = AnalysePE::GetAnalyse().GetRelocation();
+//
+//    LV_ITEM item;
+//    memset(&item, 0, sizeof(LV_ITEM));
+//    item.mask = LVIF_TEXT;
+//
+//    for (int i = 1; tempRelocation->SizeOfBlock != 0 && tempRelocation->VirtualAddress != 0; i++) {
+//        item.iItem = i - 1;
+//        item.iSubItem = 0;
+//        TCHAR tIndex[5] = { 0 };
+//        wsprintf(tIndex, L"%4d", i);
+//        item.pszText = tIndex;
+//        SendMessage(blockList_->get_list_handle(), LVM_INSERTITEM, 0, (DWORD)&item);
+//
+//        item.mask = LVIF_TEXT;
+//        item.iItem = i - 1;
+//        item.iSubItem = 1;
+//        char* sectionName = nullptr;
+//        DWORD sectionNum = AnalysePE::GetAnalyse().InWhichSectionRVA(tempRelocation->VirtualAddress);
+//        AnalysePE::GetAnalyse().GetCharSectionName(sectionNum, &sectionName);
+//        std::string sName;
+//        sName += "(\"";
+//        sName += sectionName;
+//        sName += "\")";
+//        TCHAR* tSectionName = nullptr;
+//        CharToTchar(sName.c_str(), &tSectionName);
+//        item.pszText = tSectionName;
+//        ListView_SetItem(blockList_->get_list_handle(), (DWORD)&item);
+//
+//        item.iItem = i - 1;
+//        item.iSubItem = 2;
+//        TCHAR tRVA[9] = { 0 };
+//        wsprintf(tRVA, L"%08X", tempRelocation->VirtualAddress);
+//        item.pszText = tRVA;
+//        ListView_SetItem(blockList_->get_list_handle(), (DWORD)&item);
+//
+//        item.iItem = i - 1;
+//        item.iSubItem = 3;
+//        TCHAR tBlockSize[9] = { 0 };
+//        wsprintf(tBlockSize, L"%08X", tempRelocation->SizeOfBlock);
+//        item.pszText = tBlockSize;
+//        ListView_SetItem(blockList_->get_list_handle(), (DWORD)&item);
+//
+//        item.iItem = i - 1;
+//        item.iSubItem = 4;
+//        DWORD itemNum = (tempRelocation->SizeOfBlock - 8) / 2;
+//        TCHAR* tItem = nullptr;
+//        std::string sItem;
+//        char buffer[10] = { 0 };
+//        sprintf_s(buffer, "%X", itemNum);
+//        sItem += buffer;
+//        sItem += "h / ";
+//        memset(buffer, 0, sizeof(buffer));
+//        sprintf_s(buffer, "%d", itemNum);
+//        sItem += buffer;
+//        sItem += 'd';
+//        CharToTchar(sItem.c_str(), &tItem);
+//        item.pszText = tItem;
+//        ListView_SetItem(blockList_->get_list_handle(), (DWORD)&item);
+//
+//        tempRelocation = (IMAGE_BASE_RELOCATION*)((DWORD)(tempRelocation) + tempRelocation->SizeOfBlock);
+//    }
+//}
+//
+//void RelocationDlg::InitBlockItemList() {
+//    blockItemList_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(h_current_dlg_, IDC_LIST_RELO_BLOCKITEM)
+//        , [&]() {plantBlockItemColumn(); }, [&]() {plantBlockItemItem(); }));
+//    blockItemList_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+//    blockItemList_->plant_column();
+//}
+//
+//void RelocationDlg::plantBlockItemColumn() {
+//    array<ItemWidthAndName<DWORD, wstring>, 5> items = { {
+//            { 50, L"Index" },
+//            { 80, L"RVA" },
+//            { 80, L"Offset" },
+//            { 100, L"Type" },
+//            { 120, L"Relocation Data"}
+//    } };
+//
+//    for (size_t i = 0; i < items.size(); i++) {
+//        blockItemList_->SetColumn(items[i], i);
+//        SendMessage(blockItemList_->get_list_handle(), LVM_INSERTCOLUMN, i, blockItemList_->get_column_addr());
+//    }
+//}
+//
+//void RelocationDlg::plantBlockItemItem() {
+//    DWORD BlockItemcListRow = SendMessage(blockList_->get_list_handle(), LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+//    if (BlockItemcListRow == -1) {
+//        return;
+//    }
+//    SendMessage(blockItemList_->get_list_handle(), LVM_DELETEALLITEMS, 0, 0);
+//
+//    DWORD relocationIndex = GetRelocationTableIndex(BlockItemcListRow);
+//    IMAGE_BASE_RELOCATION* tempRelocation = AnalysePE::GetAnalyse().GetRelocation(relocationIndex);
+//
+//    LV_ITEM item;
+//    memset(&item, 0, sizeof(LV_ITEM));
+//    item.mask = LVIF_TEXT;
+//
+//    DWORD itemNum = (tempRelocation->SizeOfBlock - 8) / 2;
+//    WORD* blockItem = (WORD*)((DWORD)tempRelocation + 8);
+//    for (DWORD j = 1; j <= itemNum; j++, blockItem++) {
+//        item.iItem = j - 1;
+//        item.iSubItem = 0;
+//        TCHAR tIndex[5] = { 0 };
+//        wsprintf(tIndex, L"%4d", j);
+//        item.pszText = tIndex;
+//        SendMessage(blockItemList_->get_list_handle(), LVM_INSERTITEM, 0, (DWORD)&item);
+//
+//        // 高4位表示是否需要修改，若为3，则修改4字节，若为0，则不修改
+//        if ((*blockItem & 0xF000) >> 12 == 3) {
+//            item.iItem = j - 1;
+//            item.iSubItem = 1;
+//            DWORD itemRVA = tempRelocation->VirtualAddress + (*blockItem & 0x0FFF);
+//            TCHAR tItemRVA[9] = { 0 };
+//            wsprintf(tItemRVA, L"%08X", itemRVA);
+//            item.pszText = tItemRVA;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = j - 1;
+//            item.iSubItem = 2;
+//            TCHAR tItemOffset[9] = { 0 };
+//            wsprintf(tItemOffset, L"%08X", AnalysePE::GetAnalyse().RVAToFOA(itemRVA));
+//            item.pszText = tItemOffset;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = j - 1;
+//            item.iSubItem = 3;
+//            TCHAR tTypeInfo[12] = { L"HIGHTLOW(3)" };
+//            item.pszText = tTypeInfo;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = j - 1;
+//            item.iSubItem = 4;
+//            DWORD* relocationData = (DWORD*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
+//                + AnalysePE::GetAnalyse().RVAToFOA(itemRVA));
+//            TCHAR tRelocationData[9] = { 0 };
+//            wsprintf(tRelocationData, L"%4X", *relocationData);
+//            item.pszText = tRelocationData;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//        }
+//        else {
+//            item.iItem = j - 1;
+//            item.iSubItem = 1;
+//            DWORD itemRVA = tempRelocation->VirtualAddress + (*blockItem & 0x0FFF);
+//            TCHAR tItemRVA[9] = { L"-" };
+//            item.pszText = tItemRVA;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = j - 1;
+//            item.iSubItem = 2;
+//            TCHAR tItemOffset[9] = { L"-" };
+//            item.pszText = tItemOffset;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = j - 1;
+//            item.iSubItem = 3;
+//            std::string typeInfo = "HIGHTLOW(0)";
+//            TCHAR* tType = nullptr;
+//            CharToTchar(typeInfo.c_str(), &tType);
+//            item.pszText = tType;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = j - 1;
+//            item.iSubItem = 4;
+//            TCHAR tRelocationData[9] = { L"-" };
+//            item.pszText = tRelocationData;
+//            ListView_SetItem(blockItemList_->get_list_handle(), (DWORD)&item);
+//        }
+//    }
+//}
+//
+//DWORD RelocationDlg::GetRelocationTableIndex(DWORD rowID) {
+//    TCHAR indexBuffer[9] = { 0 };
+//    LV_ITEM item;
+//    memset(&item, 0, sizeof(item));
+//
+//    item.iSubItem = 0;
+//    item.pszText = indexBuffer;
+//    item.cchTextMax = 9;
+//    SendMessage(blockList_->get_list_handle(), LVM_GETITEMTEXT, rowID, (DWORD)&item);
+//
+//
+//    DWORD index = 0;
+//    TcharToDword(indexBuffer, &index, 10);
+//    return index - 1;
+//}
+//
+//LRESULT CALLBACK RelocationDlg::RelocationProc(HWND hRelocation, UINT message, WPARAM w_param, LPARAM l_param) {
+//    NMHDR* hdr = (NMHDR*)l_param;
+//    switch (message)
+//    {
+//    case WM_INITDIALOG:
+//        this_dlg_->set_current_dlg_HWND(hRelocation);
+//        this_dlg_->InitBlockList();
+//        this_dlg_->InitBlockItemList();
+//        break;
+//    case WM_COMMAND:
+//    {
+//        int wmId = LOWORD(w_param);
+//
+//        switch (wmId) {
+//        case IDOK:
+//            this_dlg_->close_dlg();
+//            break;
+//        default:
+//            break;
+//        }
+//        break;
+//    }
+//    case WM_CLOSE:
+//        this_dlg_->close_dlg();
+//        break;
+//    case WM_NOTIFY:
+//        if (w_param == IDC_LIST_RELO_BLOCK && hdr->code == NM_CLICK) {
+//            this_dlg_->plantBlockItemItem();
+//        }
+//        break;
+//    default:
+//        return FALSE;
+//    }
+//    return FALSE;
+//}
