@@ -1,16 +1,14 @@
-module;
+﻿module;
 
 #include <windows.h>
 #include <sys/stat.h>
-#include <cstdio>
-#include <vector>
 #include "fast_io/fast_io.h"
+#include "fast_io/fast_io_device.h"
 #include "fast_io/fast_io_legacy.h"
 
 module FileManager;
 
 import STL;
-
 
 //FileManager::FileManager(const char* file_path, const char* mode){
 //	file_.open(file_path, std::fstream::in | std::fstream::out | std::fstream::binary);
@@ -57,29 +55,47 @@ import STL;
 //    outFile.close();
 //}
 
-bool FileManager::open_file(std::string_view file_path) {
-	file_ = std::make_unique<fast_io::c_file>(file_path, fast_io::open_mode::in | fast_io::open_mode::out);
-	if (!file_) {
-		return false;
+//bool FileManager::open_file(std::string_view file_path) {
+//	file_ = std::make_unique<fast_io::c_file>(file_path, fast_io::open_mode::in | fast_io::open_mode::out);
+//	if (!file_) {
+//		return false;
+//	}
+//
+//	file_path_ = std::string(file_path.begin(), file_path.end());
+//	calculate_file_size();
+//	read_file_to_buffer();
+//	return true;
+//}
+//
+//void FileManager::calculate_file_size() {
+//	struct stat fileStat { 0 };
+//	stat(file_path_.c_str(), &fileStat);
+//	file_size_ = fileStat.st_size;
+//}
+//
+//void FileManager::read_file_to_buffer() {
+//	std::vector<char> file_vec(file_size_, 0);
+//	fast_io::read(*file_.get(), file_vec.begin(), file_vec.end());
+//	
+//	char* file_buffer = new char[file_size_];
+//	memcpy(file_buffer, file_vec.data(), file_size_);
+//	file_buffer_.reset(file_buffer);
+//}
+
+namespace petools {
+
+	FileManager::FileManager(std::string_view path) noexcept
+		: file_(fast_io::mnp::os_c_str(path.data())),
+		file_path_(std::string(path.begin(), path.end())),
+		file_size_(file_.size())
+	{
+		read_file_to_buffer();
 	}
 
-	file_path_ = std::string(file_path.begin(), file_path.end());
-	calculate_file_size();
-	read_file_to_buffer();
-	return true;
-}
+	void FileManager::read_file_to_buffer() noexcept {
+		std::byte* temp_buffer = new std::byte[file_size_];
+		memcpy(temp_buffer, file_.address_begin, file_size_);
+		file_buffer_.reset(temp_buffer);
+	}
 
-void FileManager::calculate_file_size() {
-	struct stat fileStat { 0 };
-	stat(file_path_.c_str(), &fileStat);
-	file_size_ = fileStat.st_size;
-}
-
-void FileManager::read_file_to_buffer() {
-	std::vector<char> file_vec(file_size_, 0);
-	fast_io::read(*file_.get(), file_vec.begin(), file_vec.end());
-	
-	char* file_buffer = new char[file_size_];
-	memcpy(file_buffer, file_vec.data(), file_size_);
-	file_buffer_.reset(file_buffer);
-}
+} //namespace petools

@@ -1,61 +1,73 @@
-module;
+﻿module;
 
 #include <windows.h>
 #include <CommCtrl.h>
-#include <string>
 
 export module ListControl;
 
 import STL;
+import WinHandle;
 
-export struct ColumnDefinition {
-	std::size_t width_;
-	std::wstring name_;
+using std::wstring;
+using std::wstring_view;
+using std::string_view;
+using std::size_t;
+using std::function;
+using std::vector;
+using std::span;
 
-	constexpr ColumnDefinition(std::size_t width, std::wstring_view name)
-		: width_(width), name_(name) {}
+namespace petools {
 
-	constexpr ColumnDefinition(std::size_t width, std::string_view name)
-		: width_(width), name_(std::wstring(name.begin(), name.end())) {}
-};
+	export struct ColumnDefinition {
+		size_t width_;
+		wstring name_;
 
-export struct ItemDefinition {
-	std::size_t sub_item_index_;
-	std::wstring text_;
+		ColumnDefinition(size_t width, wstring_view name) noexcept
+			: width_(width), name_(name) {
+		}
 
-	constexpr ItemDefinition(std::size_t sub_item_index, std::wstring_view text)
-		: sub_item_index_(sub_item_index), text_(text){}
+		ColumnDefinition(size_t width, string_view name) noexcept
+			: width_(width), name_(wstring(name.begin(), name.end())) {
+		}
+	};
 
-	constexpr ItemDefinition(std::size_t sub_item_index, std::string_view text)
-		: sub_item_index_(sub_item_index), text_(std::wstring(text.begin(), text.end())) {}
-};
+	export struct ItemDefinition {
+		size_t sub_item_index_;
+		wstring text_;
 
-export class ListCtrl
-{
-public:
-	explicit ListCtrl(HWND h_list, std::function<void()> plant_column, std::function<void()> plant_item) noexcept;
+		ItemDefinition(size_t sub_item_index, wstring_view text) noexcept
+			: sub_item_index_(sub_item_index), text_(text) {
+		}
 
-	~ListCtrl() = default;
+		ItemDefinition(size_t sub_item_index, string_view text) noexcept
+			: sub_item_index_(sub_item_index), text_(wstring(text.begin(), text.end())) {
+		}
+	};
 
-	void init(UINT column_mask, UINT item_mask) noexcept;
 
-	void set_column(std::span<ColumnDefinition> array) noexcept;
+	export class ListCtrl
+	{
+	public:
+		explicit ListCtrl(HWND handle, function<void()> plant_column, function<void()> plant_item) noexcept;
 
-	void set_item(std::vector<ItemDefinition> vector, std::size_t row) noexcept;
+		void init(UINT column_mask, UINT item_mask) noexcept;
 
-	void plant_column() noexcept { plant_column_(); }
+		void set_column(span<ColumnDefinition> array) noexcept;
+		void set_item(vector<ItemDefinition> vector, size_t row) noexcept;
+		void plant_column() noexcept { plant_column_(); }
+		void plant_item() noexcept { plant_item_(); }
 
-	void plant_item() noexcept { plant_item_(); }
+		HWND get_list_handle() const noexcept { return list_hwnd_.get(); }
+		auto get_column_addr() const noexcept { return &column_; }
+		auto get_item_addr() const noexcept { return &item_; }
 
-	HWND get_list_handle() const noexcept { return h_list_; }
-	auto get_column_addr() const noexcept { return  &column_; }
-	auto get_item_addr() const noexcept { return  &item_; }
+	private:
+		WindowHandle list_hwnd_;
+		LV_COLUMN column_;
+		LV_ITEM item_;
 
-private:
-	HWND h_list_;
-	LV_COLUMN column_;
-	LV_ITEM item_;
+		function<void()> plant_column_;
+		function<void()> plant_item_;
+	};
 
-	std::function<void()> plant_column_;
-	std::function<void()> plant_item_;
-};
+} //namespace petools

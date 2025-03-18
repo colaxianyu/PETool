@@ -1,30 +1,26 @@
-//module;
-//
-//#include <windows.h>
-//
-//export module FileHeaderDlg;
-//
-//import STL;
-//import Dialog;
-//import TimeStampDlg;
-//
-//export class FileHeaderDlg : public DialogEX
-//{
-//public:
-//	FileHeaderDlg(HWND h_parent = nullptr);
-//	virtual ~FileHeaderDlg() override;
-//	virtual void init_dlg() override;
-//	virtual void plant() override;
-//	virtual void close_dlg() override;
-//
-//	void SetFileHeaderInfo();
-//
-//	void CreateTimeDlg();
-//private:
-//	std::unique_ptr<TimeStampDlg> timeStampDlg_ = nullptr;
-//
-//	static FileHeaderDlg* this_dlg_;
-//	void set_this_dlg() { this_dlg_ = this; }
-//
-//	static LRESULT CALLBACK FileHeaderProc(HWND hFile, UINT message, WPARAM w_param, LPARAM l_param);
-//};
+﻿module;
+
+#include <windows.h>
+#include "resource.h"
+
+export module FileHeaderDlg;
+
+import DialogEX;
+import WinHandle;
+
+namespace petools {
+
+	export class FileHeaderDlg final : public DialogEX {
+	public:
+		explicit FileHeaderDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_FILEHEAD, parent) {}
+		~FileHeaderDlg() noexcept override = default;
+
+		virtual void init_dialog() override {};
+
+		//void SetFileHeaderInfo();
+	private:
+
+		virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+	};
+
+} //namespace petools

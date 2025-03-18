@@ -1,4 +1,4 @@
-//module;
+﻿//module;
 //
 //#include <windows.h>
 //#include <fstream>
@@ -117,7 +117,7 @@
 //
 ////void ProtectorDlg::ProtectProcess() {
 ////    if (protectorBuffer_ == nullptr || rawProcessBuffer_ == nullptr) {
-////        MessageBox(0, L"�ӿ�ʧ��", TEXT("ʧ��"), MB_ERR_INVALID_CHARS);
+////        MessageBox(0, L"加壳失败", TEXT("失败"), MB_ERR_INVALID_CHARS);
 ////    }
 ////    AnalysePE::GetAnalyse().AddSection(rawProcess_->GetFileSize(), false);
 ////    IMAGE_SECTION_HEADER* lastSectionHeader = AnalysePE::GetAnalyse().GetHeaders().sectionHeader
@@ -127,7 +127,7 @@
 ////    char* tempProcessBuffer = EncodeRawProcess();
 ////    memcpy(newSection, tempProcessBuffer, rawProcess_->GetFileSize());
 ////    SaveFile();
-////    //MessageBox(0, L"�ӿǳɹ�", TEXT("�ɹ�"), MB_OK);
+////    //MessageBox(0, L"加壳成功", TEXT("成功"), MB_OK);
 ////}
 //
 ////void ProtectorDlg::SaveFile() {

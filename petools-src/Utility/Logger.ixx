@@ -1,46 +1,47 @@
-module;
+﻿module;
 
 #include "spdlog/spdlog.h"
 
 export module Logger;
 
 import STL;
+import LoggerConfig;
 
-export class Logger {
-private:
-	Logger() = default;
-	~Logger() = default;
+namespace petools {
 
-	Logger(const Logger&) = delete;
-	Logger& operator=(const Logger&) = delete;
-	Logger(Logger&& other) = delete;
-	Logger& operator=(Logger&& other) = delete;
+    export class Logger {
+    private:
+        Logger() = default;
+        ~Logger() = default;
 
-public:
-	static Logger& instance();
+        Logger(const Logger&) = delete;
+        Logger& operator=(const Logger&) = delete;
+        Logger(Logger&& other) = delete;
+        Logger& operator=(Logger&& other) = delete;
 
-	void init();
-	const std::shared_ptr<spdlog::logger> get_logger() const noexcept { return logger_; }
-private:
-	std::shared_ptr<spdlog::logger> logger_;
-};
+    public:
+        static Logger& instance() {
+            static Logger instance;
+            return instance;
+        }
 
-export template <typename... Args>
-void debug(fmt::format_string<Args...> fmt, Args&&... args) {
-	Logger::instance().get_logger()->debug(fmt, std::forward<Args>(args)...);
-}
+        void init(const LoggerConfig& config = LoggerConfig{});
+        const std::shared_ptr<spdlog::logger> get_logger() const noexcept { return logger_; }
+        bool is_initialized() const noexcept { return logger_ != nullptr; }
+        void set_level(spdlog::level::level_enum level);
 
-export template <typename... Args>
-void info(fmt::format_string<Args...> fmt, Args&&... args) {
-	Logger::instance().get_logger()->info(fmt, std::forward<Args>(args)...);
-}
+    private:
+        std::shared_ptr<spdlog::logger> logger_ = nullptr;
+        LoggerConfig config_{};
 
-export template <typename... Args>
-void warn(fmt::format_string<Args...> fmt, Args&&... args) {
-	Logger::instance().get_logger()->warn(fmt, std::forward<Args>(args)...);
-}
+        inline static int init_count_ = 0;
+    };
 
-export template <typename... Args>
-void error(fmt::format_string<Args...> fmt, Args&&... args) {
-	Logger::instance().get_logger()->error(fmt, std::forward<Args>(args)...);
-}
+	export inline auto& logger = Logger::instance().get_logger();
+
+	export template <typename... Args>
+        void debug(Args&&... args) {
+        logger->debug(std::forward<Args>(args)...);
+    }
+
+} //namespace petools

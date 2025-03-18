@@ -1,4 +1,4 @@
-//module;
+ï»¿//module;
 //
 //#include "resource.h"
 //#include <windows.h>
@@ -178,7 +178,7 @@
 //        item.pszText = tIndex;
 //        SendMessage(blockItemList_->get_list_handle(), LVM_INSERTITEM, 0, (DWORD)&item);
 //
-//        // ¸ß4Î»±íÊ¾ÊÇ·ñÐèÒªÐÞ¸Ä£¬ÈôÎª3£¬ÔòÐÞ¸Ä4×Ö½Ú£¬ÈôÎª0£¬Ôò²»ÐÞ¸Ä
+//        // é«˜4ä½è¡¨ç¤ºæ˜¯å¦éœ€è¦ä¿®æ”¹ï¼Œè‹¥ä¸º3ï¼Œåˆ™ä¿®æ”¹4å­—èŠ‚ï¼Œè‹¥ä¸º0ï¼Œåˆ™ä¸ä¿®æ”¹
 //        if ((*blockItem & 0xF000) >> 12 == 3) {
 //            item.iItem = j - 1;
 //            item.iSubItem = 1;

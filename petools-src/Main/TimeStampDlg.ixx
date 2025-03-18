@@ -1,23 +1,28 @@
-//module;
+﻿//module;
 //
 //#include <windows.h>
+//#include "resource.h"
 //
 //export module TimeStampDlg;
 //
-//import Dialog;
+//import STL;
+//import DialogEX;
+//import WinHandle;
 //
-//export class TimeStampDlg : public DialogEX {
-//public:
-//	TimeStampDlg(HWND h_parent = nullptr);
-//	virtual ~TimeStampDlg() override;
-//	virtual void init_dlg() override;
-//	virtual void plant() override;
+//namespace petools {
 //
-//	void set_TSdlg_info();
+//	export class TimeStampDlg final : public DialogEX {
+//	public:
+//		explicit TimeStampDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_TIMESTAMP, parent) {}
+//		~TimeStampDlg() noexcept override = default;
+//		//virtual void init_dlg() override;
+//		//virtual void plant() override;
 //
-//private:
-//	static TimeStampDlg* this_dlg_;
-//	void set_this_dlg() { this_dlg_ = this; }
+//		//void set_TSdlg_info();
 //
-//	static LRESULT CALLBACK TsProc(HWND hAbout, UINT message, WPARAM w_param, LPARAM l_param);
-//};
+//	private:
+//
+//		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+//	};
+//
+//} //namespace petools

@@ -1,4 +1,4 @@
-//module;
+ï»¿//module;
 //
 //#include <windows.h>
 //#include <string>
@@ -52,7 +52,7 @@
 //
 //bool AnalysePE::SetHeaders() {
 //	if (!IsPEFile()) {
-//		MessageBox(0, TEXT("²»ÊÇÓĞĞ§µÄPEÎÄ¼ş!"), TEXT("ERROR"), MB_OK);
+//		MessageBox(0, TEXT("ä¸æ˜¯æœ‰æ•ˆçš„PEæ–‡ä»¶!"), TEXT("ERROR"), MB_OK);
 //		return false;
 //	}
 //
@@ -245,7 +245,7 @@
 //	for (; tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0;tempImport++) {
 //		importNum++;
 //	}
-//	// Í¨¹ıÄ¿Â¼±íµÃµ½µÄsize±ÈÊµ¼Êsize´ó£¬ÒòÎªÄ¿Â¼±íÖĞµÄ¼ÆËã·½Ê½ÊÇÍ¨¹ıÆğÊ¼Î»ÖÃ¼ÆËãµÄ£¬ÄÇÑù»á¼ÆËãµ½ÓÃ0Ìî³äµÄ²¿·Ö
+//	// é€šè¿‡ç›®å½•è¡¨å¾—åˆ°çš„sizeæ¯”å®é™…sizeå¤§ï¼Œå› ä¸ºç›®å½•è¡¨ä¸­çš„è®¡ç®—æ–¹å¼æ˜¯é€šè¿‡èµ·å§‹ä½ç½®è®¡ç®—çš„ï¼Œé‚£æ ·ä¼šè®¡ç®—åˆ°ç”¨0å¡«å……çš„éƒ¨åˆ†
 //	DWORD allImportSize = importNum * sizeof(IMAGE_IMPORT_DESCRIPTOR);
 //	return allImportSize;
 //}
@@ -386,8 +386,8 @@
 //	if (RVA < headers_.sectionHeader->VirtualAddress) {
 //		Pos = PositionInPE::inHead;
 //	}
-//	// TODO£ºSizeOfImageµÄÖµ²¢²»Ò»¶¨×¼È·£¬ÀıÈçSizeOfImage = lastSection->RVA + lastSection->VSize£¬´ËÊ±Î´¶ÔÆë
-//	// ¶ølastSection->RVA + lastSection->VSizeÖ®ºó¿ÉÄÜ»¹ÓĞÄÚÈİ£¬¿¼ÂÇ±ß½çµÄÊÇ·ñÓ¦¸Ã¸ÄÎªmax(SizeOfImage, lastSection->RVA + ÄÚ´æ¶ÔÆë(VSize))
+//	// TODOï¼šSizeOfImageçš„å€¼å¹¶ä¸ä¸€å®šå‡†ç¡®ï¼Œä¾‹å¦‚SizeOfImage = lastSection->RVA + lastSection->VSizeï¼Œæ­¤æ—¶æœªå¯¹é½
+//	// è€ŒlastSection->RVA + lastSection->VSizeä¹‹åå¯èƒ½è¿˜æœ‰å†…å®¹ï¼Œè€ƒè™‘è¾¹ç•Œçš„æ˜¯å¦åº”è¯¥æ”¹ä¸ºmax(SizeOfImage, lastSection->RVA + å†…å­˜å¯¹é½(VSize))
 //	else if (RVA >= max(headers_.optionalHeader->SizeOfImage, lastSectionHeader->VirtualAddress + GetImageSectionSizeAlignment(*lastSectionHeader))) {
 //		Pos = PositionInPE::outFile;
 //	}
@@ -464,14 +464,14 @@
 //	*name = cTemp;
 //}
 //
-//// ÄÚ´æÓ³ÏñÖĞsectionµÄÊµ¼Ê´óĞ¡£¬È¡¶şÕßÖĞ×î´óµÄ£¬È»ºó½øĞĞÄÚ´æ¶ÔÆë
+//// å†…å­˜æ˜ åƒä¸­sectionçš„å®é™…å¤§å°ï¼Œå–äºŒè€…ä¸­æœ€å¤§çš„ï¼Œç„¶åè¿›è¡Œå†…å­˜å¯¹é½
 //DWORD AnalysePE::GetImageSectionSizeAlignment(const IMAGE_SECTION_HEADER& sectionHeader) {
 //	DWORD imageSectionSize = headers_.optionalHeader->SectionAlignment
 //		* ceil(static_cast<float>(max(sectionHeader.Misc.VirtualSize, sectionHeader.SizeOfRawData)) / static_cast<float>(headers_.optionalHeader->SectionAlignment));
 //	return imageSectionSize;
 //}
 //
-//// ´ÅÅÌÎÄ¼şÖĞsectionµÄÊµ¼Ê´óĞ¡£¬È¡¶şÕßÖĞ×îĞ¡µÄ£¬È»ºó½øĞĞ´ÅÅÌ¶ÔÆë
+//// ç£ç›˜æ–‡ä»¶ä¸­sectionçš„å®é™…å¤§å°ï¼Œå–äºŒè€…ä¸­æœ€å°çš„ï¼Œç„¶åè¿›è¡Œç£ç›˜å¯¹é½
 //DWORD AnalysePE::GetFileSectionSizeAlignment(const IMAGE_SECTION_HEADER& sectionHeader) {
 //	DWORD fileSectionSize = headers_.optionalHeader->FileAlignment
 //		* ceil(static_cast<float>(min(sectionHeader.Misc.VirtualSize, sectionHeader.SizeOfRawData)) / static_cast<float>(headers_.optionalHeader->FileAlignment));
@@ -494,7 +494,7 @@
 //	tempBuffer = new char[fileBufferSize_ + alignmentSize];
 //
 //	if (tempBuffer == nullptr) {
-//		MessageBox(0, TEXT("EnlargeÊ§°Ü!"), TEXT("ERROR"), MB_OK);
+//		MessageBox(0, TEXT("Enlargeå¤±è´¥!"), TEXT("ERROR"), MB_OK);
 //		return;
 //	}
 //	memset(tempBuffer, 0, fileBufferSize_ + alignmentSize);
@@ -513,8 +513,8 @@
 //	DWORD allImportSize = GetAllImportSize();
 //	IMAGE_SECTION_HEADER* lastSectionHeader = headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1;
 //	//DWORD oldLastSectionSize = lastSectionHeader->SizeOfRawData;
-//	// ¿¼ÂÇÁ½ÖÖÇé¿ö£¬1.VirtualSize <= SizeOfRawData£¬ÄÇÃ´VirtualSize·´Ó³ÁËÊı¾İÕæÊµµÄ´óĞ¡£¬¿ÕÏĞ¿Õ¼äµÄ¼ÆËãÕıÈ·
-//	// 2.VirtualSize > SizeOfRawData(´ËÊ±freeSpaceÎª¸º)£¬´ËÊ±Çø¿éÄÚÓĞ´óÁ¿Î´³õÊ¼»¯µÄÊı¾İ£¬ÎŞ·¨Ğ´Èë
+//	// è€ƒè™‘ä¸¤ç§æƒ…å†µï¼Œ1.VirtualSize <= SizeOfRawDataï¼Œé‚£ä¹ˆVirtualSizeåæ˜ äº†æ•°æ®çœŸå®çš„å¤§å°ï¼Œç©ºé—²ç©ºé—´çš„è®¡ç®—æ­£ç¡®
+//	// 2.VirtualSize > SizeOfRawData(æ­¤æ—¶freeSpaceä¸ºè´Ÿ)ï¼Œæ­¤æ—¶åŒºå—å†…æœ‰å¤§é‡æœªåˆå§‹åŒ–çš„æ•°æ®ï¼Œæ— æ³•å†™å…¥
 //	/*DWORD freeSpace = fileBufferSize_ - (lastSectionHeader->PointerToRawData + min(lastSectionHeader->Misc.VirtualSize, lastSectionHeader->SizeOfRawData));
 //	if(freeSpace <= allImportSize) {
 //		EnlargeLastSection(allImportSize - freeSpace);
@@ -544,7 +544,7 @@
 //		tempImport++;
 //	}
 //
-//	//´´½¨ĞÂImport
+//	//åˆ›å»ºæ–°Import
 //	IMAGE_IMPORT_DESCRIPTOR* newImport = new IMAGE_IMPORT_DESCRIPTOR();
 //	memset(newImport, 0, 20);
 //	memcpy((char*)tempImport, (char*)newImport, 20);
@@ -553,7 +553,7 @@
 //	memset((char*)(tempImport+1), 0, 20);
 //	tempImport += 3;
 //
-//	//´´½¨ĞÂµÄINT
+//	//åˆ›å»ºæ–°çš„INT
 //	//tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((IMAGE_IMPORT_BY_NAME*)tempImport + 2);
 //	IMAGE_THUNK_DATA* newINT = new IMAGE_THUNK_DATA();
 //	memset(newINT, 0, sizeof(IMAGE_THUNK_DATA));
@@ -563,7 +563,7 @@
 //	memset((char*)(newINT + 1), 0, sizeof(IMAGE_THUNK_DATA));
 //	tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((IMAGE_THUNK_DATA*)tempImport + 3);
 //
-//	//´´½¨ĞÂµÄIAT±í
+//	//åˆ›å»ºæ–°çš„IATè¡¨
 //	IMAGE_THUNK_DATA* newIAT = new IMAGE_THUNK_DATA();
 //	memset(newIAT, 0, sizeof(IMAGE_THUNK_DATA));
 //	memcpy((char*)tempImport, newIAT, sizeof(IMAGE_THUNK_DATA));
@@ -572,7 +572,7 @@
 //	memset((char*)(newIAT + 1), 0, sizeof(IMAGE_THUNK_DATA));
 //	tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((IMAGE_THUNK_DATA*)tempImport + 3);
 //
-//	// ÎªĞÂ½¨µÄImport±í¸³Öµ
+//	// ä¸ºæ–°å»ºçš„Importè¡¨èµ‹å€¼
 //	char* cDllname = new char();
 //	TcharToChar(tDllName, &cDllname);
 //	std::string s;
@@ -587,7 +587,7 @@
 //
 //	tempImport = (IMAGE_IMPORT_DESCRIPTOR*)((char*)tempImport + s.size() + 1);
 //
-//	//´´½¨ĞÂµÄByName±í
+//	//åˆ›å»ºæ–°çš„ByNameè¡¨
 //	IMAGE_IMPORT_BY_NAME* newByname = new IMAGE_IMPORT_BY_NAME;
 //	memset((char*)newByname, 0, sizeof(IMAGE_IMPORT_BY_NAME));
 //	memcpy((char*)tempImport, newByname, sizeof(IMAGE_IMPORT_BY_NAME));
@@ -597,12 +597,12 @@
 //
 //
 //
-//	// ÎªĞÂ½¨µÄINTÓëIAT±í¸³Öµ
+//	// ä¸ºæ–°å»ºçš„INTä¸IATè¡¨èµ‹å€¼
 //	newINT->u1.AddressOfData = FOAToRVA((DWORD)newByname - (DWORD)headers_.dosHeader);
 //	newIAT->u1.AddressOfData = FOAToRVA((DWORD)newByname - (DWORD)headers_.dosHeader);
 //
 //
-//	// ÎªĞÂ½¨µÄByName±í¸³Öµ
+//	// ä¸ºæ–°å»ºçš„ByNameè¡¨èµ‹å€¼
 //
 //	newByname->Hint = 0;
 //	char* funcName = nullptr;
@@ -615,13 +615,13 @@
 //	/**(name + i) = '\0';*/
 //}
 //
-//// ÅĞ¶Ï×îºóÒ»¸öÇø¿é±íÓëÒÔÒ»¸öÇø¿éÖ®¼äµÄµÄ¿Õ¼äÊÇ·ñ¿ÉÒÔÌí¼ÓĞÂÇø¿é±í
-//// ÒòÎªPointerToRawDataÔÚÌØ¶¨Çé¿öÏÂ¿ÉÄÜÎª0£¬ËùÒÔÊµ¼ÊµÄ¿ÕÏĞ¿Õ¼ä²¢²»ÄÜ¿¿¸ÃÖµ¼ÆËã
+//// åˆ¤æ–­æœ€åä¸€ä¸ªåŒºå—è¡¨ä¸ä»¥ä¸€ä¸ªåŒºå—ä¹‹é—´çš„çš„ç©ºé—´æ˜¯å¦å¯ä»¥æ·»åŠ æ–°åŒºå—è¡¨
+//// å› ä¸ºPointerToRawDataåœ¨ç‰¹å®šæƒ…å†µä¸‹å¯èƒ½ä¸º0ï¼Œæ‰€ä»¥å®é™…çš„ç©ºé—²ç©ºé—´å¹¶ä¸èƒ½é è¯¥å€¼è®¡ç®—
 //bool AnalysePE::AddSectionHeaderIfAvailable() {
 //	DWORD freeSpaceSize = headers_.optionalHeader->SizeOfHeaders - ((DWORD)headers_.sectionHeader - (DWORD)headers_.dosHeader)
 //		- headers_.fileHeader->NumberOfSections * IMAGE_SIZEOF_SECTION_HEADER;
 //
-//	// 40×Ö½Ú¸øĞÂµÄsectionHeader½á¹¹¡¢40×Ö½ÚÈ«0×ö½áÊø±êÖ¾
+//	// 40å­—èŠ‚ç»™æ–°çš„sectionHeaderç»“æ„ã€40å­—èŠ‚å…¨0åšç»“æŸæ ‡å¿—
 //	if (freeSpaceSize < IMAGE_SIZEOF_SECTION_HEADER * 2) {
 //		return false;
 //	}
@@ -644,7 +644,7 @@
 //}
 //
 //void AnalysePE::AddSection(DWORD SectionSize, bool needAlignment) {
-//	// ÅĞ¶Ï×îºóÒ»¸öÇø¿éºóÊÇ·ñ»¹ÓĞĞÅÏ¢
+//	// åˆ¤æ–­æœ€åä¸€ä¸ªåŒºå—åæ˜¯å¦è¿˜æœ‰ä¿¡æ¯
 //	bool haveInfo = HaveInfo();
 //	DWORD infoSize = 0;
 //	char* buffer = nullptr;
@@ -654,7 +654,7 @@
 //
 //	IMAGE_SECTION_HEADER mySectionHeader{0};
 //
-//	// ³õÊ¼»¯×Ô¶¨ÒåµÄÇø¿é±í£¬ÆäÖĞPointerToRawDataĞèÒªÊµ¼ÊÌí¼Óºó²Å¿ÉÈ·¶¨Öµ£¬¹ÊÓÉAddSectionHeader()º¯ÊıÍê³É
+//	// åˆå§‹åŒ–è‡ªå®šä¹‰çš„åŒºå—è¡¨ï¼Œå…¶ä¸­PointerToRawDataéœ€è¦å®é™…æ·»åŠ åæ‰å¯ç¡®å®šå€¼ï¼Œæ•…ç”±AddSectionHeader()å‡½æ•°å®Œæˆ
 //	std::string name = ".mySec";
 //	for (int i = 0; name[i] != 0 && i < IMAGE_SIZEOF_SHORT_NAME; i++) {
 //		mySectionHeader.Name[i] = name[i];
@@ -673,8 +673,8 @@
 //	mySectionHeader.SizeOfRawData = fileSectionSize;
 //	mySectionHeader.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 //
-//	// È·¶¨×Ô¶¨ÒåSectionÔÚÎÄ¼şÖĞµÄÎ»ÖÃ£¬¼´PointerToRawData£¬ÎªÁË·ÀÖ¹×îºóÒ»¸öSectionÊÇÒ»¸öÍêÈ«Î´³õÊ¼»¯µÄSection(¼´SizeOfRawDataºÍPointerToRawData¶¼Îª0)
-//	// ¹ÊĞèÒª´ÓLastSectionÏòÇ°±éÀú£¬ÕÒµ½µÚÒ»¸öPointerToRawData²»Îª0µÄSection£¬½«×Ô¶¨ÒåSection¸´ÖÆµ½¸Ã½ÚÖ®ºó
+//	// ç¡®å®šè‡ªå®šä¹‰Sectionåœ¨æ–‡ä»¶ä¸­çš„ä½ç½®ï¼Œå³PointerToRawDataï¼Œä¸ºäº†é˜²æ­¢æœ€åä¸€ä¸ªSectionæ˜¯ä¸€ä¸ªå®Œå…¨æœªåˆå§‹åŒ–çš„Section(å³SizeOfRawDataå’ŒPointerToRawDataéƒ½ä¸º0)
+//	// æ•…éœ€è¦ä»LastSectionå‘å‰éå†ï¼Œæ‰¾åˆ°ç¬¬ä¸€ä¸ªPointerToRawDataä¸ä¸º0çš„Sectionï¼Œå°†è‡ªå®šä¹‰Sectionå¤åˆ¶åˆ°è¯¥èŠ‚ä¹‹å
 //	for (int i = headers_.fileHeader->NumberOfSections - 1; i >= 0; i--) {
 //		if ((headers_.sectionHeader + i)->PointerToRawData != 0 && (headers_.sectionHeader + i)->SizeOfRawData != 0) {
 //			mySectionHeader.PointerToRawData = (headers_.sectionHeader + i)->PointerToRawData + GetFileSectionSizeAlignment(*(headers_.sectionHeader + i));
@@ -700,8 +700,8 @@
 //	headers_.optionalHeader->SizeOfImage = mySectionHeader.VirtualAddress + GetImageSectionSizeAlignment(mySectionHeader);
 //}
 //
-//// ÎªĞÂµÄÇø¿éÌí¼ÓÇø¿é±í£¬ÅĞ¶ÏHeaderÖĞµÄ¿ÕÏĞ¿Õ¼äÊÇ·ñ¿ÉÒÔ¼ÓÈëÇø¿é±í£¬Èç¹û²»¿ÉÒÔ£¬Ôò½²dosHeaderÖ®ÏÂµÄËùÓĞheaderÌ§¸ß£¨Õ¼ÓÃdos stubµÄ¿Õ¼ä£©
-//// ÈôÈÔÈ»²»¹»£¬Ôò¿ª±ÙĞÂ¿Õ¼ä
+//// ä¸ºæ–°çš„åŒºå—æ·»åŠ åŒºå—è¡¨ï¼Œåˆ¤æ–­Headerä¸­çš„ç©ºé—²ç©ºé—´æ˜¯å¦å¯ä»¥åŠ å…¥åŒºå—è¡¨ï¼Œå¦‚æœä¸å¯ä»¥ï¼Œåˆ™è®²dosHeaderä¹‹ä¸‹çš„æ‰€æœ‰headeræŠ¬é«˜ï¼ˆå ç”¨dos stubçš„ç©ºé—´ï¼‰
+//// è‹¥ä»ç„¶ä¸å¤Ÿï¼Œåˆ™å¼€è¾Ÿæ–°ç©ºé—´
 //void AnalysePE::AddSectionHeader(IMAGE_SECTION_HEADER* mySectionHeader) {
 //	bool isAvailableSpace = AddSectionHeaderIfAvailable();	
 //	DWORD newBufferSize = 0;
@@ -714,7 +714,7 @@
 //			DWORD headerSizeNoAlignment = (DWORD)(headers_.sectionHeader + headers_.fileHeader->NumberOfSections - 1)
 //				+ IMAGE_SIZEOF_SECTION_HEADER - (DWORD)headers_.dosHeader;
 //
-//			// newBufferSize = Ô­BufferSize - Ô­header´óĞ¡ + ĞÂµÄ¶ÔÆäºóµÄheader´óĞ¡
+//			// newBufferSize = åŸBufferSize - åŸheaderå¤§å° + æ–°çš„å¯¹å…¶åçš„headerå¤§å°
 //			DWORD newHeaderSize = headers_.optionalHeader->FileAlignment 
 //				* ceil(static_cast<float>(headerSizeNoAlignment + IMAGE_SIZEOF_SECTION_HEADER) / static_cast<float>(headers_.optionalHeader->FileAlignment));
 //			newBufferSize = fileBufferSize_ - headers_.optionalHeader->SizeOfHeaders + newHeaderSize;
@@ -753,8 +753,8 @@
 //	//char* cFuncName = nullptr;
 //	//TcharToChar(tFuncName, &cFuncName);
 //
-//	// injectSpaceSizeµÄ×îĞ¡Öµ = £¨µ¼Èë±í + INT±í + IAT±í£©* 2 + byName±íÖĞHINTµÄ´óĞ¡(2) + byName±í´óĞ¡ + len(tDllName) + len(tFuncNAme) + allImportSize + 2
-//	// ÎªÁË·½±ã¼ÆËã£¬²ÉÓÃ£¨µ¼Èë±í + INT±í + IAT±í + byName±í£©* 2 + len(tDllName) + len(tFuncNAme) + allImportSize + 2(Á½¸ö\0)£¬Ö»±ÈÉÏÊ½¶àÁË2×Ö½Ú
+//	// injectSpaceSizeçš„æœ€å°å€¼ = ï¼ˆå¯¼å…¥è¡¨ + INTè¡¨ + IATè¡¨ï¼‰* 2 + byNameè¡¨ä¸­HINTçš„å¤§å°(2) + byNameè¡¨å¤§å° + len(tDllName) + len(tFuncNAme) + allImportSize + 2
+//	// ä¸ºäº†æ–¹ä¾¿è®¡ç®—ï¼Œé‡‡ç”¨ï¼ˆå¯¼å…¥è¡¨ + INTè¡¨ + IATè¡¨ + byNameè¡¨ï¼‰* 2 + len(tDllName) + len(tFuncNAme) + allImportSize + 2(ä¸¤ä¸ª\0)ï¼Œåªæ¯”ä¸Šå¼å¤šäº†2å­—èŠ‚
 //	DWORD injectSpaceSize = (sizeof(IMAGE_IMPORT_DESCRIPTOR) + sizeof(IMAGE_THUNK_DATA) * 2 + sizeof(IMAGE_IMPORT_BY_NAME)) * 2
 //		+ strlen(dll_name.c_str()) + strlen(function_name.c_str()) + 2 + GetAllImportSize();
 //
@@ -768,7 +768,7 @@
 //	}
 //	else {
 //		DWORD freeSpaceSize = lastSectionHeader->SizeOfRawData - lastSectionHeader->Misc.VirtualSize;
-//		// ´íÎóµÄ¼ÆËã·½Ê½£¬»á¸²¸ÇÎÄ¼şµÄÊı×ÖÇ©Ãû¡¢µ÷ÊÔĞÅÏ¢µÈÄÚÈİ
+//		// é”™è¯¯çš„è®¡ç®—æ–¹å¼ï¼Œä¼šè¦†ç›–æ–‡ä»¶çš„æ•°å­—ç­¾åã€è°ƒè¯•ä¿¡æ¯ç­‰å†…å®¹
 //		//DWORD freeSpaceSize = fileBufferSize_ - (lastSectionHeader->PointerToRawData + lastSectionHeader->Misc.VirtualSize);
 //		if (freeSpaceSize < injectSpaceSize) {
 //			needSize = injectSpaceSize - freeSpaceSize;
@@ -914,8 +914,8 @@
 //}
 //
 //void AnalysePE::MoveIAT(DWORD& moveAddress) {
-//	// ÒòÎªPEÖĞ¼ä½Óµ÷ÓÃĞ´µÄÊÇIAT±íÖĞµÄÄÚÈİ£¬ÒÆ¶¯IAT±íĞèÒªĞŞ¸Ä³ÌĞòÖĞËùÓĞµÄ¼ä½Óµ÷ÓÃµÄÎ»ÖÃ£¬¹ıÓÚÂé·³
-//	// ÔİÊ±Ã»Ïëµ½Ò»¸öºÃµÄ·½·¨½â¾ö¸ÃÎÊÌâ
+//	// å› ä¸ºPEä¸­é—´æ¥è°ƒç”¨å†™çš„æ˜¯IATè¡¨ä¸­çš„å†…å®¹ï¼Œç§»åŠ¨IATè¡¨éœ€è¦ä¿®æ”¹ç¨‹åºä¸­æ‰€æœ‰çš„é—´æ¥è°ƒç”¨çš„ä½ç½®ï¼Œè¿‡äºéº»çƒ¦
+//	// æš‚æ—¶æ²¡æƒ³åˆ°ä¸€ä¸ªå¥½çš„æ–¹æ³•è§£å†³è¯¥é—®é¢˜
 //}
 //
 //void AnalysePE::MoveByNameTable(DWORD& moveAddress) {

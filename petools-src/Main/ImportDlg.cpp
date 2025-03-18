@@ -1,4 +1,4 @@
-//module;
+ï»¿//module;
 //
 //#include "resource.h"
 //#include <windows.h>
@@ -159,7 +159,7 @@
 // 
 //    DWORD firstThunk = GetFirstThunkFromMainList(mainListRow);
 //
-//    // INTÓëIAT¶¼ÊÇË«×Ö´óĞ¡µÄUnion£¬Ö±½Ó¶¨ÒåÎªDWORD*·½±ã²Ù×÷
+//    // INTä¸IATéƒ½æ˜¯åŒå­—å¤§å°çš„Unionï¼Œç›´æ¥å®šä¹‰ä¸ºDWORD*æ–¹ä¾¿æ“ä½œ
 //    DWORD* tempIAT = (DWORD*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
 //        + AnalysePE::GetAnalyse().RVAToFOA(firstThunk));
 //

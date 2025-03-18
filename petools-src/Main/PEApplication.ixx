@@ -1,11 +1,15 @@
-module;
+﻿module;
 
 #include <windows.h>
 
 export module PEApplication;
 
-import STL;
 import DialogEX;
+import MainDlg;
+import Logger;
+import DialogManager;
+
+namespace petools {
 
 #ifdef _UNICODE
 #if defined _M_IX86
@@ -19,21 +23,22 @@ import DialogEX;
 #endif
 #endif
 
+	export class PEApplication {
+	public:
+		PEApplication() = default;
+		~PEApplication() = default;
 
+		PEApplication(const PEApplication&) = delete;
+		PEApplication& operator=(const PEApplication&) = delete;
+		PEApplication(PEApplication&&) = delete;
+		PEApplication& operator=(PEApplication&&) = delete;
 
-export class PEApplication
-{
-private:
-	PEApplication() = default;
-	~PEApplication() = default;
+		void run_application(HINSTANCE h_instance, int cmd_show) noexcept {
+			Logger::instance().init();
+			DialogEX::configure(h_instance, cmd_show);
+			dialog_mgr.open_dialog<MainDlg>();
+			
+		}
+	};
 
-public:
-	PEApplication(PEApplication&) = delete;
-	PEApplication(const PEApplication&) = delete;
-	PEApplication(PEApplication&&) = delete;
-	PEApplication& operator=(const PEApplication&) = delete;
-
-	static PEApplication& instance();
-
-	void init_APP(HINSTANCE h_instance, int cmd_show) noexcept;
-};
+} //namespace petools

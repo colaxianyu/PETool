@@ -1,24 +1,25 @@
-//module;
+﻿//module;
 //
 //#include <windows.h>
+//#include "resource.h"
 //
 //export module OptHeaderDlg;
 //
-//import Dialog;
+//import DialogEX;
+//import WinHandle;
 //
-//export class OptHeaderDlg : public DialogEX
-//{
-//public:
-//	OptHeaderDlg(HWND h_parent = nullptr);
-//	virtual ~OptHeaderDlg() override;
-//	virtual void init_dlg() override;
-//	virtual void plant() override;
+//namespace petools {
 //
-//	void SetOptHeaderInfo();
-//private:
-//	static OptHeaderDlg* this_dlg_;
-//	void set_this_dlg() { this_dlg_ = this; }
+//	export class OptHeaderDlg final : public DialogEX {
+//	public:
+//		explicit OptHeaderDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_OPTHEADER, parent) {}
+//		~OptHeaderDlg() noexcept override = default;
 //
-//	static LRESULT CALLBACK OptHeaderProc(HWND hOpt, UINT message, WPARAM w_param, LPARAM l_param);
-//};
+//		void init_dialog() override;
 //
+//		//void SetOptHeaderInfo();
+//	private:
+//		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+//	};
+//
+//} //namespace petools

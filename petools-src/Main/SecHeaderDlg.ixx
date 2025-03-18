@@ -1,33 +1,35 @@
-//module;
+﻿//module;
 //
 //#include <windows.h>
+//#include "resource.h"
 //
 //export module SecHeaderDlg;
 //
-//import Dialog;
 //import STL;
+//import DialogEX;
+//import WinHandle;
 //import ListControl;
 //
+////using std::unique_ptr;
 //
-//export class SecHeaderDlg : public DialogEX
-//{
-//public:
-//	SecHeaderDlg(HWND h_parent = nullptr) noexcept(true);
-//	virtual ~SecHeaderDlg() noexcept(true) override;
-//	virtual void init_dlg() override;
-//	virtual void plant() override;
-//	virtual void close_dlg() override;
+//namespace petools {
 //
-//	void init_section_list();
+//	export class SecHeaderDlg final : public DialogEX {
+//	public:
+//		explicit SecHeaderDlg(HWND h_parent) noexcept : DialogEX(IDD_DIALOG_SECTIONS, h_parent) {}
+//		~SecHeaderDlg() noexcept override = default;
 //
-//	void plant_section_column();
-//	void plant_section_item();
-//private:
-//	std::unique_ptr<ListCtrl> section_list_ = nullptr;
+//		void init_dialog() override {}
 //
-//	static SecHeaderDlg* this_dlg_;
-//	void set_this_dlg() { this_dlg_ = this; }
+//		//void init_section_list();
 //
-//	static LRESULT CALLBACK section_proc(HWND h_sec, UINT message, WPARAM w_param, LPARAM l_param);
-//};
+//		//void plant_section_column();
+//		//void plant_section_item();
 //
+//	private:
+//		std::unique_ptr<ListCtrl> section_list_ = nullptr;
+//
+//		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+//	};
+//
+//} //namespace petools

@@ -1,19 +1,21 @@
-//module;
-//
-//export module AboutDlg;
-//
-//import DialogEX;
-//
-//
-//export class AboutDlg : public DialogEX<AboutDlg> {
-//public:
-//    explicit AboutDlg(INT template_id, HWND h_parent = nullptr) noexcept;
-//
-//    virtual ~AboutDlg() noexcept override;
-//
-//	virtual void show_dialog() override;
-//	virtual void close_dialog() override;
-//
-//private:
-//    LRESULT dialog_proc(HWND h_about, UINT message, WPARAM w_param, LPARAM l_param) override;
-//};
+﻿module;
+
+#include "resource.h"
+
+export module AboutDlg;
+
+import DialogEX;
+import WinHandle;
+
+namespace petools {
+
+	export class AboutDlg final : public DialogEX {
+	public:
+		explicit AboutDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_ABOUT, parent) {}
+		~AboutDlg() noexcept override = default;
+
+	private:
+		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+	};
+
+} //namespace petools

@@ -1,164 +1,75 @@
-module;
+﻿module;
 
 #include <windows.h>
-#include <vector>
-#include <functional>
-#include <iostream>
 
 export module DialogEX;
 
 import STL;
+import DialogStateMachine;
+import WinHandle;
 
-using tools::win32::show_error_message;
+using std::atomic;
+using std::atomic_int;
+using std::move;
 
-export enum class DialogEvent { 
-	None,
-	Init, 
-	Show,    
-	Hide,        
-	Close      
-};
+namespace petools {
 
-//export class DialogEX {
-//
-//using event_handler = std::function<void(DialogEX*, DialogEvent)>;
-//
-//protected:
-//	inline static HINSTANCE app_instacne_ = nullptr;
-//	inline static int cmd_show_ = SW_SHOWNORMAL;
-//
-//	INT template_id_;
-//	HWND h_current_dlg_;
-//	HWND h_parent_dlg_;
-//	DialogEvent current_event_ = DialogEvent::None;
-//
-//public:
-//	explicit DialogEX(INT id_template, HWND h_parent = nullptr) noexcept;
-//	virtual ~DialogEX() noexcept;
-//
-	//virtual void init_dialog() {};
-	//virtual void show_dialog() = 0;
-	//virtual void hide_dialog() {};
-	//virtual void close_dialog() = 0;
-//
-//	void set_current_dlg_handle(HWND h_dlg) noexcept { h_current_dlg_ = h_dlg; }
-//	//void set_parent_dlg_handle(HWND h_dlg) noexcept { h_parent_dlg_ = h_dlg; }
-//	//void set_template_id(INT id) noexcept { template_id_ = id; }
-//	void set_current_event(DialogEvent new_event) noexcept { current_event_ = new_event; }
-//	
-//	static void set_app_instacne_(HINSTANCE h_instacne) noexcept { app_instacne_ = h_instacne; }
-//	static void set_cmd_show(int cmd_show) noexcept { cmd_show_ = cmd_show; }
-//
-//	[[nodiscard]] INT get_template_id() const noexcept { return template_id_; }
-//	[[nodiscard]] HWND get_current_dlg_handle() const noexcept { return h_current_dlg_; }
-//	[[nodiscard]] HWND get_parent_dlg_handle() const noexcept { return h_parent_dlg_; }
-//	[[nodiscard]] DialogEvent get_current_event() const noexcept { return current_event_; }
-//
-//	virtual LRESULT dialog_proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) = 0;
-//};
-//
-//export template <typename DialogType>
-//class DialogPtr {
-//private:
-//	std::weak_ptr<DialogType> dialog_ptr_;
-//public:
-//	explicit DialogPtr(std::weak_ptr<DialogType> dialog_ptr) noexcept : dialog_ptr_(dialog_ptr) {}
-//
-//	[[nodiscard]] DialogType* get() const noexcept { return dialog_ptr_.lock().get(); }
-//
-//	[[nodiscard]] DialogType* operator->() const noexcept { return get(); }
-//
-//	[[nodiscard]] bool is_valid() const noexcept { return !dialog_ptr_.expired(); }
-//
-//	explicit operator bool() const noexcept { return is_valid(); }
-//
-//	using dialog_type = DialogType;
-//};
+    export class DialogEX {
+    public:
+        explicit DialogEX(INT template_id, HWND parent = nullptr) noexcept;
 
-#define HAS_MEMBER_FUNCTION(function)                   \
-template <typename T, typename = std::void_t<>>                     \
-struct has_##function : std::false_type {};                        \
-                                                                    \
-template <typename T>                                               \
-struct has_##function<T, std::void_t<decltype(std::declval<T>().function())>> : std::true_type{};   \
-                                                                    \
-template <typename T>                                               \
-concept has_##function = has_##function<T>::value
+        virtual ~DialogEX() noexcept = default;
 
-HAS_MEMBER_FUNCTION(init_dialog_impl);
-HAS_MEMBER_FUNCTION(show_dialog_impl);
-HAS_MEMBER_FUNCTION(hide_dialog_impl);
-HAS_MEMBER_FUNCTION(close_dialog_impl);
+        DialogEX(const DialogEX&) = delete;
+        DialogEX& operator=(const DialogEX&) = delete;
 
-export template <typename Derived>
-class DialogEX {
-protected:
-    inline static HINSTANCE app_instance_ = nullptr;
-    inline static int cmd_show_ = SW_SHOWNORMAL;
+        DialogEX(DialogEX&&) noexcept;
+        DialogEX& operator=(DialogEX&&) noexcept;
 
-    HWND h_current_dlg_;
-    HWND h_parent_dlg_;
-    DialogEvent current_event_ = DialogEvent::None;
+        [[nodiscard]] HWND get_current_hwnd() const noexcept { return current_hwnd_.get(); }
+        [[nodiscard]] HWND get_parent_hwnd() const noexcept { return parent_hwnd_.get(); }
 
-public:
+        [[nodiscard]] INT get_template_id() const noexcept { return template_id_; }
+        [[nodiscard]] DialogStateMachine& get_state_machine() noexcept { return state_machine_; }
 
-    explicit DialogEX(HWND h_parent = nullptr) noexcept
-        : h_parent_dlg_(h_parent),
-        h_current_dlg_(nullptr) {
+        static void configure(HINSTANCE h_instance, int cmd_show) noexcept;
+        [[nodiscard]] static HINSTANCE get_instance() noexcept { return app_instance_.load(); }
+        [[nodiscard]] static int get_cmd_show() noexcept { return default_cmd_show_.load(); }
 
-        static_assert(has_show_dialog_impl<Derived>, "Derived must implement show_dialog_impl()");
-        static_assert(has_close_dialog_impl<Derived>, "Derived must implement close_dialog_impl()");
-    }
+    protected:
+        WindowHandle current_hwnd_;
+        WindowHandleRef parent_hwnd_;
 
-    ~DialogEX() noexcept = default;
-
-    void init_dialog() {
-        if constexpr (has_init_dialog_impl<Derived>) {
-            static_cast<Derived*>(this)->init_dialog_impl();
+        virtual void init_dialog() {}
+        virtual void show_dialog() {
+            ShowWindow(current_hwnd_.get(), default_cmd_show_);
+            UpdateWindow(current_hwnd_.get());
         }
-    }
-
-    void show_dialog() {
-        static_cast<Derived*>(this)->show_dialog_impl();
-    }
-
-    void hide_dialog() {
-        if constexpr (has_hide_dialog_impl) {
-            static_cast<Derived*>(this)->hide_dialog_impl();
+        virtual void hide_dialog() {}
+        virtual void close_dialog() {
+            EndDialog(current_hwnd_.get(), 0);
         }
-    }
 
-    void close_dialog() {
-        static_cast<Derived*>(this)->close_dialog_impl();
-    }
+        [[nodiscard]] DialogState get_current_state() const noexcept { return state_machine_.get_current_state(); }
+        [[nodiscard]] DialogState get_previous_state() const noexcept { return state_machine_.get_previous_state(); }
 
-    void set_current_dlg_handle(HWND h_dlg) noexcept { h_current_dlg_ = h_dlg; }
-    void set_current_event(DialogEvent new_event) noexcept { current_event_ = new_event; }
+        virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) = 0;
+    private:
+        friend class DialogManager;
 
-    static void set_app_instance(HINSTANCE h_instance) noexcept { app_instance_ = h_instance; }
-    static void set_cmd_show(int cmd_show) noexcept { cmd_show_ = cmd_show; }
+        INT template_id_;
+        DialogStateMachine state_machine_;
+        inline static atomic<HINSTANCE> app_instance_{ nullptr };
+        inline static atomic_int default_cmd_show_{ SW_SHOWNORMAL };
 
-    [[nodiscard]] HWND get_current_dlg_handle() const noexcept { return h_current_dlg_; }
-    [[nodiscard]] HWND get_parent_dlg_handle() const noexcept { return h_parent_dlg_; }
-    [[nodiscard]] DialogEvent get_current_event() const noexcept { return current_event_; }
+        void handle_init() { state_machine_.transition_to(DialogState::Initializing); }
+        void handle_show() { state_machine_.transition_to(DialogState::Active); }
+        void handle_hide() { state_machine_.transition_to(DialogState::Suspended); }
+        void handle_close() { state_machine_.transition_to(DialogState::Closing); }
 
-    LRESULT dialog_proc(HWND h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
-        return static_cast<Derived*>(this)->dialog_proc_impl(h_dlg, message, w_param, l_param);
-    }
-};
+        void SetTransitions();
 
-export template <typename DialogType>
-class DialogPtr {
-private:
-	std::weak_ptr<DialogType> dialog_ptr_;
-public:
-	explicit DialogPtr(std::weak_ptr<DialogType> dialog_ptr) noexcept : dialog_ptr_(dialog_ptr) {}
+        static INT_PTR CALLBACK static_dialog_proc(HWND, UINT, WPARAM, LPARAM);
+    };
 
-	[[nodiscard]] DialogType* get() const noexcept { return dialog_ptr_.lock().get(); }
-
-	[[nodiscard]] DialogType* operator->() const noexcept { return get(); }
-
-	[[nodiscard]] bool is_valid() const noexcept { return !dialog_ptr_.expired(); }
-
-	explicit operator bool() const noexcept { return is_valid(); }
-};
+} //namespace petools

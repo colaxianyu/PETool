@@ -1,4 +1,4 @@
-//module;
+ï»¿//module;
 //
 //#include "resource.h"
 //#include <windows.h>
@@ -118,7 +118,7 @@
 //}
 //
 ///*
-//*   ¼ÆËã°´Å¥ event
+//*   è®¡ç®—æŒ‰é’® event
 //*/
 //void CalculateDlg::OnClickCalc() {
 //    TCHAR editBuffer[9] = { 0 };
@@ -308,7 +308,7 @@
 //    switch (message)
 //    {
 //    case WM_INITDIALOG:
-//        // calculate´°¿Ú×ÓÀà»¯
+//        // calculateçª—å£å­ç±»åŒ–
 //        RvaOldProc = (WNDPROC)SetWindowLong(GetDlgItem(h_calc, IDC_EDIT_RVA), GWL_WNDPROC, (LONG)RVA_new_proc);
 //        VaOldProc = (WNDPROC)SetWindowLong(GetDlgItem(h_calc, IDC_EDIT_VA), GWL_WNDPROC, (LONG)VA_new_proc);
 //        FoaOldProc = (WNDPROC)SetWindowLong(GetDlgItem(h_calc, IDC_EDIT_FOA), GWL_WNDPROC, (LONG)FOA_new_proc);
@@ -349,7 +349,7 @@
 //}
 //
 ///*
-//*   ÊµÏÖedit¿Ø¼şµÄÊäÈëÏŞÖÆ£¬hex only
+//*   å®ç°editæ§ä»¶çš„è¾“å…¥é™åˆ¶ï¼Œhex only
 //*/
 //LRESULT CALLBACK CalculateDlg::RVA_new_proc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param) {
 //    TCHAR tCh;

@@ -1,4 +1,4 @@
-//module;
+﻿//module;
 //
 //#include <windows.h>
 //
@@ -6,8 +6,8 @@
 //
 //import Dialog;
 //
-//// ���ڼ���һ����ַ��PE�ļ��е�λ��
-//// ��ͨ��FOA��VA��RVA�����ַ���㣬����֤��Ϸ���
+//// 用于计算一个地址在PE文件中的位置
+//// 可通过FOA、VA与RVA三类地址计算，且验证其合法性
 //
 //export class CalculateDlg : public DialogEX
 //{

@@ -1,4 +1,4 @@
-#define IDD_DIALOG_MAIN                 101
+﻿#define IDD_DIALOG_MAIN                 101
 #define IDI_ICON_MAINICO                102
 #define IDD_DIALOG_ABOUT                103
 #define IDD_DIALOG_PEEDIT               104

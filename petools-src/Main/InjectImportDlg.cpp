@@ -1,4 +1,4 @@
-//module;
+﻿//module;
 //
 //#include "resource.h"
 //#include <windows.h>
@@ -39,7 +39,7 @@
 //
 //    // AnalysePE::GetAnalyse().DllInject(dll_name.c_str(), function_name.c_str());
 //	AnalysePE::GetAnalyse().dll_inject(ws_dll_name, ws_function_name);
-//    MessageBox(0, L"ע��ɹ�", TEXT("�ɹ�"), MB_OK);
+//    MessageBox(0, L"注入成功", TEXT("成功"), MB_OK);
 //}
 //
 //LRESULT CALLBACK InjectImportDlg::InjectImportProc(HWND hInject, UINT message, WPARAM w_param, LPARAM l_param) {
