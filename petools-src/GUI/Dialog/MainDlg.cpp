@@ -4,7 +4,7 @@
 #include <Tlhelp32.h>
 #include <WtsApi32.h>
 #include <CommCtrl.h>
-#include "resource.h"
+#include "..\GUI\resource.h"
 
 #pragma comment(lib, "WtsApi32.lib")
 

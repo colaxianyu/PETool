@@ -1,7 +1,7 @@
 ﻿module;
 
 #include <windows.h>
-#include "resource.h"
+#include "..\GUI\resource.h"
 
 export module FileHeaderDlg;
 

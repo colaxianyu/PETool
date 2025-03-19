@@ -1,50 +1,23 @@
-﻿//module;
-//
-//#include "resource.h"
-//#include <windows.h>
-//#include <commctrl.h>
-//
-//#define WM_DELETE_DLG (WM_APP + 1)
-//
-//module ImportDlg;
-//
-//import STL;
+﻿module;
+
+#include <windows.h>
+#include <commctrl.h>
+#include "..\GUI\resource.h"
+
+module ImportDlg;
+
+import STL;
+import DialogManager;
 //import AnalysePE;
-//
-//using petools::show::ItemWidthAndName;
-//using petools::CharToTchar;
-//using petools::TcharToDword;
+
 //using std::array;
 //using std::wstring;
-//
-//extern HINSTANCE app_inst;
-//
-//ImportDlg* ImportDlg::this_dlg_ = nullptr;
-//
-//ImportDlg::ImportDlg(HWND h_parent)
-//    : DialogEX(IDD_DIALOG_IMPORT, h_parent)
-//{
-//
-//}
-//
-//ImportDlg::~ImportDlg() {
-//
-//}
-//
+
+
 //void ImportDlg::init_dlg() {
 //    set_this_dlg();
 //}
-//
-//void ImportDlg::plant() {
-//    DialogBox(app_inst, MAKEINTRESOURCE(id_template_), h_parent_dlg_, (DLGPROC)ImportProc);
-//}
-//
-//void ImportDlg::close_dlg() {
-//	funcList_.reset();
-//	mainList_.reset();
-//	EndDialog(h_current_dlg_, 0);
-//}
-//
+
 //void ImportDlg::InitMainList() {
 //    mainList_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(h_current_dlg_, IDC_LIST_IMP_MAIN)
 //        , [&]() {plantMainColumn(); }, [&]() {plantMainItem(); }));
@@ -221,39 +194,38 @@
 //    TcharToDword(firstThunkBuffer, &firstThunk, 16);
 //    return firstThunk;
 //}
-//
-//LRESULT CALLBACK ImportDlg::ImportProc(HWND hImport, UINT message, WPARAM w_param, LPARAM l_param) {
-//    NMHDR* hdr = (NMHDR*)l_param;
-//    switch (message)
-//    {
-//    case WM_INITDIALOG:
-//        this_dlg_->set_current_dlg_HWND(hImport);
-//        this_dlg_->InitMainList();
-//        this_dlg_->InitFuncList();
-//        break;
-//    case WM_COMMAND:
-//    {
-//        int wmId = LOWORD(w_param);
-//
-//        switch (wmId) {
-//        case IDOK:
-//            this_dlg_->close_dlg();
-//            break;
-//        default:
-//            break;
-//        }
-//        break;
-//    }
-//    case WM_CLOSE:
-//        this_dlg_->close_dlg();
-//        break;
-//    case WM_NOTIFY:
-//        if (w_param == IDC_LIST_IMP_MAIN && hdr->code == NM_CLICK) {
-//            this_dlg_->plantFuncItem();
-//        }
-//        break;
-//    default:
-//        return FALSE;
-//    }
-//    return FALSE;
-//}
+
+namespace petools {
+
+    LRESULT ImportDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+        NMHDR* hdr = (NMHDR*)l_param;
+        switch (message)
+        {
+        case WM_COMMAND:
+        {
+            int wmId = LOWORD(w_param);
+
+            switch (wmId) {
+            case IDOK:
+				dialog_mgr.close_dialog();
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+        case WM_NOTIFY:
+            if (w_param == IDC_LIST_IMP_MAIN && hdr->code == NM_CLICK) {
+                //this_dlg_->plantFuncItem();
+            }
+            break;
+        case WM_CLOSE:
+            dialog_mgr.close_dialog();
+            break;
+        default:
+            return FALSE;
+        }
+        return FALSE;
+    }
+
+}

@@ -1,49 +1,21 @@
-﻿//module;
-//
-//#include "resource.h"
-//#include <windows.h>
-//#include <commctrl.h>
-//#include <cstdio>
-//
-//module RelocationDlg;
-//
-//import STL;
+﻿module;
+
+#include <windows.h>
+#include <commctrl.h>
+#include "..\GUI\resource.h"
+
+module RelocationDlg;
+
+import STL;
+import DialogManager;
 //import AnalysePE;
-//
-//using petools::show::ItemWidthAndName;
-//using petools::CharToTchar;
-//using petools::TcharToDword;
-//using std::array;
-//using std::wstring;
-//
-//extern HINSTANCE app_inst;
-//
-//RelocationDlg* RelocationDlg::this_dlg_ = nullptr;
-//
-//RelocationDlg::RelocationDlg(HWND h_parent)
-//    : DialogEX(IDD_DIALOG_RELOCATION, h_parent)
-//{
-//
-//}
-//
-//RelocationDlg::~RelocationDlg() {
-//
-//}
-//
+
+
 //void RelocationDlg::init_dlg() {
 //    set_this_dlg();
 //}
-//
-//void RelocationDlg::plant() {
-//    DialogBox(app_inst, MAKEINTRESOURCE(id_template_), h_parent_dlg_, (DLGPROC)RelocationProc);
-//}
-//
-//void RelocationDlg::close_dlg() {
-//	blockList_.reset();
-//	blockItemList_.reset();
-//	EndDialog(h_current_dlg_, 0);
-//}
-//
+
+
 //void RelocationDlg::InitBlockList() {
 //    blockList_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(h_current_dlg_, IDC_LIST_RELO_BLOCK)
 //        , [&]() {plantBlockColumn(); }, [&]() {plantBlockItem(); }));
@@ -256,39 +228,37 @@
 //    TcharToDword(indexBuffer, &index, 10);
 //    return index - 1;
 //}
-//
-//LRESULT CALLBACK RelocationDlg::RelocationProc(HWND hRelocation, UINT message, WPARAM w_param, LPARAM l_param) {
-//    NMHDR* hdr = (NMHDR*)l_param;
-//    switch (message)
-//    {
-//    case WM_INITDIALOG:
-//        this_dlg_->set_current_dlg_HWND(hRelocation);
-//        this_dlg_->InitBlockList();
-//        this_dlg_->InitBlockItemList();
-//        break;
-//    case WM_COMMAND:
-//    {
-//        int wmId = LOWORD(w_param);
-//
-//        switch (wmId) {
-//        case IDOK:
-//            this_dlg_->close_dlg();
-//            break;
-//        default:
-//            break;
-//        }
-//        break;
-//    }
-//    case WM_CLOSE:
-//        this_dlg_->close_dlg();
-//        break;
-//    case WM_NOTIFY:
-//        if (w_param == IDC_LIST_RELO_BLOCK && hdr->code == NM_CLICK) {
-//            this_dlg_->plantBlockItemItem();
-//        }
-//        break;
-//    default:
-//        return FALSE;
-//    }
-//    return FALSE;
-//}
+
+namespace petools {
+
+    LRESULT RelocationDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+        NMHDR* hdr = (NMHDR*)l_param;
+        switch (message)
+        {
+        case WM_COMMAND:
+        {
+            int wmId = LOWORD(w_param);
+            switch (wmId) {
+            case IDOK:
+                dialog_mgr.close_dialog();
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+        case WM_CLOSE:
+			dialog_mgr.close_dialog();
+            break;
+        case WM_NOTIFY:
+            if (w_param == IDC_LIST_RELO_BLOCK && hdr->code == NM_CLICK) {
+                //this_dlg_->plantBlockItemItem();
+            }
+            break;
+        default:
+            return FALSE;
+        }
+        return FALSE;
+    }
+
+} //namespace petools

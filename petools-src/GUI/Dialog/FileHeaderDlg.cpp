@@ -1,12 +1,12 @@
 ﻿module;
 
 #include <windows.h>
-#include "resource.h"
+#include "..\GUI\resource.h"
 
 module FileHeaderDlg;
 
 import DialogManager;
-//import TimeStampDlg;
+import TimeStampDlg;
 
 //import AnalysePE;
 
@@ -33,7 +33,7 @@ namespace petools {
             switch (wmId)
             {
             case IDC_BUTTON_DETAILDATA:
-				//dialog_mgr.open_dialog<TimeStampDlg>(current_hwnd_.borrow());
+				dialog_mgr.open_dialog<TimeStampDlg>(current_hwnd_.borrow());
                 break;
             case IDOK:
                 dialog_mgr.close_dialog();

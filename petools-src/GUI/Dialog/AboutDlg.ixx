@@ -1,6 +1,6 @@
 ﻿module;
 
-#include "resource.h"
+#include "..\GUI\resource.h"
 
 export module AboutDlg;
 

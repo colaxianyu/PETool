@@ -1,45 +1,18 @@
-﻿//module;
-//
-//#include "resource.h"
-//#include <windows.h>
-//#include <commctrl.h>
-//
-//module ExportDlg;
-//
-//import STL;
-//import AnalysePE;
-//
-//using petools::show::ItemWidthAndName;
-//using petools::show::SetDlgItemText_t;
-//using petools::CharToTchar;
-//using std::array;
-//using std::wstring;
-//
-//extern HINSTANCE app_inst;
-//
-//ExportDlg::ExportDlg(HWND h_parent)
-//    : DialogEX(IDD_DIALOG_EXPORT, h_parent)
-//{
-//
-//}
-//
-//ExportDlg::~ExportDlg() {
-//
-//}
-//
+﻿module;
+
+#include <windows.h>
+#include <commctrl.h>
+#include "..\GUI\resource.h"
+
+module ExportDlg;
+
+import STL;
+import DialogManager;
+
 //void ExportDlg::init_dlg() {
 //    set_this_dlg();
 //}
-//
-//void ExportDlg::plant() {
-//    DialogBox(app_inst, MAKEINTRESOURCE(id_template_), h_parent_dlg_, (DLGPROC)ExportProc);
-//}
-//
-//void ExportDlg::close_dlg() {
-//    funcList_.reset();
-//	EndDialog(h_current_dlg_, 0);
-//}
-//
+
 //void ExportDlg::SetExportInfo() {
 //    IMAGE_EXPORT_DIRECTORY* temp_export = AnalysePE::GetAnalyse().GetExport();
 //
@@ -139,34 +112,33 @@
 //        }
 //    }
 //}
-//
-//LRESULT CALLBACK ExportDlg::ExportProc(HWND hExport, UINT message, WPARAM w_param, LPARAM l_param) {
-//    switch (message)
-//    {
-//    case WM_INITDIALOG:
-//        this_dlg_->set_current_dlg_HWND(hExport);
-//        this_dlg_->SetExportInfo();
-//        this_dlg_->InitFuncList();    
-//        break;
-//    case WM_COMMAND:
-//    {
-//        int wmId = LOWORD(w_param);
-//
-//        switch (wmId) {
-//        case IDOK:
-//            this_dlg_->close_dlg();
-//            break;
-//        default:
-//            break;
-//        }
-//        break;
-//    }
-//    case WM_CLOSE:
-//        this_dlg_->close_dlg();
-//        break;
-//
-//    default:
-//        return FALSE;
-//    }
-//    return FALSE;
-//}
+
+namespace petools {
+
+    LRESULT ExportDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+        switch (message)
+        {;
+        case WM_COMMAND:
+        {
+            int wmId = LOWORD(w_param);
+
+            switch (wmId) {
+            case IDOK:
+				dialog_mgr.close_dialog();
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+        case WM_CLOSE:
+            dialog_mgr.close_dialog();
+            break;
+
+        default:
+            return FALSE;
+        }
+        return FALSE;
+    }
+
+} // namespace petools

@@ -2,14 +2,14 @@
 
 #include <windows.h>
 #include <string>
-#include "resource.h"
+#include "..\GUI\resource.h"
 
 module PeEditDlg;
 
 import FileHeaderDlg;
-//import OptHeaderDlg;
-//import SecHeaderDlg;
-//import DirectoryDlg;
+import OptHeaderDlg;
+import SecHeaderDlg;
+import DirectoryDlg;
 import DialogManager;
 
 //import FileManage;
@@ -98,13 +98,13 @@ namespace petools {
 				dialog_mgr.open_dialog<FileHeaderDlg>(current_hwnd_.borrow());
                 break;
             case IDC_BUTTON_OPTHEADER:
-                //dialog_mgr.open_dialog<OptHeaderDlg>(current_hwnd_.borrow());
+                dialog_mgr.open_dialog<OptHeaderDlg>(current_hwnd_.borrow());
                 break;
             case IDC_BUTTON_SECTIONS:
-                //dialog_mgr.open_dialog<SecHeaderDlg>(current_hwnd_.borrow());
+                dialog_mgr.open_dialog<SecHeaderDlg>(current_hwnd_.borrow());
                 break;
             case IDC_BUTTON_DIRECTORIES:
-				//dialog_mgr.open_dialog<DirectoryDlg>(current_hwnd_.borrow());
+				dialog_mgr.open_dialog<DirectoryDlg>(current_hwnd_.borrow());
                 break;
             case IDC_BUTTON_CALCFOA:
                 //dialog_mgr.open_dialog<TimeStampDlg>(current_hwnd_.borrow());
