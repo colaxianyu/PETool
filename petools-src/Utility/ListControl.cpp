@@ -32,7 +32,7 @@ namespace petools {
 		item_.mask = item_mask;
 	}
 
-	void ListCtrl::set_column(span<ColumnDefinition> array) noexcept {
+	void ListCtrl::set_column(span<column_definition> array) noexcept {
 		for (size_t i = 0; i < array.size(); i++) {
 			column_.pszText = const_cast<LPWSTR>(array[i].name_.c_str());
 			column_.cx = array[i].width_;
@@ -41,7 +41,7 @@ namespace petools {
 		}
 	}
 
-	void ListCtrl::set_item(std::vector<ItemDefinition> vector, size_t row) noexcept {
+	void ListCtrl::set_item(std::vector<item_definition> vector, size_t row) noexcept {
 		for (size_t i = 0; i < vector.size(); i++) {
 			item_.pszText = const_cast<LPWSTR>(vector[i].text_.c_str());
 			item_.iSubItem = vector[i].sub_item_index_;

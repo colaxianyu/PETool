@@ -67,7 +67,7 @@ namespace petools {
         void handle_hide() { state_machine_.transition_to(DialogState::Suspended); }
         void handle_close() { state_machine_.transition_to(DialogState::Closing); }
 
-        void SetTransitions();
+        void set_transitions();
 
         static INT_PTR CALLBACK static_dialog_proc(HWND, UINT, WPARAM, LPARAM);
     };

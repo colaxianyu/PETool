@@ -11,7 +11,7 @@ namespace petools {
     DialogEX::DialogEX(INT template_id, HWND parent) noexcept
         : template_id_(template_id), parent_hwnd_(parent)
     {
-        SetTransitions();
+        set_transitions();
     }
 
     DialogEX::DialogEX(DialogEX&& other) noexcept
@@ -43,7 +43,7 @@ namespace petools {
         default_cmd_show_.store(cmd_show);
     }
 
-    void DialogEX::SetTransitions() {
+    void DialogEX::set_transitions() {
         state_machine_.add_transition_rule(DialogState::Constructed,
             DialogState::Initializing,
             [this]() { this->init_dialog(); }

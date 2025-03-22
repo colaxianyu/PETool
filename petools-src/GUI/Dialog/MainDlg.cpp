@@ -90,7 +90,7 @@ namespace petools {
     }
 
     void MainDlg::plant_process_column() noexcept {
-        array<ColumnDefinition, 4> items = { {
+        array<column_definition, 4> items = { {
             { process_showing_config::process_column_length, L"Process" },
             { process_showing_config::pid_column_length, L"PID" },
             { process_showing_config::image_base_column_length, L"Image Base" },
@@ -120,11 +120,11 @@ namespace petools {
             HANDLE module_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process.th32ProcessID);
 
             if (module_snap != INVALID_HANDLE_VALUE && Module32First(module_snap, &module)) {
-                std::vector<ItemDefinition> items;
-                items.push_back(ItemDefinition{ 0, process.szExeFile });
-                items.push_back(ItemDefinition{ 1, to_wstring_hex(process.th32ProcessID, process_showing_config::pid_hex_width) });
-                items.push_back(ItemDefinition{ 2, to_wstring_hex(reinterpret_cast<DWORD>(module.modBaseAddr), process_showing_config::image_base_hex_width) });
-                items.push_back(ItemDefinition{ 3, to_wstring_hex(module.modBaseSize, process_showing_config::image_size_hex_width) });
+                std::vector<item_definition> items;
+                items.push_back(item_definition{ 0, process.szExeFile });
+                items.push_back(item_definition{ 1, to_wstring_hex(process.th32ProcessID, process_showing_config::pid_hex_width) });
+                items.push_back(item_definition{ 2, to_wstring_hex(reinterpret_cast<DWORD>(module.modBaseAddr), process_showing_config::image_base_hex_width) });
+                items.push_back(item_definition{ 3, to_wstring_hex(module.modBaseSize, process_showing_config::image_size_hex_width) });
 
                 process_list_->set_item(items, row);
                 CloseHandle(module_snap);
@@ -136,7 +136,7 @@ namespace petools {
     }
 
     void MainDlg::plant_module_column() noexcept {
-        array<ColumnDefinition, 2> items = { {
+        array<column_definition, 2> items = { {
             { module_showing_config::module_name_column_length, L"Module Name" },
             { module_showing_config::module_size_column_length, L"Module Size" }
         } };
@@ -165,9 +165,9 @@ namespace petools {
         int row = 0;
 
         while (Module32Next(h_module, &module)) {
-            std::vector<ItemDefinition> items;
-            items.push_back(ItemDefinition{ 0, module.szExePath });
-            items.push_back(ItemDefinition{ 1, to_wstring_hex(module.modBaseSize, module_showing_config::module_size_hex_width) });
+            std::vector<item_definition> items;
+            items.push_back(item_definition{ 0, module.szExePath });
+            items.push_back(item_definition{ 1, to_wstring_hex(module.modBaseSize, module_showing_config::module_size_hex_width) });
 
             module_list_->set_item(items, row);
             row++;

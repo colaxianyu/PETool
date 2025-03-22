@@ -32,7 +32,7 @@ namespace petools {
     }
     
     void SecHeaderDlg::plant_section_column() noexcept {
-        array<ColumnDefinition, 7> items = { {
+        array<column_definition, 7> items = { {
     		{ 30, L"#" },
     		{ 80, L"Name" },
     		{ 110, L"Virtual Size"},

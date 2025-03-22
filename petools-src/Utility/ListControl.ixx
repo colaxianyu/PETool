@@ -18,28 +18,28 @@ using std::span;
 
 namespace petools {
 
-	export struct ColumnDefinition {
+	export struct column_definition {
 		size_t width_;
 		wstring name_;
 
-		ColumnDefinition(size_t width, wstring_view name) noexcept
+		column_definition(size_t width, wstring_view name) noexcept
 			: width_(width), name_(name) {
 		}
 
-		ColumnDefinition(size_t width, string_view name) noexcept
+		column_definition(size_t width, string_view name) noexcept
 			: width_(width), name_(wstring(name.begin(), name.end())) {
 		}
 	};
 
-	export struct ItemDefinition {
+	export struct item_definition {
 		size_t sub_item_index_;
 		wstring text_;
 
-		ItemDefinition(size_t sub_item_index, wstring_view text) noexcept
+		item_definition(size_t sub_item_index, wstring_view text) noexcept
 			: sub_item_index_(sub_item_index), text_(text) {
 		}
 
-		ItemDefinition(size_t sub_item_index, string_view text) noexcept
+		item_definition(size_t sub_item_index, string_view text) noexcept
 			: sub_item_index_(sub_item_index), text_(wstring(text.begin(), text.end())) {
 		}
 	};
@@ -52,8 +52,8 @@ namespace petools {
 
 		void init(UINT column_mask, UINT item_mask) noexcept;
 
-		void set_column(span<ColumnDefinition> array) noexcept;
-		void set_item(vector<ItemDefinition> vector, size_t row) noexcept;
+		void set_column(span<column_definition> array) noexcept;
+		void set_item(vector<item_definition> vector, size_t row) noexcept;
 		void plant_column() noexcept { plant_column_(); }
 		void plant_item() noexcept { plant_item_(); }
 

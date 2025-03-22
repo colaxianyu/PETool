@@ -146,6 +146,11 @@ export namespace tools {
 		return s;
 	}
 
+	void TcharToDword(const TCHAR* in, DWORD* out, int base) {
+		TCHAR* end;
+		*out = wcstol(in, &end, base);
+	}
+
 	namespace win32 {
 		void show_error_message(HWND h_WND, std::wstring error_message) {
 			MessageBox(h_WND, error_message.c_str(), L"ERROR", MB_OK);

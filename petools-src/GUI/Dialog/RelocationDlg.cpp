@@ -2,14 +2,17 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <cstdio>
 #include "..\GUI\resource.h"
 
 module RelocationDlg;
 
 import STL;
 import DialogManager;
-//import AnalysePE;
+import AnalysePE;
 
+using std::array;
+using tools::CharToTchar;
 
 //void RelocationDlg::init_dlg() {
 //    set_this_dlg();
@@ -230,6 +233,103 @@ import DialogManager;
 //}
 
 namespace petools {
+
+	void RelocationDlg::init_dialog() noexcept {
+        init_block_list();
+		//InitBlockItemList();
+	}
+
+    void RelocationDlg::show_dialog() noexcept {
+		block_list_->plant_column();
+        block_list_->plant_item();
+        //blockItemList_->plant_column();
+        //blockItemList_->plant_item();
+		ShowWindow(current_hwnd_, get_cmd_show());
+		UpdateWindow(current_hwnd_);
+    }
+
+    void RelocationDlg::init_block_list() noexcept {
+        block_list_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(current_hwnd_, IDC_LIST_RELO_BLOCK)
+            , [&]() {plant_block_column(); }, [&]() {plant_block_item(); }));
+        block_list_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+    }
+
+	void RelocationDlg::plant_block_column() noexcept {
+		array<column_definition, 5> items = { {
+			{ 50, L"Index" },
+			{ 100, L"Section" },
+			{ 80, L"RVA" },
+			{ 110, L"Size Of Block" },
+			{ 120, L"Items(HEX/DEC)" }
+		} };
+
+		block_list_->set_column(items);
+	}
+
+    void RelocationDlg::plant_block_item() noexcept {
+        IMAGE_BASE_RELOCATION* relocation = pe_analyse.GetRelocation();
+
+        LV_ITEM item;
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_TEXT;
+
+        for (int i = 1; relocation->SizeOfBlock != 0 && relocation->VirtualAddress != 0; i++) {
+            item.iItem = i - 1;
+            item.iSubItem = 0;
+            TCHAR t_index[5] = { 0 };
+            wsprintf(t_index, L"%4d", i);
+            item.pszText = t_index;
+            SendMessage(block_list_->get_list_handle(), LVM_INSERTITEM, 0, (DWORD)&item);
+
+            item.mask = LVIF_TEXT;
+            item.iItem = i - 1;
+            item.iSubItem = 1;
+            char* section_name = nullptr;
+            DWORD section_num = pe_analyse.InWhichSectionRVA(relocation ->VirtualAddress);
+            pe_analyse.GetCharSectionName(section_num, &section_name);
+            std::string sName;
+            sName += "(\"";
+            sName += section_name;
+            sName += "\")";
+            TCHAR* t_section_name = nullptr;
+            CharToTchar(sName.c_str(), &t_section_name);
+            item.pszText = t_section_name;
+            ListView_SetItem(block_list_->get_list_handle(), (DWORD)&item);
+
+            item.iItem = i - 1;
+            item.iSubItem = 2;
+            TCHAR t_rva[9] = { 0 };
+            wsprintf(t_rva, L"%08X", relocation->VirtualAddress);
+            item.pszText = t_rva;
+            ListView_SetItem(block_list_->get_list_handle(), (DWORD)&item);
+
+            item.iItem = i - 1;
+            item.iSubItem = 3;
+            TCHAR t_block_size[9] = { 0 };
+            wsprintf(t_block_size, L"%08X", relocation->SizeOfBlock);
+            item.pszText = t_block_size;
+            ListView_SetItem(block_list_->get_list_handle(), (DWORD)&item);
+
+            item.iItem = i - 1;
+            item.iSubItem = 4;
+            DWORD item_num = (relocation->SizeOfBlock - 8) / 2;
+            TCHAR* t_item = nullptr;
+            std::string s_item;
+            char buffer[10] = { 0 };
+            sprintf_s(buffer, "%X", item_num);
+            s_item += buffer;
+            s_item += "h / ";
+            memset(buffer, 0, sizeof(buffer));
+            sprintf_s(buffer, "%d", item_num);
+            s_item += buffer;
+            s_item += 'd';
+            CharToTchar(s_item.c_str(), &t_item);
+            item.pszText = t_item;
+            ListView_SetItem(block_list_->get_list_handle(), (DWORD)&item);
+
+            relocation = (IMAGE_BASE_RELOCATION*)((DWORD)(relocation) + relocation->SizeOfBlock);
+        }
+    }
 
     LRESULT RelocationDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         NMHDR* hdr = (NMHDR*)l_param;
