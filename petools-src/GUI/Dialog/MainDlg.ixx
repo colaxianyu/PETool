@@ -24,9 +24,9 @@ namespace petools {
 
 		~MainDlg() noexcept override = default;
 
-		void init_dialog() override;
-		void show_dialog() override;
-		void close_dialog() override;
+		void init_dialog() noexcept override;
+		void show_dialog() noexcept override;
+		void close_dialog() noexcept override;
 
 		void init_process_list() noexcept;
 		void init_module_list() noexcept;

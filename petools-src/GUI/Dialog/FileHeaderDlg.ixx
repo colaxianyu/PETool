@@ -15,9 +15,9 @@ namespace petools {
 		explicit FileHeaderDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_FILEHEAD, parent) {}
 		~FileHeaderDlg() noexcept override = default;
 
-		virtual void init_dialog() override {};
+		void init_dialog() noexcept override;
+		void set_file_header_info() noexcept;
 
-		//void SetFileHeaderInfo();
 	private:
 
 		virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;

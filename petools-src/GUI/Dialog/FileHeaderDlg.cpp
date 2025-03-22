@@ -7,22 +7,41 @@ module FileHeaderDlg;
 
 import DialogManager;
 import TimeStampDlg;
+import AnalysePE;
 
 //import AnalysePE;
 
-//using petools::show::SetDlgItemText_t;
-
-//void FileHeaderDlg::SetFileHeaderInfo() {
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_MACHINE, AnalysePE::GetAnalyse().GetHeaders().fileHeader->Machine, 4);
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_SECTIONS, AnalysePE::GetAnalyse().GetHeaders().fileHeader->NumberOfSections, 4);
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_TIMEDATA, AnalysePE::GetAnalyse().GetHeaders().fileHeader->TimeDateStamp, 8);
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_POINTER, AnalysePE::GetAnalyse().GetHeaders().fileHeader->PointerToSymbolTable, 4);
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_COFFTABLE, AnalysePE::GetAnalyse().GetHeaders().fileHeader->NumberOfSymbols, 4);
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_OPTSIZE, AnalysePE::GetAnalyse().GetHeaders().fileHeader->SizeOfOptionalHeader, 4);
-//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_CHA, AnalysePE::GetAnalyse().GetHeaders().fileHeader->Characteristics, 4);
-//}
+using tools::show::SetDlgItemText_t;
 
 namespace petools {
+
+    void FileHeaderDlg::init_dialog() noexcept {
+        set_file_header_info();
+    }
+
+    void FileHeaderDlg::set_file_header_info() noexcept {
+		const auto& headers = pe_analyse.GetHeaders();
+
+        struct pe_field_mapping {
+            DWORD template_id;
+            DWORD value;
+            DWORD show_length = 8;
+        };
+
+        const pe_field_mapping pe_fields[] = {
+            { IDC_EDIT_MACHINE, headers.fileHeader->Machine, 4 },
+            { IDC_EDIT_SECTIONS, headers.fileHeader->NumberOfSections, 4 },
+            { IDC_EDIT_TIMEDATA, headers.fileHeader->TimeDateStamp },
+            { IDC_EDIT_POINTER, headers.fileHeader->PointerToSymbolTable, 4 },
+            { IDC_EDIT_COFFTABLE, headers.fileHeader->NumberOfSymbols, 4 },
+            { IDC_EDIT_OPTSIZE, headers.fileHeader->SizeOfOptionalHeader, 4 },
+            { IDC_EDIT_CHA, headers.fileHeader->Characteristics, 4 }
+        };
+
+        for (const auto& field : pe_fields) {
+            SetDlgItemText_t(current_hwnd_, field.template_id, field.value, field.show_length);
+        }
+    }
 
     LRESULT FileHeaderDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)

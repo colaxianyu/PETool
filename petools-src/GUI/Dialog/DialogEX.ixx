@@ -40,13 +40,13 @@ namespace petools {
         WindowHandle current_hwnd_;
         WindowHandleRef parent_hwnd_;
 
-        virtual void init_dialog() {}
-        virtual void show_dialog() {
+        virtual void init_dialog() noexcept {}
+        virtual void show_dialog() noexcept {
             ShowWindow(current_hwnd_.get(), default_cmd_show_);
             UpdateWindow(current_hwnd_.get());
         }
-        virtual void hide_dialog() {}
-        virtual void close_dialog() {
+        virtual void hide_dialog() noexcept {}
+        virtual void close_dialog() noexcept {
             EndDialog(current_hwnd_.get(), 0);
         }
 

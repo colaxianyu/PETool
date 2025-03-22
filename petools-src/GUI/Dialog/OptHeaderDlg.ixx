@@ -15,7 +15,8 @@ namespace petools {
 		explicit OptHeaderDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_OPTHEADER, parent) {}
 		~OptHeaderDlg() noexcept override = default;
 
-		void init_dialog() override;
+		void init_dialog() noexcept override;
+		void set_optional_header_info() noexcept;
 
 		//void SetOptHeaderInfo();
 	private:

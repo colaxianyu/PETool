@@ -19,12 +19,13 @@ namespace petools {
 		explicit SecHeaderDlg(HWND h_parent) noexcept : DialogEX(IDD_DIALOG_SECTIONS, h_parent) {}
 		~SecHeaderDlg() noexcept override = default;
 
-		//void init_dialog() override {}
+		void init_dialog() noexcept override;
+		void show_dialog() noexcept override;
 
-		//void init_section_list();
+		void init_section_list() noexcept;
 
-		//void plant_section_column();
-		//void plant_section_item();
+		void plant_section_column() noexcept;
+		void plant_section_item() noexcept;
 
 	private:
 		std::unique_ptr<ListCtrl> section_list_ = nullptr;

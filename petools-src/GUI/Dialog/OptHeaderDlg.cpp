@@ -6,8 +6,9 @@
 module OptHeaderDlg;
 
 import DialogManager;
+import AnalysePE;
 
-//using petools::show::SetDlgItemText_t;
+using tools::show::SetDlgItemText_t;
 
 
 
@@ -45,8 +46,55 @@ import DialogManager;
 //}
 
 namespace petools {
-    void OptHeaderDlg::init_dialog() {
-        //set_this_dlg();
+    void OptHeaderDlg::init_dialog() noexcept {
+        set_optional_header_info();
+    }
+
+    void OptHeaderDlg::set_optional_header_info() noexcept {
+        const auto& header = pe_analyse.GetHeaders();
+
+        struct pe_field_mapping {
+            DWORD template_id;
+            DWORD value;
+            DWORD show_length = 8;
+        };
+
+        const pe_field_mapping pe_fields[] = {
+            { IDC_EDIT_OPTMAGIC, header.optionalHeader->Magic, 4 },
+            { IDC_EDIT_OPTMAJORLINK, header.optionalHeader->MajorLinkerVersion, 2 },
+            { IDC_EDIT_OPTMINORLINK, header.optionalHeader->MinorLinkerVersion, 2 },
+            { IDC_EDIT_OPTCODESIZE, header.optionalHeader->SizeOfCode },
+            { IDC_EDIT_OPTINITDATA, header.optionalHeader->SizeOfInitializedData },
+            { IDC_EDIT_OPTUNINITDATA, header.optionalHeader->SizeOfUninitializedData },
+            { IDC_EDIT_OPTENTRY, header.optionalHeader->AddressOfEntryPoint },
+            { IDC_EDIT_OPTCODEBASE, header.optionalHeader->BaseOfCode },
+            { IDC_EDIT_OPTDATABASE, header.optionalHeader->BaseOfData },
+            { IDC_EDIT_OPTIMAGEBASE, header.optionalHeader->ImageBase },
+            { IDC_EDIT_OPTSECALIGN, header.optionalHeader->SectionAlignment },
+            { IDC_EDIT_OPTFILEALIGN, header.optionalHeader->FileAlignment },
+            { IDC_EDIT_OPTMAJOROS, header.optionalHeader->MajorOperatingSystemVersion, 4 },
+            { IDC_EDIT_OPTMINOROS, header.optionalHeader->MinorOperatingSystemVersion, 4 },
+            { IDC_EDIT_OPTMAJORIMAGE, header.optionalHeader->MajorImageVersion, 4 },
+            { IDC_EDIT_OPTMINORIMAGE, header.optionalHeader->MinorImageVersion, 4 },
+            { IDC_EDIT_OPTMAJORSUBSYS, header.optionalHeader->MajorSubsystemVersion, 4 },
+            { IDC_EDIT_OPTMINORSUBSYS, header.optionalHeader->MinorSubsystemVersion, 4 },
+            { IDC_EDIT_OPTWINVERSION, header.optionalHeader->Win32VersionValue },
+            { IDC_EDIT_OPTIMAGESIZE, header.optionalHeader->SizeOfImage },
+            { IDC_EDIT_OPTHEADERSSIZE, header.optionalHeader->SizeOfHeaders },
+            { IDC_EDIT_OPTCHECK, header.optionalHeader->CheckSum },
+            { IDC_EDIT_OPTSUBSYS, header.optionalHeader->Subsystem, 4 },
+            { IDC_EDIT_OPTDLLCHA, header.optionalHeader->DllCharacteristics, 4 },
+            { IDC_EDIT_OPTSTACKRES, header.optionalHeader->SizeOfStackReserve },
+            { IDC_EDIT_OPTSTACKCOM, header.optionalHeader->SizeOfStackCommit },
+            { IDC_EDIT_OPTHEAPRES, header.optionalHeader->SizeOfHeapReserve },
+            { IDC_EDIT_OPTHEAPCOM, header.optionalHeader->SizeOfHeapCommit },
+            { IDC_EDIT_OPTFLAGS, header.optionalHeader->LoaderFlags },
+            { IDC_EDIT_OPTRVAANDSIZE, header.optionalHeader->NumberOfRvaAndSizes }
+        };
+
+        for (const auto& field : pe_fields) {
+            SetDlgItemText_t(current_hwnd_, field.template_id, field.value, field.show_length);
+        }
     }
 
     LRESULT OptHeaderDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {

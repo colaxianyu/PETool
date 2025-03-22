@@ -9,6 +9,7 @@
 module FileManager;
 
 import STL;
+import AnalysePE;
 
 //FileManager::FileManager(const char* file_path, const char* mode){
 //	file_.open(file_path, std::fstream::in | std::fstream::out | std::fstream::binary);
@@ -89,13 +90,10 @@ namespace petools {
 		file_path_(std::string(path.begin(), path.end())),
 		file_size_(file_.size())
 	{
-		read_file_to_buffer();
+		pe_analyse.init(reinterpret_cast<const std::byte*>(file_.address_begin), file_size_);
 	}
 
-	void FileManager::read_file_to_buffer() noexcept {
-		std::byte* temp_buffer = new std::byte[file_size_];
-		memcpy(temp_buffer, file_.address_begin, file_size_);
-		file_buffer_.reset(temp_buffer);
+	FileManager::~FileManager() noexcept {
+		pe_analyse.UnloadPeData();
 	}
-
 } //namespace petools

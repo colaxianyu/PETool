@@ -59,7 +59,7 @@ namespace petools {
 	public:
 		explicit FileManager(std::string_view path) noexcept;
 
-		~FileManager() = default;
+		~FileManager() noexcept;
 
 		FileManager(const FileManager&) = delete;
 		FileManager& operator=(const FileManager&) = delete;
@@ -68,16 +68,18 @@ namespace petools {
 		FileManager& operator=(FileManager&&) = delete;
 
 		[[nodiscard]] std::size_t get_file_size() const { return file_size_; }
-		[[nodiscard]] std::byte* get_file_buffer() const { return file_buffer_.get(); }
 		[[nodiscard]] std::string_view get_file_path() const { return file_path_; }
+		[[nodiscard]] std::span<const char> get_file_span() const {
+			return std::span<const char>(
+				file_.address_begin,
+				file_size_
+			);
+		}
 
 	private:
 		std::string file_path_;
 		fast_io::native_file_loader file_;
-		std::unique_ptr<std::byte[]> file_buffer_;
 		std::size_t file_size_;
-
-		void read_file_to_buffer() noexcept;
 	};
 
 } //namespace petools

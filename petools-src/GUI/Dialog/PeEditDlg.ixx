@@ -10,14 +10,6 @@ import DialogEX;
 import WinHandle;
 import FileManager;
 
-//import AnalysePE;
-//import FileHeaderDlg;
-//import OptHeaderDlg;
-//import SecHeaderDlg;
-//import DirectoryDlg;
-//import CalculateDlg;
-//import InjectImportDlg;
-
 using std::unique_ptr;
 using std::vector;
 using tools::config::filename_max;
@@ -32,11 +24,11 @@ namespace petools {
 
 		~PeEditDlg() noexcept override = default;
 
-		void init_dialog() override;
+		void init_dialog() noexcept override;
 
-		void set_dialog_title();
-		//void SetPEMainInfo();
-
+		void set_dialog_title() noexcept;
+		void set_main_info() noexcept;
+		
 		//void SaveAsFile();
 		//FileManage* GetFileManage() { return fileManage_.get(); }
 		//std::unique_ptr<FileManager>& GetFileManager() noexcept { return file_manager_; }
@@ -46,8 +38,6 @@ namespace petools {
 
 	private:
 		static constexpr const wchar_t* title_prefix_ = L"PE编辑器 - ";
-
-		struct showing_info {};
 
 		LRESULT handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) override;
 	};

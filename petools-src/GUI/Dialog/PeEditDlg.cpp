@@ -11,9 +11,7 @@ import OptHeaderDlg;
 import SecHeaderDlg;
 import DirectoryDlg;
 import DialogManager;
-
-//import FileManage;
-//import AnalysePE;
+import AnalysePE;
 
 using std::wstring;
 using tools::show::SetDlgItemText_t;
@@ -21,32 +19,47 @@ using tools::config::filename_max;
 
 namespace petools {
 
-    void PeEditDlg::init_dialog() {
+    void PeEditDlg::init_dialog() noexcept {
         set_dialog_title();
+        set_main_info();
     }
 
-    void PeEditDlg::set_dialog_title() {
+    void PeEditDlg::set_dialog_title() noexcept {
         wstring file_path = string_to_wstring(file_manager_.get_file_path());
 		wstring title = title_prefix_ + file_path;
         SetWindowText(current_hwnd_, title.c_str());
     }
 
-    //void PeEditDlg::SetPEMainInfo() {
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_ENTRY, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->AddressOfEntryPoint, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_IMAGEBASE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->ImageBase, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_IMAGESIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfImage, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_CODEBASE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->BaseOfCode, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_DATABASE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->BaseOfData, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_SECTIONALIGN, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SectionAlignment, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_FILEALIGN, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->FileAlignment, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_HEADERSIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->SizeOfHeaders, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_OPTHEADERSIZE, AnalysePE::GetAnalyse().GetHeaders().fileHeader->SizeOfOptionalHeader, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_SECTIONSIZE, AnalysePE::GetAnalyse().GetHeaders().fileHeader->NumberOfSections, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_CHARACT, AnalysePE::GetAnalyse().GetHeaders().fileHeader->Characteristics, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_TIMESTAMP, AnalysePE::GetAnalyse().GetHeaders().fileHeader->TimeDateStamp, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_SUBSYS, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->Subsystem, 8);
-    //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_DIRSIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->NumberOfRvaAndSizes, 8);
-    //}
+    void PeEditDlg::set_main_info() noexcept {
+        const auto& headers = pe_analyse.GetHeaders();
+
+        struct pe_field_mapping {
+            DWORD template_id;
+            DWORD value;
+			DWORD show_length = 8;
+        };
+
+		const pe_field_mapping pe_fields[] = {
+			{ IDC_EDIT_ENTRY, headers.optionalHeader->AddressOfEntryPoint },
+			{ IDC_EDIT_IMAGEBASE, headers.optionalHeader->ImageBase },
+			{ IDC_EDIT_IMAGESIZE, headers.optionalHeader->SizeOfImage },
+			{ IDC_EDIT_CODEBASE, headers.optionalHeader->BaseOfCode },
+			{ IDC_EDIT_DATABASE, headers.optionalHeader->BaseOfData },
+			{ IDC_EDIT_SECTIONALIGN, headers.optionalHeader->SectionAlignment },
+			{ IDC_EDIT_FILEALIGN, headers.optionalHeader->FileAlignment },
+			{ IDC_EDIT_HEADERSIZE, headers.optionalHeader->SizeOfHeaders },
+			{ IDC_EDIT_OPTHEADERSIZE, headers.fileHeader->SizeOfOptionalHeader },
+			{ IDC_EDIT_SECTIONSIZE, headers.fileHeader->NumberOfSections },
+			{ IDC_EDIT_CHARACT, headers.fileHeader->Characteristics },
+			{ IDC_EDIT_TIMESTAMP, headers.fileHeader->TimeDateStamp },
+			{ IDC_EDIT_SUBSYS, headers.optionalHeader->Subsystem },
+			{ IDC_EDIT_DIRSIZE, headers.optionalHeader->NumberOfRvaAndSizes }
+		};
+
+		for (const auto& field : pe_fields) {
+			SetDlgItemText_t(current_hwnd_, field.template_id, field.value, field.show_length);
+		}
+    }
 
     //void PeEditDlg::SaveAsFile() {
     //    OPENFILENAME openFile = {0};

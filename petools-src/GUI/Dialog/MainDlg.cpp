@@ -49,7 +49,7 @@ struct module_showing_config {
 
 namespace petools {
 
-    void MainDlg::init_dialog() {
+    void MainDlg::init_dialog()  noexcept {
         auto handle = LoadIcon(get_instance(), MAKEINTRESOURCE(IDI_ICON_MAINICO));
         icon_ = make_handle<HICON, decltype(&DestroyIcon)>(handle);
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon_.get()));
@@ -58,7 +58,7 @@ namespace petools {
         init_module_list();
     }
 
-    void MainDlg::show_dialog() {
+    void MainDlg::show_dialog() noexcept {
         process_list_->plant_column();
         process_list_->plant_item();
         module_list_->plant_column();
@@ -67,7 +67,7 @@ namespace petools {
         UpdateWindow(current_hwnd_.get());
     }
 
-    void MainDlg::close_dialog() {
+    void MainDlg::close_dialog() noexcept {
         PostQuitMessage(0);
     }
 
