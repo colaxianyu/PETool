@@ -19,6 +19,8 @@ module MainDlg;
 import PeEditDlg;
 import AboutDlg;
 import DialogManager;
+import Concept;
+import Tool;
 
 using std::vector;
 using std::array;
@@ -26,6 +28,10 @@ using std::wstring;
 using std::size_t;
 using std::optional;
 using std::make_unique;
+
+using petools::tool::wstring_to_string;
+using petools::tool::to_wstring_hex;
+
 using tools::config::filename_max;
 using tools::config::format_filter;
 
@@ -186,7 +192,7 @@ namespace petools {
         item.cchTextMax = process_showing_config::pid_hex_width + 1;
         SendMessage(process_list_->get_list_handle(), LVM_GETITEMTEXT, row_index, reinterpret_cast<LPARAM>(&item));
 
-        return wstring_to_dword(pid_str, numeric_base::hex{});
+        return tool::wstring_to_dword(pid_str, numeric_base::hex{});
     }
 
     LRESULT MainDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
@@ -200,7 +206,7 @@ namespace petools {
             switch (wmId)
             {
             case IDC_BUTTON_PEVIEW:
-                file_name_result = choose_file(current_hwnd_.get());
+                file_name_result = tool::choose_file(current_hwnd_.get());
                 if (!file_name_result.has_value()) {
                     break;
                 }

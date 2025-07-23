@@ -96,4 +96,5 @@ namespace petools {
 	FileManager::~FileManager() noexcept {
 		pe_analyse.UnloadPeData();
 	}
+
 } //namespace petools

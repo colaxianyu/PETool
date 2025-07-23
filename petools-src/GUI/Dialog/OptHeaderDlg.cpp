@@ -7,9 +7,7 @@ module OptHeaderDlg;
 
 import DialogManager;
 import AnalysePE;
-
-using tools::show::SetDlgItemText_t;
-
+import Tool;
 
 
 //void OptHeaderDlg::SetOptHeaderInfo() {
@@ -93,7 +91,7 @@ namespace petools {
         };
 
         for (const auto& field : pe_fields) {
-            SetDlgItemText_t(current_hwnd_, field.template_id, field.value, field.show_length);
+             tool::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
         }
     }
 

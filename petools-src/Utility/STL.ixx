@@ -16,7 +16,6 @@
 #include <iostream>
 #include <algorithm>
 #include <string_view>
-
 #include <source_location>
 
 export module STL;
@@ -31,15 +30,21 @@ export namespace std {
     using std::weak_ptr;
     using std::enable_shared_from_this;
 
+    using std::uint16_t;
+	using std::uint32_t;
+	using std::uint64_t;
+
     // Containers
     using std::vector;
     using std::stack;
     using std::array;
     using std::span;
+	using std::variant;
     using std::unordered_set;
     using std::unordered_map;
 
     // String Types
+    using std::basic_string;
     using std::string;
     using std::string_view;
     using std::wstring;
@@ -57,10 +62,12 @@ export namespace std {
     using std::derived_from;
     using std::conditional_t;
     using std::constructible_from;
+    using std::integral_constant;
     using std::is_integral_v;
     using std::is_unsigned_v;
     using std::is_base_of_v;
     using std::is_invocable_r_v;
+
 
     // Function and Binding
     using std::function;
@@ -93,30 +100,20 @@ export namespace std {
 	using std::make_optional;
     using std::ceil;
     using std::nullopt;
+    using std::visit;
 	using std::byte;
 
     namespace chrono {
         using std::chrono::time_point;
         using std::chrono::system_clock;
     }
+
+	namespace ranges {
+		using std::ranges::subrange;
+	}
 }
 
-export namespace numeric_base {
-	using hex = std::integral_constant<int, 16>;
-	using dec = std::integral_constant<int, 10>;
-	using oct = std::integral_constant<int, 8>;
-	using bin = std::integral_constant<int, 2>;
-} // namespace numeric_base
-
 export namespace tools {
-
-	namespace show {
-		void SetDlgItemText_t(HWND hDlg, int item_id, DWORD value, DWORD show_lenth) {
-			TCHAR text[32] = { 0 };
-			_snwprintf_s(text, sizeof(text) / sizeof(TCHAR), L"%0*X", show_lenth, value);
-			::SetDlgItemText(hDlg, item_id, text);
-		};
-	}
 
 	namespace config {
 		constexpr unsigned int filename_max = 260;
@@ -185,81 +182,3 @@ export namespace tools {
 		}
 	}
 }
-
-
-namespace petools {
-	export{
-#define STRING_CONVERT_WIN32 1
-#define STRING_CONVERT_STD 2
-
-#ifndef STRING_CONVERT_IMPL
-#ifdef _WIN32
-#define STRING_CONVERT STRING_CONVERT_WIN32
-#else
-#define STRING_CONVERT STRING_CONVERT_STD
-#endif
-#endif
-
-#if STRING_CONVERT == STRING_CONVERT_WIN32
-		inline std::wstring string_to_wstring(std::string_view str) {
-			std::wstring wstr;
-			wstr.resize(MultiByteToWideChar(CP_ACP, 0, str.data(), str.size(), nullptr, 0));
-			MultiByteToWideChar(CP_ACP, 0, str.data(), str.size(), &wstr[0], wstr.size());
-			return wstr;
-		}
-		inline std::string wstring_to_string(std::wstring_view wstr) {
-			std::string str;
-			str.resize(WideCharToMultiByte(CP_ACP, 0, wstr.data(), wstr.size(), nullptr, 0, nullptr, nullptr));
-			WideCharToMultiByte(CP_ACP, 0, wstr.data(), wstr.size(), &str[0], str.size(), nullptr, nullptr);
-			return str;
-		}
-#elif STRING_CONVERT == STRING_CONVERT_STD
-		inline std::wstring string_to_wstring(std::string_view str) {
-			return std::wstring(str.begin(), str.end());
-		}
-		inline std::string wstring_to_string(std::wstring_view wstr) {
-			return std::string(wstr.begin(), wstr.end());
-		}
-#endif
-
-		std::optional<DWORD> string_to_dword(std::string_view str, int base = numeric_base::dec{}) {
-			DWORD value = 0;
-
-			auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value, base);
-
-			if (ec == std::errc()) {
-				return value;
-			}
-			else {
-				return std::nullopt;
-			}
-		}
-
-		std::wstring to_wstring_hex(DWORD value, DWORD width) {
-			return std::format(L"{:0{}X}", value, width);
-		}
-
-		std::optional<DWORD> wstring_to_dword(std::wstring_view wstr, int base = numeric_base::dec{}) {
-			return string_to_dword(wstring_to_string(wstr), base);
-		}
-
-		std::optional<std::string> choose_file(HWND parent_handle) {
-			std::wstring file_path(MAX_PATH, L'\0');
-			OPENFILENAME open_file;
-			memset(&open_file, 0, sizeof(open_file));
-
-			open_file.lStructSize = sizeof(OPENFILENAME);
-			open_file.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-			open_file.hwndOwner = parent_handle;
-			open_file.lpstrFilter = tools::config::format_filter;
-			open_file.lpstrFile = &file_path[0];
-			open_file.nMaxFile = MAX_PATH;
-
-			if (GetOpenFileName(&open_file) == FALSE) {
-				return std::nullopt;
-			}
-
-			return wstring_to_string(file_path);
-		}
-	}
-}	// namespace petools

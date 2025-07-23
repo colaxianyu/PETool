@@ -9,6 +9,8 @@ module AnalysePE;
 import STL;
 
 using std::string;
+using std::span;
+using std::byte;
 using std::make_unique;
 using std::cout;
 
@@ -235,7 +237,8 @@ namespace petools {
 			RVAToFOA(headers_.optionalHeader->DataDirectory[1].VirtualAddress));
 		for (; tempImport->OriginalFirstThunk != 0 && tempImport->FirstThunk != 0; tempImport++) {
 			importNum++;
-		}
+		}	
+		
 		// 通过目录表得到的size比实际size大，因为目录表中的计算方式是通过起始位置计算的，那样会计算到用0填充的部分
 		DWORD allImportSize = importNum * sizeof(IMAGE_IMPORT_DESCRIPTOR);
 		return allImportSize;
@@ -438,7 +441,7 @@ import++;
 	}
 
 	void AnalysePE::GetTcharSectionName(const DWORD secIndex, TCHAR** name) {
-		char* cTemp = new char[sizeof(char) * 9];
+		char* cTemp = new char[9];
 		memset(cTemp, 0, sizeof(char) * 9);
 		for (int i = 0; i < 8; i++) {
 			cTemp[i] = headers_.sectionHeader[secIndex].Name[i];
@@ -959,5 +962,47 @@ import++;
 		return size;
 
 	}
+
+	void PEParser::parser_headers(span<byte> file_span) noexcept {
+		WORD dos_header_address = reinterpret_cast<WORD>(file_span.data());
+		WORD nt_header_address = dos_header_address + reinterpret_cast<IMAGE_DOS_HEADER*>(dos_header_address)->e_lfanew;
+		WORD file_header_address = nt_header_address + sizeof(IMAGE_NT_SIGNATURE);
+		WORD optional_header_address = file_header_address + sizeof(IMAGE_FILE_HEADER);
+
+
+		bool is_x64_pe = *reinterpret_cast<WORD*>(optional_header_address) == IMAGE_NT_OPTIONAL_HDR64_MAGIC;
+		WORD section_header_address = is_x64_pe ? 
+			optional_header_address + sizeof(IMAGE_OPTIONAL_HEADER64)
+			: optional_header_address + sizeof(IMAGE_OPTIONAL_HEADER32);
+
+		if (is_x64_pe) {
+			pe_headers64 headers = {
+				.dos_header = reinterpret_cast<IMAGE_DOS_HEADER*>(dos_header_address),
+				.nt_header64 = reinterpret_cast<IMAGE_NT_HEADERS64*>(nt_header_address),
+				.file_header = reinterpret_cast<IMAGE_FILE_HEADER*>(file_header_address),
+				.optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header_address),
+				.section_header = reinterpret_cast<IMAGE_SECTION_HEADER*>(section_header_address)
+			};
+			headers_.emplace<pe_headers64>(headers);
+		}
+		else {
+			pe_headers32 headers = {
+				.dos_header = reinterpret_cast<IMAGE_DOS_HEADER*>(dos_header_address),
+				.nt_header32 = reinterpret_cast<IMAGE_NT_HEADERS32*>(nt_header_address),
+				.file_header = reinterpret_cast<IMAGE_FILE_HEADER*>(file_header_address),
+				.optional_header32 = reinterpret_cast<IMAGE_OPTIONAL_HEADER32*>(optional_header_address),
+				.section_header = reinterpret_cast<IMAGE_SECTION_HEADER*>(section_header_address)
+			};
+			headers_.emplace<pe_headers32>(headers);
+		}
+	}
+
+	//bool PEParser::is_x64() const noexcept {
+
+	//	//WORD magic_address = base + dos_header->e_lfanew + 4 + sizeof(IMAGE_FILE_HEADER);
+	//	
+	//	//return (*reinterpret_cast<WORD*>(magic_address) == IMAGE_NT_OPTIONAL_HDR64_MAGIC);
+	//}
+
 
 } // namespace petools

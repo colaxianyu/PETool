@@ -55,6 +55,12 @@ import STL;
 
 namespace petools {
 
+	export enum class WriteMode : uint32_t {
+		SPARSE,
+		BLOCK_COW,
+		FULL_COPY
+	};
+
 	export class FileManager {
 	public:
 		explicit FileManager(std::string_view path) noexcept;
@@ -77,9 +83,11 @@ namespace petools {
 		}
 
 	private:
-		std::string file_path_;
 		fast_io::native_file_loader file_;
+		std::string file_path_;
+		
 		std::size_t file_size_;
 	};
+
 
 } //namespace petools

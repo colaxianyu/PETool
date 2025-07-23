@@ -27,14 +27,12 @@ namespace petools {
 		struct handle_traits<HWND, decltype(&DestroyWindow)> : nullptr_handle_traits_base<HWND> {
 		using deleter_type = decltype(&DestroyWindow);
 		static constexpr deleter_type deleter = DestroyWindow;
-		static bool is_valid(HWND handle) noexcept { return IsWindow(handle) != 0; }
 	};
 
 	export template<>
 		struct handle_traits<HMENU, decltype(&DestroyMenu)> : nullptr_handle_traits_base<HMENU> {
 		using deleter_type = decltype(&DestroyMenu);
 		static constexpr deleter_type deleter = DestroyMenu;
-		static bool is_valid(HMENU handle) noexcept { return IsMenu(handle) != 0; }
 	};
 
 	export template<>

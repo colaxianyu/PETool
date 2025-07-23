@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <fstream>
 #include <memory>
+#include <variant>
+#include <type_traits>
 
 export module AnalysePE;
 
@@ -14,7 +16,13 @@ export enum class PositionInPE : unsigned int {
 };
 
 using std::unique_ptr;
+using std::variant;
+using std::span;
+using std::byte;
+
 using enum PositionInPE;
+
+
 
 namespace petools {
 
@@ -26,7 +34,7 @@ namespace petools {
 		IMAGE_DOS_HEADER* dosHeader = nullptr;
 		IMAGE_NT_HEADERS* ntHeader = nullptr;
 		IMAGE_FILE_HEADER* fileHeader = nullptr;
-		IMAGE_OPTIONAL_HEADER* optionalHeader = nullptr;
+		IMAGE_OPTIONAL_HEADER32* optionalHeader = nullptr;
 		IMAGE_SECTION_HEADER* sectionHeader = nullptr;
 
 		void Reset() {
@@ -37,6 +45,44 @@ namespace petools {
 			sectionHeader = nullptr;
 		}
 	};
+
+	export struct pe_headers32 {
+		IMAGE_DOS_HEADER* const dos_header = nullptr;
+		IMAGE_NT_HEADERS32* const nt_header32 = nullptr;
+		IMAGE_FILE_HEADER* const file_header = nullptr;
+		IMAGE_OPTIONAL_HEADER32* const optional_header32 = nullptr;
+		IMAGE_SECTION_HEADER* const section_header = nullptr;
+	};
+
+	export struct pe_headers64 {
+		IMAGE_DOS_HEADER* const dos_header = nullptr;
+		IMAGE_NT_HEADERS64* const nt_header64 = nullptr;
+		IMAGE_FILE_HEADER* const file_header = nullptr;
+		IMAGE_OPTIONAL_HEADER64* const optional_header64 = nullptr;
+		IMAGE_SECTION_HEADER* const section_header = nullptr;
+	};
+
+	export struct pe_headers {
+		variant<pe_headers32, pe_headers64> headers;
+
+		void get() {
+			std::visit(
+				[](auto&& arg) {
+					using T = std::decay_t<decltype(arg)>;
+					if constexpr (std::is_same_v<T, pe_headers32>) {
+						std::cout << "pe32";
+					}
+					else if constexpr (std::is_same_v<T, pe_headers64>) {
+						std::cout << "pe64";
+					}
+					else {
+						static_assert("123");
+					}
+				}, headers);
+		}
+	};
+
+
 
 	//
 	//	PE Analyse Tool 
@@ -148,12 +194,23 @@ namespace petools {
 
 		int GetFileBufferSzie() { return fileBufferSize_; }
 		PeHeaders& GetHeaders() { return headers_; };
-		//char* GetFileBuffer() { return fileBuffer_.get(); }
+
 	private:
-		//unique_ptr<char[]> fileBuffer_ = nullptr;
 		std::vector<std::byte> file_buffer_;
 		DWORD fileBufferSize_ = 0;
-		PeHeaders headers_{};
+		PeHeaders headers_;
+	};
+	
+	class PEParser {
+	public:
+		PEParser() = default;
+
+		void parser_headers(span<byte> file_span) noexcept;
+		bool is_x64() const noexcept;
+
+
+	private:
+		variant<pe_headers32, pe_headers64> headers_;
 	};
 
 	export inline auto& pe_analyse = AnalysePE::instance();

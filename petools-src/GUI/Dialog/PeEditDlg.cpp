@@ -12,9 +12,11 @@ import SecHeaderDlg;
 import DirectoryDlg;
 import DialogManager;
 import AnalysePE;
+import Tool;
 
 using std::wstring;
-using tools::show::SetDlgItemText_t;
+
+using petools::tool::string_to_wstring;
 using tools::config::filename_max;
 
 namespace petools {
@@ -57,7 +59,7 @@ namespace petools {
 		};
 
 		for (const auto& field : pe_fields) {
-			SetDlgItemText_t(current_hwnd_, field.template_id, field.value, field.show_length);
+			tool::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
 		}
     }
 

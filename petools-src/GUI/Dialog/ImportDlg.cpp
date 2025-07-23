@@ -2,11 +2,14 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <cstdio>
 #include "..\GUI\resource.h"
 
 module ImportDlg;
 
 import STL;
+import Concept;
+import Tool;
 import DialogManager;
 import AnalysePE;
 
@@ -57,6 +60,8 @@ namespace petools {
         memset(&item, 0, sizeof(LV_ITEM));
 
         const auto& header = pe_analyse.GetHeaders();
+
+        for (auto cur : tool::make_ranges(import_descriptor));
 
         for (int i = 0; import_descriptor->OriginalFirstThunk != 0; i++, import_descriptor++) {
             item.mask = LVIF_TEXT;
