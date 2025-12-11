@@ -11,14 +11,14 @@ namespace petools {
     DialogEX::DialogEX(INT template_id, HWND parent) noexcept
         : template_id_(template_id), parent_hwnd_(parent)
     {
-        set_transitions();
+        //set_transitions();
     }
 
     DialogEX::DialogEX(DialogEX&& other) noexcept
         : template_id_(other.template_id_),
-        parent_hwnd_(other.parent_hwnd_),
-        current_hwnd_(move(other.current_hwnd_)),
-        state_machine_(move(other.state_machine_))
+        parent_hwnd_(parent_hwnd_),
+        current_hwnd_(move(other.current_hwnd_))
+        //state_machine_(move(other.state_machine_))
     {
         other.template_id_ = 0;
     }
@@ -28,7 +28,7 @@ namespace petools {
             template_id_ = other.template_id_;
             parent_hwnd_ = other.parent_hwnd_;
             current_hwnd_ = move(other.current_hwnd_);
-            state_machine_ = move(other.state_machine_);
+            //state_machine_ = move(other.state_machine_);
 
             other.template_id_ = 0;
         }
@@ -43,32 +43,32 @@ namespace petools {
         default_cmd_show_.store(cmd_show);
     }
 
-    void DialogEX::set_transitions() {
-        state_machine_.add_transition_rule(DialogState::Constructed,
-            DialogState::Initializing,
-            [this]() { this->init_dialog(); }
-        );
+    //void DialogEX::set_transitions() {
+    //    state_machine_.add_transition_rule(DialogState::Constructed,
+    //        DialogState::Initializing,
+    //        [this]() { this->init_dialog(); }
+    //    );
 
-        state_machine_.add_transition_rule(DialogState::Initializing,
-            DialogState::Active,
-            [this]() { this->show_dialog(); }
-        );
+    //    state_machine_.add_transition_rule(DialogState::Initializing,
+    //        DialogState::Active,
+    //        [this]() { this->show_dialog(); }
+    //    );
 
-        state_machine_.add_transition_rule(DialogState::Active,
-            DialogState::Suspended,
-            [this]() { this->hide_dialog(); }
-        );
+    //    state_machine_.add_transition_rule(DialogState::Active,
+    //        DialogState::Suspended,
+    //        [this]() { this->hide_dialog(); }
+    //    );
 
-        state_machine_.add_transition_rule(DialogState::Suspended,
-            DialogState::Active,
-            [this]() { this->show_dialog(); }
-        );
+    //    state_machine_.add_transition_rule(DialogState::Suspended,
+    //        DialogState::Active,
+    //        [this]() { this->show_dialog(); }
+    //    );
 
-        state_machine_.add_transition_rule(DialogState::Active,
-            DialogState::Closing,
-            [this]() { this->close_dialog(); }
-        );
-    }
+    //    state_machine_.add_transition_rule(DialogState::Active,
+    //        DialogState::Closing,
+    //        [this]() { this->close_dialog(); }
+    //    );
+    //}
 
     INT_PTR CALLBACK DialogEX::static_dialog_proc(HWND h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         DialogEX* this_dlg = nullptr;
@@ -84,14 +84,8 @@ namespace petools {
             return FALSE;
         }
 
-        try {
-            LRESULT result = this_dlg->handle_message(this_dlg->current_hwnd_, message, w_param, l_param);
-            return result;
-        }
-        catch (...) {
-            // Defensive: never let exceptions escape a Win32 dialog proc
-            return FALSE;
-        }
+        LRESULT result = this_dlg->handle_message(this_dlg->current_hwnd_, message, w_param, l_param);
+        return result;
     }
 
 } //namespace petools
