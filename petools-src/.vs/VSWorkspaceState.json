@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\include",
+    "\\include\\Core",
+    "\\include\\GUI",
+    "\\src",
+    "\\src\\GUI"
+  ],
+  "SelectedNode": "\\src\\GUI\\AboutDlg.cpp",
+  "PreviewInSolutionExplorer": false
+}

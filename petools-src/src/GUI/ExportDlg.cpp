@@ -1,0 +1,144 @@
+﻿module;
+
+#include <windows.h>
+#include <commctrl.h>
+#include "resources/resource.h"
+
+module ExportDlg;
+
+import STL;
+import DialogManager;
+
+//void ExportDlg::init_dlg() {
+//    set_this_dlg();
+//}
+
+//void ExportDlg::SetExportInfo() {
+//    IMAGE_EXPORT_DIRECTORY* temp_export = AnalysePE::GetAnalyse().GetExport();
+//
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_CHA, temp_export->Characteristics, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_TIME, temp_export->TimeDateStamp, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_BASE, temp_export->Base, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_NAMEOFFSET, temp_export->Name, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_NUMFUNC, temp_export->NumberOfFunctions, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_NUMNAME, temp_export->NumberOfNames, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_ADDRFUNC, temp_export->AddressOfFunctions, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_ADDRNAME, temp_export->AddressOfNames, 8);
+//    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_EXP_ADDRORD, temp_export->AddressOfNameOrdinals, 8);
+//
+//    TCHAR* name = nullptr;
+//    char* cName = (char*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
+//        + AnalysePE::GetAnalyse().RVAToFOA(temp_export->Name));
+//    CharToTchar(cName, &name);
+//    SetDlgItemText(h_current_dlg_, IDC_EDIT_EXP_NAME, name);
+//    cName = nullptr;
+//    name = nullptr;
+//}
+//
+//void ExportDlg::InitFuncList() {
+//    funcList_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(h_current_dlg_, IDC_LIST_EXP_FUNC)
+//        , [&]() {plantFuncColumn(); }, [&]() {plantFuncItem(); }));
+//    funcList_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+//    funcList_->plant_column();
+//    funcList_->plant_item();
+//}
+//
+//void ExportDlg::plantFuncColumn() {
+//
+//    array<ItemWidthAndName<DWORD, std::wstring>, 4> items = { {
+//        { 90, L"Ordinal" },
+//        { 70, L"RVA" },
+//        { 90, L"Offset" },
+//        { 390, L"Function Name" }
+//    } };
+//
+//    for (size_t i = 0; i < items.size(); i++) {
+//        funcList_->SetColumn(items[i], i);
+//        SendMessage(funcList_->get_list_handle(), LVM_INSERTCOLUMN, i, funcList_->get_column_addr());
+//    }
+//}
+//
+//void ExportDlg::plantFuncItem() {
+//    IMAGE_EXPORT_DIRECTORY* temp_export = AnalysePE::GetAnalyse().GetExport();
+//    DWORD* funcAddr = (DWORD*)((DWORD)AnalysePE::GetAnalyse().GetHeaders().dosHeader
+//        + AnalysePE::GetAnalyse().RVAToFOA(temp_export->AddressOfFunctions));
+//        
+//    LV_ITEM item;
+//    memset(&item, 0, sizeof(LV_ITEM));
+//    item.mask = LVIF_TEXT;
+//
+//    for (DWORD i = 0; i < temp_export->NumberOfFunctions; i++) {
+//        if (*(funcAddr + i) != 0) {
+//            item.iItem = i;
+//            item.iSubItem = 0;
+//            TCHAR ordinal[5] = { 0 };
+//            wsprintf(ordinal, L"%04X", i + temp_export->Base);
+//            item.pszText = ordinal;
+//            SendMessage(funcList_->get_list_handle(), LVM_INSERTITEM, 0, (DWORD)&item);
+//
+//            item.iItem = i;
+//            item.iSubItem = 1;
+//            TCHAR funcRVA[9] = { 0 };
+//            wsprintf(funcRVA, L"%08X", *funcAddr);
+//            item.pszText = funcRVA;
+//            ListView_SetItem(funcList_->get_list_handle(), (DWORD)&item);
+//
+//            item.iItem = i;
+//            item.iSubItem = 2;
+//            TCHAR funcOffset[9] = { 0 };
+//            wsprintf(funcOffset, L"%08X", AnalysePE::GetAnalyse().RVAToFOA(*funcAddr));
+//            item.pszText = funcOffset;
+//            ListView_SetItem(funcList_->get_list_handle(), (DWORD)&item);
+//
+//            WORD ordinalTableIndex = AnalysePE::GetAnalyse().GetOrdinalTableIndex(i);
+//            if (ordinalTableIndex != -1) {
+//                item.iItem = i;
+//                item.iSubItem = 3;
+//                TCHAR* tFuncName = nullptr;
+//                char* name = AnalysePE::GetAnalyse().GetExportFuncName(ordinalTableIndex);
+//                CharToTchar(name, &tFuncName);
+//                item.pszText = tFuncName;
+//                ListView_SetItem(funcList_->get_list_handle(), (DWORD)&item);
+//                name = nullptr;
+//                tFuncName = nullptr;
+//            }
+//            else {
+//                item.iItem = i;
+//                item.iSubItem = 3;
+//                TCHAR tFuncName[2] = L"-";
+//                item.pszText = tFuncName;
+//                ListView_SetItem(funcList_->get_list_handle(), (DWORD)&item);
+//            }
+//        }
+//    }
+//}
+
+namespace petools {
+
+    LRESULT ExportDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+        switch (message)
+        {;
+        case WM_COMMAND:
+        {
+            int wmId = LOWORD(w_param);
+
+            switch (wmId) {
+            case IDOK:
+				dialog_mgr().close_dialog();
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+        case WM_CLOSE:
+            dialog_mgr().close_dialog();
+            break;
+
+        default:
+            return FALSE;
+        }
+        return FALSE;
+    }
+
+} // namespace petools
