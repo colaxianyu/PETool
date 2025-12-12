@@ -4,8 +4,8 @@
 #include "resources/resource.h"
 
 export module MainDlg;
-
 import STL;
+import std.compat;
 import DialogEX;
 import WinHandle;
 import ListControl;

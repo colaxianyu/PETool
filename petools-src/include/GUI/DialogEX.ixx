@@ -4,7 +4,7 @@
 
 export module DialogEX;
 
-import STL;
+import std.compat;
 import WinHandle;
 
 using std::atomic;
@@ -67,6 +67,7 @@ namespace petools {
         }
 
         virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) = 0;
+
     private:
         friend class DialogManager;
 
