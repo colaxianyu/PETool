@@ -48,17 +48,17 @@ namespace petools {
             ::DestroyWindow(current_hwnd_.get());
         }
 
-        virtual bool on_init_dialog() noexcept {
+        virtual bool OnInitDialog() noexcept {
             init_dialog();
             show_dialog();
             return true;
         }
 
-        virtual bool on_command(WORD, WORD, HWND ) noexcept {
+        virtual bool OnCommand(WORD, WORD, HWND ) noexcept {
             return false;
         }
 
-        virtual bool on_close() noexcept {
+        virtual bool OnClose() noexcept {
             close_dialog();
             return true;
         }

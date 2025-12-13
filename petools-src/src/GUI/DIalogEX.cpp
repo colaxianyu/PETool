@@ -4,6 +4,8 @@
 
 module DialogEX;
 
+import DialogManager;
+
 using std::move;
 
 namespace petools {
@@ -47,8 +49,7 @@ namespace petools {
             this_dlg = reinterpret_cast<DialogEX*>(l_param);
             SetWindowLongPtr(h_dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this_dlg));
             this_dlg->current_hwnd_ = make_handle<HWND, decltype(&DestroyWindow)>(h_dlg);
-            // Let high-level init handler drive dialog initialization.
-            return this_dlg->on_init_dialog() ? TRUE : FALSE;
+            return this_dlg->OnInitDialog() ? TRUE : FALSE;
         }
 
         this_dlg = reinterpret_cast<DialogEX*>(GetWindowLongPtr(h_dlg, GWLP_USERDATA));
@@ -61,13 +62,14 @@ namespace petools {
                 WORD id = LOWORD(w_param);
                 WORD code = HIWORD(w_param);
                 HWND ctrl = reinterpret_cast<HWND>(l_param);
-                if (this_dlg->on_command(id, code, ctrl)) {
+                if (this_dlg->OnCommand(id, code, ctrl)) {
                     return TRUE;
                 }
                 break;
             }
             case WM_CLOSE:
-                if (this_dlg->on_close()) {
+                if (this_dlg->OnClose()) {
+                    dialog_mgr().close_dialog();
                     return TRUE;
                 }
                 break;
