@@ -38,26 +38,23 @@ namespace petools {
         WindowHandle current_hwnd_;
         HWND parent_hwnd_{};
 
-        // Lifecycle hooks for derived dialogs
         virtual void init_dialog() noexcept {}
         virtual void show_dialog() noexcept {
-            ShowWindow(current_hwnd_.get(), default_cmd_show_);
-            UpdateWindow(current_hwnd_.get());
+            ::ShowWindow(current_hwnd_.get(), default_cmd_show_);
+            ::UpdateWindow(current_hwnd_.get());
         }
         virtual void hide_dialog() noexcept {}
         virtual void close_dialog() noexcept {
-            EndDialog(current_hwnd_.get(), 0);
+            ::DestroyWindow(current_hwnd_.get());
         }
 
-        // High-level message handlers. Return true if the message was handled.
-        // Default implementations provide reasonable behavior and can be
-        // overridden in derived dialogs.
         virtual bool on_init_dialog() noexcept {
             init_dialog();
+            show_dialog();
             return true;
         }
 
-        virtual bool on_command(WORD /*id*/, WORD /*code*/, HWND /*ctrl*/) noexcept {
+        virtual bool on_command(WORD, WORD, HWND ) noexcept {
             return false;
         }
 
@@ -66,7 +63,9 @@ namespace petools {
             return true;
         }
 
-        virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) = 0;
+        virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) {
+            return FALSE;
+        }
 
     private:
         friend class DialogManager;
@@ -74,12 +73,6 @@ namespace petools {
         INT template_id_;
         inline static atomic<HINSTANCE> app_instance_{ nullptr };
         inline static atomic_int default_cmd_show_{ SW_SHOWNORMAL };
-
-        // Lifecycle entry points used by DialogManager
-        void handle_init() noexcept { init_dialog(); }
-        void handle_show() noexcept { show_dialog(); }
-        void handle_hide() noexcept { hide_dialog(); }
-        void handle_close() noexcept { close_dialog(); }
 
         static INT_PTR CALLBACK static_dialog_proc(HWND, UINT, WPARAM, LPARAM);
     };

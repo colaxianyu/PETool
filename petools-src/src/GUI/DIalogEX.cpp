@@ -47,16 +47,42 @@ namespace petools {
             this_dlg = reinterpret_cast<DialogEX*>(l_param);
             SetWindowLongPtr(h_dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this_dlg));
             this_dlg->current_hwnd_ = make_handle<HWND, decltype(&DestroyWindow)>(h_dlg);
-            return TRUE;
+            // Let high-level init handler drive dialog initialization.
+            return this_dlg->on_init_dialog() ? TRUE : FALSE;
         }
 
         this_dlg = reinterpret_cast<DialogEX*>(GetWindowLongPtr(h_dlg, GWLP_USERDATA));
         if (!this_dlg) {
             return FALSE;
         }
+        try {
+            switch (message) {
+            case WM_COMMAND: {
+                WORD id = LOWORD(w_param);
+                WORD code = HIWORD(w_param);
+                HWND ctrl = reinterpret_cast<HWND>(l_param);
+                if (this_dlg->on_command(id, code, ctrl)) {
+                    return TRUE;
+                }
+                break;
+            }
+            case WM_CLOSE:
+                if (this_dlg->on_close()) {
+                    return TRUE;
+                }
+                break;
+            default:
+                break;
+            }
 
-        LRESULT result = this_dlg->handle_message(this_dlg->current_hwnd_, message, w_param, l_param);
-        return result;
+            // Fallback for dialogs that still override the legacy handler.
+            LRESULT result = this_dlg->handle_message(this_dlg->current_hwnd_, message, w_param, l_param);
+            return result;
+        }
+        catch (...) {
+            // Defensive: never let exceptions escape a Win32 dialog proc
+            return FALSE;
+        }
     }
 
 } //namespace petools

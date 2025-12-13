@@ -16,19 +16,25 @@ namespace petools {
 
 	export class DialogManager {
 	public:
-		static DialogManager& instance() {
+		static DialogManager& Instance() {
 			static DialogManager instance;
 			return instance;
 		}
 
-		template <typename T, typename... Args>
-		void open_dialog(Args&&... args) {
-			auto dialog = make_unique<T>(forward<Args>(args)...);
+		template <typename Dlg, typename... Args>
+		[[nodiscard]] Dlg* OpenDialog(Args&&... args) {
+			static_assert(std::is_base_of_v<DialogEX, Dlg>, "Dlg must derive from DialogEX");
+
+			auto dialog = make_unique<Dlg>(forward<Args>(args)...);
+			if (!dialog) {
+				return nullptr;
+			}
+
 			if (!dialogs_.empty()) {
 				disable_current_dialog();
 			}
 
-			::CreateDialogParam(
+			HWND hdlg = ::CreateDialogParam(
 				dialog->get_instance(),
 				MAKEINTRESOURCE(dialog->get_template_id()),
 				dialog->get_parent_hwnd(),
@@ -36,19 +42,31 @@ namespace petools {
 				reinterpret_cast<LPARAM>(dialog.get())
 			);
 
-			dialog->handle_init();
+			if (!hdlg) {
+				::MessageBoxW(
+					dialog->get_parent_hwnd(),
+					L"创建对话框失败。",
+					L"错误",
+					MB_ICONERROR | MB_OK
+				);
+				return nullptr;
+			}
+
 			dialogs_.push(move(dialog));
-			dialogs_.top()->handle_show();
+			return static_cast<Dlg*>(dialogs_.top().get());
 		}
 
-		void close_dialog() {
+		void close_dialog() noexcept {
 			if (dialogs_.empty()) {
 				return;
 			}
-			dialogs_.top()->handle_close();
+
 			dialogs_.pop();
 			if (!dialogs_.empty()) {
 				activate_current_dialog();
+			}
+			else {
+				::PostQuitMessage(0);
 			}
 		}
 
@@ -79,7 +97,7 @@ namespace petools {
 
 	//export inline auto& dialog_mgr = DialogManager::instance();
 	export inline DialogManager& dialog_mgr() noexcept {
-		return DialogManager::instance();
+		return DialogManager::Instance();
 	}
 
 } //namespace petools
