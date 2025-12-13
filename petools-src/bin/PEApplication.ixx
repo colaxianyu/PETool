@@ -33,10 +33,10 @@ namespace petools {
 		PEApplication(PEApplication&&) = delete;
 		PEApplication& operator=(PEApplication&&) = delete;
 
-		void run_application(HINSTANCE h_instance, int cmd_show) noexcept {
+		void RunApplication(HINSTANCE h_instance, int cmd_show) noexcept {
 			Logger::instance().init();
-			DialogEX::configure(h_instance, cmd_show);
-			dialog_mgr().open_dialog<MainDlg>();
+			DialogEX::Configure(h_instance, cmd_show);
+			dialog_mgr().OpenDialog<MainDlg>();
 			
 		}
 	};

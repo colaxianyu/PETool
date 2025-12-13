@@ -33,7 +33,7 @@ namespace petools {
         return *this;
     }
 
-    void DialogEX::configure(HINSTANCE h_instance, int cmd_show) noexcept {
+    void DialogEX::Configure(HINSTANCE h_instance, int cmd_show) noexcept {
         if (app_instance_.load() != nullptr) {
             return;
         }

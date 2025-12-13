@@ -30,7 +30,7 @@ namespace petools {
 
         [[nodiscard]] INT get_template_id() const noexcept { return template_id_; }
 
-        static void configure(HINSTANCE h_instance, int cmd_show) noexcept;
+        static void Configure(HINSTANCE h_instance, int cmd_show) noexcept;
         [[nodiscard]] static HINSTANCE get_instance() noexcept { return app_instance_.load(); }
         [[nodiscard]] static int get_cmd_show() noexcept { return default_cmd_show_.load(); }
 
