@@ -8,7 +8,7 @@ import DialogManager;
 
 using std::move;
 
-namespace petools {
+namespace petools::gui {
 
     DialogEX::DialogEX(INT template_id, HWND parent) noexcept
         : template_id_(template_id), parent_hwnd_(parent)
@@ -18,7 +18,7 @@ namespace petools {
 
     DialogEX::DialogEX(DialogEX&& other) noexcept
         : template_id_(other.template_id_),
-        parent_hwnd_(parent_hwnd_),
+        parent_hwnd_(other.parent_hwnd_),
         current_hwnd_(move(other.current_hwnd_))
     {
         other.template_id_ = 0;
@@ -36,14 +36,14 @@ namespace petools {
     }
 
     void DialogEX::Configure(HINSTANCE h_instance, int cmd_show) noexcept {
-        if (app_instance_.load() != nullptr) {
+        if (app_instance_ != nullptr) {
             return;
         }
-        app_instance_.store(h_instance);
-        default_cmd_show_.store(cmd_show);
+        app_instance_ = h_instance;
+        default_cmd_show_ = cmd_show;
     }
 
-    INT_PTR CALLBACK DialogEX::static_dialog_proc(HWND h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    INT_PTR CALLBACK DialogEX::StaticDialogProc(HWND h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         DialogEX* this_dlg = nullptr;
         if (message == WM_INITDIALOG) {
             this_dlg = reinterpret_cast<DialogEX*>(l_param);
@@ -69,7 +69,7 @@ namespace petools {
             }
             case WM_CLOSE:
                 if (this_dlg->OnClose()) {
-                    dialog_mgr().close_dialog();
+                    DialogMgr().CloseDialog();
                     return TRUE;
                 }
                 break;
@@ -77,8 +77,7 @@ namespace petools {
                 break;
             }
 
-            // Fallback for dialogs that still override the legacy handler.
-            LRESULT result = this_dlg->handle_message(this_dlg->current_hwnd_, message, w_param, l_param);
+            LRESULT result = this_dlg->HandleMessage(this_dlg->current_hwnd_, message, w_param, l_param);
             return result;
         }
         catch (...) {

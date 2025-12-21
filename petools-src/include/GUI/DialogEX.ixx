@@ -7,11 +7,9 @@ export module DialogEX;
 import std.compat;
 import WinHandle;
 
-using std::atomic;
-using std::atomic_int;
 using std::move;
 
-namespace petools {
+namespace petools::gui {
 
     export class DialogEX {
     public:
@@ -25,32 +23,29 @@ namespace petools {
         DialogEX(DialogEX&&) noexcept;
         DialogEX& operator=(DialogEX&&) noexcept;
 
-        [[nodiscard]] HWND get_current_hwnd() const noexcept { return current_hwnd_.get(); }
-        [[nodiscard]] HWND get_parent_hwnd() const noexcept { return parent_hwnd_; }
+        [[nodiscard]] HWND GetCurrentHWND() const noexcept { return current_hwnd_.get(); }
+        [[nodiscard]] HWND GetParentHWND() const noexcept { return parent_hwnd_; }
 
-        [[nodiscard]] INT get_template_id() const noexcept { return template_id_; }
+        [[nodiscard]] INT GetTemplateID() const noexcept { return template_id_; }
 
         static void Configure(HINSTANCE h_instance, int cmd_show) noexcept;
-        [[nodiscard]] static HINSTANCE get_instance() noexcept { return app_instance_.load(); }
-        [[nodiscard]] static int get_cmd_show() noexcept { return default_cmd_show_.load(); }
+        [[nodiscard]] static HINSTANCE GetInstance() noexcept { return app_instance_; }
+        [[nodiscard]] static int GetCmdShow() noexcept { return default_cmd_show_; }
 
     protected:
         WindowHandle current_hwnd_;
         HWND parent_hwnd_{};
 
-        virtual void init_dialog() noexcept {}
-        virtual void show_dialog() noexcept {
+        virtual void InitDialog() noexcept {}
+        virtual void ShowDialog() noexcept {
             ::ShowWindow(current_hwnd_.get(), default_cmd_show_);
             ::UpdateWindow(current_hwnd_.get());
         }
-        virtual void hide_dialog() noexcept {}
-        virtual void close_dialog() noexcept {
-            ::DestroyWindow(current_hwnd_.get());
-        }
+        virtual void PreCloseDialog() noexcept {}
 
         virtual bool OnInitDialog() noexcept {
-            init_dialog();
-            show_dialog();
+            InitDialog();
+            ShowDialog();
             return true;
         }
 
@@ -59,11 +54,11 @@ namespace petools {
         }
 
         virtual bool OnClose() noexcept {
-            close_dialog();
+            PreCloseDialog();
             return true;
         }
 
-        virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) {
+        virtual LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) {
             return FALSE;
         }
 
@@ -71,10 +66,10 @@ namespace petools {
         friend class DialogManager;
 
         INT template_id_;
-        inline static atomic<HINSTANCE> app_instance_{ nullptr };
-        inline static atomic_int default_cmd_show_{ SW_SHOWNORMAL };
+        inline static HINSTANCE app_instance_{ nullptr };
+        inline static int default_cmd_show_{ SW_SHOWNORMAL };
 
-        static INT_PTR CALLBACK static_dialog_proc(HWND, UINT, WPARAM, LPARAM);
+        static INT_PTR CALLBACK StaticDialogProc(HWND, UINT, WPARAM, LPARAM);
     };
 
 } //namespace petools
