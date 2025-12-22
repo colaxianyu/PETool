@@ -6,8 +6,6 @@ module DialogEX;
 
 import DialogManager;
 
-using std::move;
-
 namespace petools::gui {
 
     DialogEX::DialogEX(INT template_id, HWND parent) noexcept
@@ -19,7 +17,7 @@ namespace petools::gui {
     DialogEX::DialogEX(DialogEX&& other) noexcept
         : template_id_(other.template_id_),
         parent_hwnd_(other.parent_hwnd_),
-        current_hwnd_(move(other.current_hwnd_))
+        current_hwnd_(std::move(other.current_hwnd_))
     {
         other.template_id_ = 0;
     }
@@ -28,7 +26,7 @@ namespace petools::gui {
         if (this != &other) {
             template_id_ = other.template_id_;
             parent_hwnd_ = other.parent_hwnd_;
-            current_hwnd_ = move(other.current_hwnd_);
+            current_hwnd_ = std::move(other.current_hwnd_);
 
             other.template_id_ = 0;
         }
@@ -68,7 +66,7 @@ namespace petools::gui {
                 break;
             }
             case WM_CLOSE:
-                if (this_dlg->OnClose()) {
+                if (this_dlg->OnPreClose()) {
                     DialogMgr().CloseDialog();
                     return TRUE;
                 }
@@ -77,13 +75,13 @@ namespace petools::gui {
                 break;
             }
 
-            LRESULT result = this_dlg->HandleMessage(this_dlg->current_hwnd_, message, w_param, l_param);
+            LRESULT result = this_dlg->OnOtherMessage(message, w_param, l_param);
             return result;
         }
         catch (...) {
-            // Defensive: never let exceptions escape a Win32 dialog proc
+			//Todo: log the exception
             return FALSE;
         }
     }
 
-} //namespace petools
+} //namespace petools::gui

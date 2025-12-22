@@ -4,8 +4,9 @@
 #include "resources/resource.h"
 
 export module MainDlg;
-import STL;
+
 import std.compat;
+import STL;
 import DialogEX;
 import WinHandle;
 import ListControl;
@@ -13,10 +14,7 @@ import ListControl;
 //import ProtectorDlg;
 //import PeEditDlg;
 
-using std::unique_ptr;
-using std::optional;
-
-namespace petools {
+namespace petools::gui {
 
 	export class MainDlg final : public DialogEX {
 	public:
@@ -24,26 +22,27 @@ namespace petools {
 
 		~MainDlg() noexcept override = default;
 
-		void init_dialog() noexcept override;
-		void show_dialog() noexcept override;
-		void close_dialog() noexcept override;
+		void InitDialog() override;
+		void ShowDialog() override;
 
-		void init_process_list() noexcept;
-		void init_module_list() noexcept;
+		void InitProcessList() noexcept;
+		void InitModuleList() noexcept;
 
-		void plant_process_item() noexcept;
-		void plant_process_column() noexcept;
-		void plant_module_column() noexcept;
-		void plant_module_item() noexcept;
+		void PlantProcessItem() noexcept;
+		void PlantProcessColumn() noexcept;
+		void PlantModuleColumn() noexcept;
+		void PlantModuleItem() noexcept;
 
-		optional<DWORD> get_pid(INT row_index) noexcept;
+		std::optional<DWORD> GetPid(INT row_index) noexcept;
 
 	private:
 		IconHandle icon_;
-		unique_ptr<ListCtrl> process_list_ = nullptr;
-		unique_ptr<ListCtrl> module_list_ = nullptr;
+		std::unique_ptr<ListCtrl> process_list_ = nullptr;
+		std::unique_ptr<ListCtrl> module_list_ = nullptr;
 
-		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+		bool OnCommand(WORD, WORD, HWND) override;
+		virtual LRESULT OnOtherMessage(UINT, WPARAM, LPARAM) override;
+
 	};
 
-} //namespace petools
+} //namespace petools::gui

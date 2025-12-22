@@ -15,4 +15,4 @@ namespace petools::gui {
 		~AboutDlg() noexcept override = default;
 	};
 
-} //namespace petools
+} //namespace petools::gui

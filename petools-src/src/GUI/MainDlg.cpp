@@ -11,7 +11,6 @@
 module MainDlg;
 
 //// import AnalysePE;
-//import DialogManager;
 //import FileManager;
 ////import AboutDlg;
 ////import ProtectorDlg;
@@ -21,7 +20,7 @@ import PeEditDlg;
 import AboutDlg;
 import DialogManager;
 import Concept;
-import Tool;
+import Utility;
 
 using std::vector;
 using std::array;
@@ -30,8 +29,8 @@ using std::size_t;
 using std::optional;
 using std::make_unique;
 
-using petools::tool::wstring_to_string;
-using petools::tool::to_wstring_hex;
+using petools::utility::wstring_to_string;
+using petools::utility::to_wstring_hex;
 
 using tools::config::filename_max;
 using tools::config::format_filter;
@@ -54,49 +53,45 @@ struct module_showing_config {
     static constexpr size_t module_size_hex_width = 8;
 };
 
-namespace petools {
+namespace petools::gui {
 
-    void MainDlg::init_dialog()  noexcept {
-        auto handle = LoadIcon(get_instance(), MAKEINTRESOURCE(IDI_ICON_MAINICO));
+    void MainDlg::InitDialog() {
+        auto handle = LoadIcon(GetInstance(), MAKEINTRESOURCE(IDI_ICON_MAINICO));
         icon_ = make_handle<HICON, decltype(&DestroyIcon)>(handle);
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon_.get()));
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon_.get()));
-        init_process_list();
-        init_module_list();
+        InitProcessList();
+        InitModuleList();
     }
 
-    void MainDlg::show_dialog() noexcept {
+    void MainDlg::ShowDialog() {
         process_list_->plant_column();
         process_list_->plant_item();
         module_list_->plant_column();
 
-        ShowWindow(current_hwnd_.get(), get_cmd_show());
+        ShowWindow(current_hwnd_.get(), GetCmdShow());
         UpdateWindow(current_hwnd_.get());
     }
 
-    void MainDlg::close_dialog() noexcept {
-        PostQuitMessage(0);
-    }
-
-    void MainDlg::init_process_list() noexcept {
+    void MainDlg::InitProcessList() noexcept {
         process_list_ = make_unique<ListCtrl>(
             GetDlgItem(current_hwnd_.get(), IDC_LIST_PROCESS),
-            [&]() {plant_process_column(); },
-            [&]() {plant_process_item(); }
+            [&]() {PlantProcessColumn(); },
+            [&]() {PlantProcessItem(); }
         );
         process_list_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
     }
 
-    void MainDlg::init_module_list() noexcept {
+    void MainDlg::InitModuleList() noexcept {
         module_list_ = make_unique<ListCtrl>(
             GetDlgItem(current_hwnd_.get(), IDC_LIST_MODULE),
-            [&]() {plant_module_column(); },
-            [&]() {plant_module_item(); }
+            [&]() {PlantModuleColumn(); },
+            [&]() {PlantModuleItem(); }
         );
         module_list_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM, LVIF_TEXT);
     }
 
-    void MainDlg::plant_process_column() noexcept {
+    void MainDlg::PlantProcessColumn() noexcept {
         array<column_definition, 4> items = { {
             { process_showing_config::process_column_length, L"Process" },
             { process_showing_config::pid_column_length, L"PID" },
@@ -107,7 +102,7 @@ namespace petools {
         process_list_->set_column(items);
     }
 
-    void MainDlg::plant_process_item() noexcept {
+    void MainDlg::PlantProcessItem() noexcept {
         PROCESSENTRY32 process;
         memset(&process, 0, sizeof(process));
         process.dwSize = sizeof(process);
@@ -123,26 +118,31 @@ namespace petools {
 
         std::size_t row = 0;
 
-        while (Process32Next(process_snap, &process)) {
-            HANDLE module_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process.th32ProcessID);
+        if (Process32First(process_snap, &process)) {
+            do {
+                HANDLE module_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process.th32ProcessID);
+                if (module_snap == INVALID_HANDLE_VALUE) {
+                    continue;
+                }
 
-            if (module_snap != INVALID_HANDLE_VALUE && Module32First(module_snap, &module)) {
-                std::vector<item_definition> items;
-                items.push_back(item_definition{ 0, process.szExeFile });
-                items.push_back(item_definition{ 1, to_wstring_hex(process.th32ProcessID, process_showing_config::pid_hex_width) });
-                items.push_back(item_definition{ 2, to_wstring_hex(reinterpret_cast<DWORD>(module.modBaseAddr), process_showing_config::image_base_hex_width) });
-                items.push_back(item_definition{ 3, to_wstring_hex(module.modBaseSize, process_showing_config::image_size_hex_width) });
+                if (Module32First(module_snap, &module)) {
+                    std::vector<item_definition> items;
+                    items.push_back(item_definition{ 0, process.szExeFile });
+                    items.push_back(item_definition{ 1, to_wstring_hex(process.th32ProcessID, process_showing_config::pid_hex_width) });
+                    items.push_back(item_definition{ 2, to_wstring_hex(reinterpret_cast<DWORD>(module.modBaseAddr), process_showing_config::image_base_hex_width) });
+                    items.push_back(item_definition{ 3, to_wstring_hex(module.modBaseSize, process_showing_config::image_size_hex_width) });
 
-                process_list_->set_item(items, row);
+                    process_list_->set_item(items, row++);
+                }
+
                 CloseHandle(module_snap);
-                row++;
-            }
+            } while (Process32Next(process_snap, &process));
         }
 
         CloseHandle(process_snap);
     }
 
-    void MainDlg::plant_module_column() noexcept {
+    void MainDlg::PlantModuleColumn() noexcept {
         array<column_definition, 2> items = { {
             { module_showing_config::module_name_column_length, L"Module Name" },
             { module_showing_config::module_size_column_length, L"Module Size" }
@@ -151,7 +151,7 @@ namespace petools {
         module_list_->set_column(items);
     }
 
-    void MainDlg::plant_module_item() noexcept {
+    void MainDlg::PlantModuleItem() noexcept {
         DWORD process_list_row = SendMessage(process_list_->get_list_handle(), LVM_GETNEXTITEM, -1, LVNI_SELECTED);
         if (process_list_row == -1) {
             return;
@@ -159,11 +159,14 @@ namespace petools {
 
         SendMessage(module_list_->get_list_handle(), LVM_DELETEALLITEMS, 0, 0);
 
-        std::optional<DWORD> pid_result = get_pid(process_list_row);
+        std::optional<DWORD> pid_result = GetPid(process_list_row);
         if (!pid_result.has_value()) {
             return;
         }
         HANDLE h_module = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid_result.value());
+        if (h_module == INVALID_HANDLE_VALUE) {
+            return;
+        }
 
         MODULEENTRY32 module;
         memset(&module, 0, sizeof(module));
@@ -171,19 +174,20 @@ namespace petools {
 
         int row = 0;
 
-        while (Module32Next(h_module, &module)) {
-            std::vector<item_definition> items;
-            items.push_back(item_definition{ 0, module.szExePath });
-            items.push_back(item_definition{ 1, to_wstring_hex(module.modBaseSize, module_showing_config::module_size_hex_width) });
+        if (Module32First(h_module, &module)) {
+            do {
+                std::vector<item_definition> items;
+                items.push_back(item_definition{ 0, module.szExePath });
+                items.push_back(item_definition{ 1, to_wstring_hex(module.modBaseSize, module_showing_config::module_size_hex_width) });
 
-            module_list_->set_item(items, row);
-            row++;
+                module_list_->set_item(items, row++);
+            } while (Module32Next(h_module, &module));
         }
 
         CloseHandle(h_module);
     }
 
-    optional<DWORD> MainDlg::get_pid(INT row_index) noexcept {
+    optional<DWORD> MainDlg::GetPid(INT row_index) noexcept {
         std::wstring pid_str(process_showing_config::pid_hex_width + 1, L'\0');
         LV_ITEM item;
         memset(&item, 0, sizeof(item));
@@ -193,52 +197,101 @@ namespace petools {
         item.cchTextMax = process_showing_config::pid_hex_width + 1;
         SendMessage(process_list_->get_list_handle(), LVM_GETITEMTEXT, row_index, reinterpret_cast<LPARAM>(&item));
 
-        return tool::wstring_to_dword(pid_str, numeric_base::hex{});
+        return petools::utility::wstring_to_dword(pid_str, numeric_base::hex{});
     }
 
-    LRESULT MainDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
-        NMHDR* hdr = (NMHDR*)l_param;
-        switch (message)
+    bool MainDlg::OnCommand(WORD id, WORD code, HWND ctrl) {
+        switch (id)
         {
-        case WM_COMMAND:
+        case IDC_BUTTON_PEVIEW:
         {
-            int wmId = LOWORD(w_param);
-            std::optional<std::string> file_name_result = std::make_optional<std::string>();
-            switch (wmId)
-            {
-            case IDC_BUTTON_PEVIEW:
-                file_name_result = tool::choose_file(current_hwnd_.get());
-                if (!file_name_result.has_value()) {
-                    break;
-                }
-				//dialog_mgr.open_dialog<PeEditDlg>(current_hwnd_.borrow(), file_name_result.value());
-                break;
-            case IDC_BUTTON_ABOUT:
-                //dialog_mgr.open_dialog<AboutDlg>(current_hwnd_.borrow());
-                break;
-            case IDC_BUTTON_PROTECT:
-                //create_protector_dlg();
-                break;
-            case IDC_BUTTON_QUIT:
-                //dialog_mgr.close_dialog();
-                break;
-            default:
-                break;
+            optional<std::string> file_name_result = petools::utility::choose_file(current_hwnd_.get());
+            if (!file_name_result.has_value()) {
+                return true;
             }
-            break;
+            // DialogMgr().OpenDialog<PeEditDlg>(GetCurrentHWND(), file_name_result.value());
+            return true;
         }
-        case WM_CLOSE:
-            //dialog_mgr.close_dialog();
-            break;
-        case WM_NOTIFY:
-            if (w_param == IDC_LIST_PROCESS && hdr->code == NM_CLICK) {
-                plant_module_item();
-            }
-            break;
+        case IDC_BUTTON_ABOUT:
+        {
+            DialogMgr().OpenDialog<AboutDlg>(GetCurrentHWND());
+            return true;
+        }
+        case IDC_BUTTON_PROTECT:
+        {
+            //create_protector_dlg();
+            return true;
+        }
+        case IDC_BUTTON_QUIT:
+        {
+            DialogMgr().CloseDialog();
+            return true;
+        }
         default:
-            return FALSE;
+            break;
         }
-        //return FALSE;
+        return false;
     }
+
+    LRESULT MainDlg::OnOtherMessage(UINT msg, WPARAM w_param, LPARAM l_param) {
+        switch (msg) {
+        case WM_NOTIFY: 
+        {
+			NMHDR* hdr = (NMHDR*)l_param;
+            if (w_param == IDC_LIST_PROCESS && hdr->code == NM_CLICK) {
+                PlantModuleItem();
+                return true;
+            }
+        }
+        default:
+			break;
+        }
+        return false;
+    }
+
+    //LRESULT MainDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    //    NMHDR* hdr = (NMHDR*)l_param;
+    //    switch (message)
+    //    {
+    //    case WM_COMMAND:
+    //    {
+    //        int wmId = LOWORD(w_param);
+    //        std::optional<std::string> file_name_result = std::make_optional<std::string>();
+    //        switch (wmId)
+    //        {
+    //        case IDC_BUTTON_PEVIEW:
+    //            file_name_result = tool::choose_file(current_hwnd_.get());
+    //            if (!file_name_result.has_value()) {
+    //                break;
+    //            }
+				////dialog_mgr.open_dialog<PeEditDlg>(current_hwnd_.borrow(), file_name_result.value());
+    //            break;
+    //        case IDC_BUTTON_ABOUT:
+    //            DialogMgr().OpenDialog<AboutDlg>(current_hwnd_.borrow());
+    //            break;
+    //        case IDC_BUTTON_PROTECT:
+    //            //create_protector_dlg();
+    //            break;
+    //        case IDC_BUTTON_QUIT:
+    //            //dialog_mgr.close_dialog();
+    //            break;
+    //        default:
+    //            break;
+    //        }
+    //        break;
+    //    }
+    //    case WM_CLOSE:
+    //        //dialog_mgr.close_dialog();
+    //        break;
+    //    case WM_NOTIFY:
+    //        if (w_param == IDC_LIST_PROCESS && hdr->code == NM_CLICK) {
+    //            PlantModuleItem();
+    //        }
+    //        break;
+    //    default:
+    //        return FALSE;
+    //    }
+    //    //return FALSE;
+    //}
 
 } //namespace petools

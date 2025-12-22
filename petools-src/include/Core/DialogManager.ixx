@@ -4,19 +4,14 @@
 
 export module DialogManager;
 
+import std.compat;
 import DialogEX;
-import STL;
-
-using std::unique_ptr;
-using std::stack;
-using std::make_unique;
-using std::forward;
 
 namespace petools::gui {
 
 	export class DialogManager {
 	public:
-		static DialogManager& Instance() {
+		static DialogManager& Instance() noexcept {
 			static DialogManager instance;
 			return instance;
 		}
@@ -25,7 +20,7 @@ namespace petools::gui {
 		[[nodiscard]] Dlg* OpenDialog(Args&&... args) {
 			static_assert(std::is_base_of_v<DialogEX, Dlg>, "Dlg must derive from DialogEX");
 
-			auto dialog = make_unique<Dlg>(forward<Args>(args)...);
+			auto dialog = std::make_unique<Dlg>(std::forward<Args>(args)...);
 			if (!dialog) {
 				return nullptr;
 			}
@@ -52,7 +47,7 @@ namespace petools::gui {
 				return nullptr;
 			}
 
-			dialogs_.push(move(dialog));
+			dialogs_.push(std::move(dialog));
 			return static_cast<Dlg*>(dialogs_.top().get());
 		}
 
@@ -80,24 +75,24 @@ namespace petools::gui {
 		DialogManager(DialogManager&&) = delete;
 		DialogManager& operator=(DialogManager&&) = delete;
 
-		void DisableCurrentDialog() {
+		void DisableCurrentDialog() noexcept {
 			if (auto hwnd = dialogs_.top()->GetCurrentHWND()) {
 				::EnableWindow(hwnd, FALSE);
 			}
 		}
 
-		void ActivateCurrentDialog() {
+		void ActivateCurrentDialog() noexcept {
 			if (auto hwnd = dialogs_.top()->GetCurrentHWND()) {
 				::EnableWindow(hwnd, TRUE);
 				::SetForegroundWindow(hwnd);
 			}
 		}
 
-		stack<unique_ptr<DialogEX>> dialogs_;
+		std::stack<std::unique_ptr<DialogEX>> dialogs_;
 	};
 
 	export inline DialogManager& DialogMgr() noexcept {
 		return DialogManager::Instance();
 	}
 
-} //namespace petools
+} //namespace petools::gui

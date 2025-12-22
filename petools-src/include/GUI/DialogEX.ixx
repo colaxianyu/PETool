@@ -7,8 +7,6 @@ export module DialogEX;
 import std.compat;
 import WinHandle;
 
-using std::move;
-
 namespace petools::gui {
 
     export class DialogEX {
@@ -36,26 +34,30 @@ namespace petools::gui {
         WindowHandle current_hwnd_;
         HWND parent_hwnd_{};
 
-        virtual void InitDialog() noexcept {}
-        virtual void ShowDialog() noexcept {
+        virtual void InitDialog() {}
+        virtual void ShowDialog() {
             ::ShowWindow(current_hwnd_.get(), default_cmd_show_);
             ::UpdateWindow(current_hwnd_.get());
         }
-        virtual void PreCloseDialog() noexcept {}
+        virtual void PreCloseDialog() {}
 
-        virtual bool OnInitDialog() noexcept {
+        virtual bool OnInitDialog() {
             InitDialog();
             ShowDialog();
             return true;
         }
 
-        virtual bool OnCommand(WORD, WORD, HWND ) noexcept {
+        virtual bool OnCommand(WORD, WORD, HWND) {
             return false;
         }
 
-        virtual bool OnClose() noexcept {
+        virtual bool OnPreClose() {
             PreCloseDialog();
             return true;
+        }
+
+        virtual LRESULT OnOtherMessage(UINT, WPARAM, LPARAM) {
+            return FALSE;
         }
 
         virtual LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) {
@@ -72,4 +74,4 @@ namespace petools::gui {
         static INT_PTR CALLBACK StaticDialogProc(HWND, UINT, WPARAM, LPARAM);
     };
 
-} //namespace petools
+} //namespace petools::gui
