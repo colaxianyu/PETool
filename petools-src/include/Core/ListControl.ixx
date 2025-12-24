@@ -5,69 +5,78 @@
 
 export module ListControl;
 
-import STL;
+import std.compat;
 import WinHandle;
-
-using std::wstring;
-using std::wstring_view;
-using std::string_view;
-using std::size_t;
-using std::function;
-using std::vector;
-using std::span;
 
 namespace petools {
 
-	export struct column_definition {
+	export struct ColumnDefinition {
 		size_t width_;
-		wstring name_;
+		std::wstring name_;
 
-		column_definition(size_t width, wstring_view name) noexcept
+		ColumnDefinition(size_t width, std::wstring_view name) noexcept
 			: width_(width), name_(name) {
 		}
 
-		column_definition(size_t width, string_view name) noexcept
-			: width_(width), name_(wstring(name.begin(), name.end())) {
+		ColumnDefinition(size_t width, std::string_view name) noexcept
+			: width_(width), name_(std::wstring(name.begin(), name.end())) {
 		}
 	};
 
-	export struct item_definition {
+	export struct ItemDefinition {
 		size_t sub_item_index_;
-		wstring text_;
+		std::wstring text_;
 
-		item_definition(size_t sub_item_index, wstring_view text) noexcept
+		ItemDefinition(size_t sub_item_index, std::wstring_view text) noexcept
 			: sub_item_index_(sub_item_index), text_(text) {
 		}
 
-		item_definition(size_t sub_item_index, string_view text) noexcept
-			: sub_item_index_(sub_item_index), text_(wstring(text.begin(), text.end())) {
+		ItemDefinition(size_t sub_item_index, std::string_view text) noexcept
+			: sub_item_index_(sub_item_index), text_(std::wstring(text.begin(), text.end())) {
 		}
 	};
 
+	export enum class ListErrorOP : unsigned char
+	{
+		SET_EXTENDED_STYLE,
+		INSERT_COLUMN,
+		DELETE_COLUMN,
+		DELETE_ALL_ITEMS,
+		INSERT_ITEM,
+		SET_ITEM
+	};
+
+	export struct ListError
+	{
+		ListErrorOP op{};
+		int index{ -1 };
+		LRESULT result{ 0 };
+		DWORD win32Err{ 0 };
+	};
 
 	export class ListCtrl
 	{
 	public:
-		explicit ListCtrl(HWND handle, function<void()> plant_column, function<void()> plant_item) noexcept;
+		explicit ListCtrl(HWND handle) noexcept : list_hwnd_(handle) {}
 
-		void init(UINT column_mask, UINT item_mask) noexcept;
+		[[nodiscard]] std::expected<void, ListError> Init(UINT column_mask, UINT item_mask, DWORD extended_style = LVS_EX_FULLROWSELECT) noexcept;
 
-		void set_column(span<column_definition> array) noexcept;
-		void set_item(vector<item_definition> vector, size_t row) noexcept;
-		void plant_column() noexcept { plant_column_(); }
-		void plant_item() noexcept { plant_item_(); }
+		[[nodiscard]] std::expected<void, ListError> SetColumn(std::span<ColumnDefinition> columns, int fmt = LVCFMT_CENTER) noexcept;
+		[[nodiscard]] std::expected<void, ListError> SetItem(std::span<ItemDefinition> items, size_t row) noexcept;
 
-		HWND get_list_handle() const noexcept { return list_hwnd_.get(); }
-		auto get_column_addr() const noexcept { return &column_; }
-		auto get_item_addr() const noexcept { return &item_; }
+		// [[nodiscard]] std::expected<void, ListError> ClearColumns() noexcept;
+		[[nodiscard]] std::expected<void, ListError> ClearItems() noexcept;
+
+		[[nodiscard]] std::optional<int> SelectedIndex() const noexcept;
+
+		[[nodiscard]] HWND GetListHandle() const noexcept { return list_hwnd_.get(); }
 
 	private:
 		WindowHandle list_hwnd_;
-		LV_COLUMN column_;
-		LV_ITEM item_;
+		UINT column_mask_{ 0 };
+		UINT item_mask_{ 0 };
 
-		function<void()> plant_column_;
-		function<void()> plant_item_;
+		static ListError MakeError(ListErrorOP op, int index, LRESULT result) noexcept;
 	};
 
 } //namespace petools

@@ -5,54 +5,132 @@
 
 module ListControl;
 
-import STL;
-
-using std::function;
-using std::span;
-using std::size_t;
-using std::move;
-
 namespace petools {
 
-	ListCtrl::ListCtrl(HWND handle, function<void()> plant_column, function<void()> plant_item) noexcept
-		: list_hwnd_(handle),
-		plant_column_(move(plant_column)),
-		plant_item_(move(plant_item))
-
+	ListError ListCtrl::MakeError(ListErrorOP op, int index, LRESULT result) noexcept
 	{
-		memset(&column_, 0, sizeof(column_));
-		memset(&item_, 0, sizeof(item_));
+		return ListError{
+			.op = op,
+			.index = index,
+			.result = result,
+			.win32Err = ::GetLastError(),
+		};
 	}
 
-	void ListCtrl::init(UINT column_mask, UINT item_mask) noexcept {
-		SendMessage(list_hwnd_.get(), LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
-
-		column_.mask = column_mask;
-		column_.fmt = LVCFMT_CENTER;
-		item_.mask = item_mask;
-	}
-
-	void ListCtrl::set_column(span<column_definition> array) noexcept {
-		for (size_t i = 0; i < array.size(); i++) {
-			column_.pszText = const_cast<LPWSTR>(array[i].name_.c_str());
-			column_.cx = array[i].width_;
-			column_.iSubItem = i;
-			SendMessage(list_hwnd_.get(), LVM_INSERTCOLUMN, i, reinterpret_cast<LPARAM>(&column_));
+	std::expected<void, ListError> ListCtrl::Init(UINT column_mask, UINT item_mask, DWORD extended_style) noexcept {
+		if (!list_hwnd_.get() || !::IsWindow(list_hwnd_.get())) {
+			return std::unexpected(MakeError(ListErrorOP::SET_EXTENDED_STYLE, -1, 0));
 		}
+
+		column_mask_ = column_mask;
+		item_mask_ = item_mask;
+		ListView_SetExtendedListViewStyleEx(list_hwnd_.get(), extended_style, extended_style);
+
+		return {};
 	}
 
-	void ListCtrl::set_item(std::vector<item_definition> vector, size_t row) noexcept {
-		for (size_t i = 0; i < vector.size(); i++) {
-			item_.pszText = const_cast<LPWSTR>(vector[i].text_.c_str());
-			item_.iSubItem = vector[i].sub_item_index_;
-			item_.iItem = row;
-			if (i == 0) {
-				SendMessage(list_hwnd_.get(), LVM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&item_));
-			}
-			else {
-				ListView_SetItem(list_hwnd_.get(), reinterpret_cast<LPARAM>(&item_));
+	std::expected<void, ListError> ListCtrl::SetColumn(std::span<ColumnDefinition> columns, int fmt) noexcept {
+		if (columns.empty()) {
+			return std::unexpected(MakeError(ListErrorOP::INSERT_COLUMN, -1, 0));
+		}
+
+		if (!list_hwnd_.get() || !::IsWindow(list_hwnd_.get())) {
+			return std::unexpected(MakeError(ListErrorOP::INSERT_COLUMN, -1, 0));
+		}
+
+		for (size_t i = 0; i < columns.size(); ++i) {
+			LVCOLUMNW column{};
+			column.mask = column_mask_;
+			column.fmt = fmt;
+			column.cx = static_cast<int>(columns[i].width_);
+			column.iSubItem = static_cast<int>(i);
+			column.pszText = const_cast<LPWSTR>(columns[i].name_.c_str());
+
+			const LRESULT r = SendMessageW(
+				list_hwnd_.get(),
+				LVM_INSERTCOLUMNW,
+				static_cast<WPARAM>(i),
+				reinterpret_cast<LPARAM>(&column));
+
+			if (r == -1) {
+				return std::unexpected(MakeError(ListErrorOP::INSERT_COLUMN, static_cast<int>(i), r));
 			}
 		}
+
+		return {};
+	}
+
+	std::expected<void, ListError> ListCtrl::SetItem(std::span<ItemDefinition> items, size_t row) noexcept {
+		if (items.empty()) {
+			return std::unexpected(MakeError(ListErrorOP::SET_ITEM, static_cast<int>(row), 0));
+		}
+
+		if (!list_hwnd_.get() || !::IsWindow(list_hwnd_.get())) {
+			return std::unexpected(MakeError(ListErrorOP::SET_ITEM, static_cast<int>(row), 0));
+		}
+
+		const ItemDefinition* primary = nullptr;
+		for (const auto& it : items) {
+			if (it.sub_item_index_ == 0) {
+				primary = &it;
+				break;
+			}
+		}
+
+		if (!primary) {
+			return std::unexpected(MakeError(ListErrorOP::SET_ITEM, static_cast<int>(row), 0));
+		}
+
+		LVITEMW item{};
+		item.mask = item_mask_;
+		item.iItem = static_cast<int>(row);
+		item.iSubItem = 0;
+		item.pszText = const_cast<LPWSTR>(primary->text_.c_str());
+
+		const LRESULT inserted = SendMessageW(
+			list_hwnd_.get(),
+			LVM_INSERTITEMW,
+			0,
+			reinterpret_cast<LPARAM>(&item));
+
+		if (inserted == -1) {
+			return std::unexpected(MakeError(ListErrorOP::SET_ITEM, static_cast<int>(row), inserted));
+		}
+
+		for (const auto& it : items) {
+			if (it.sub_item_index_ == 0) {
+				continue;
+			}
+
+			LVITEMW others{};
+			others.mask = item_mask_;
+			others.iItem = static_cast<int>(inserted);
+			others.iSubItem = static_cast<int>(it.sub_item_index_);
+			others.pszText = const_cast<LPWSTR>(it.text_.c_str());
+
+			const BOOL ok = ListView_SetItem(list_hwnd_.get(), &others);
+			if (!ok) {
+				return std::unexpected(MakeError(ListErrorOP::SET_ITEM, static_cast<int>(it.sub_item_index_), ok));
+			}
+		}
+
+		return {};
+	}
+
+	std::expected<void, ListError> ListCtrl::ClearItems() noexcept
+	{
+		LRESULT r = SendMessageW(list_hwnd_.get(), LVM_DELETEALLITEMS, 0, 0);
+		if (r == FALSE) {
+			return std::unexpected(MakeError(ListErrorOP::DELETE_ALL_ITEMS, -1, r));
+		}
+		return {};
+	}
+
+	std::optional<int> ListCtrl::SelectedIndex() const noexcept
+	{
+		int idx = ListView_GetNextItem(list_hwnd_.get(), -1, LVNI_SELECTED);
+		if (idx == -1) return std::nullopt;
+		return idx;
 	}
 
 } //namespace petools
