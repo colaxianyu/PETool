@@ -8,20 +8,18 @@ module FileHeaderDlg;
 import DialogManager;
 import TimeStampDlg;
 import AnalysePE;
-import Tool;
+import Utility;
 
 //import AnalysePE;
 
+namespace petools::gui {
 
-
-namespace petools {
-
-    void FileHeaderDlg::init_dialog() noexcept {
+    void FileHeaderDlg::InitDialog() noexcept {
         set_file_header_info();
     }
 
     void FileHeaderDlg::set_file_header_info() noexcept {
-		const auto& headers = pe_analyse().GetHeaders();
+		const auto& headers = PeAnalyse().GetHeaders();
 
         struct pe_field_mapping {
             DWORD template_id;
@@ -40,11 +38,11 @@ namespace petools {
         };
 
         for (const auto& field : pe_fields) {
-            tool::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
+            petools::utility::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
         }
     }
 
-    LRESULT FileHeaderDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT FileHeaderDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)
         {
         case WM_COMMAND:
@@ -53,16 +51,16 @@ namespace petools {
             switch (wmId)
             {
             case IDC_BUTTON_DETAILDATA:
-				dialog_mgr().open_dialog<TimeStampDlg>(current_hwnd_.borrow());
+                DialogMgr().OpenDialog<TimeStampDlg>(current_hwnd_.borrow());
                 break;
             case IDOK:
-                dialog_mgr().close_dialog();
+                DialogMgr().CloseDialog();
                 break;
             }
             break;
         }
         case WM_CLOSE:
-            dialog_mgr().close_dialog();
+            DialogMgr().CloseDialog();
             break;
         default:
             return FALSE;

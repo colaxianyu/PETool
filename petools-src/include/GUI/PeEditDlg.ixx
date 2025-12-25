@@ -5,16 +5,13 @@
 
 export module PeEditDlg;
 
-import STL;
+import std.compat;
 import DialogEX;
 import WinHandle;
 import FileManager;
+import Utility;
 
-using std::unique_ptr;
-using std::vector;
-using tools::config::filename_max;
-
-namespace petools {
+namespace petools::gui {
 
 	export class PeEditDlg final : public DialogEX {
 	public:
@@ -24,10 +21,10 @@ namespace petools {
 
 		~PeEditDlg() noexcept override = default;
 
-		void init_dialog() noexcept override;
+		void InitDialog() noexcept override;
 
-		void set_dialog_title() noexcept;
-		void set_main_info() noexcept;
+		void SetTitle() noexcept;
+		void SetMainInfo() noexcept;
 		
 		//void SaveAsFile();
 		//FileManage* GetFileManage() { return fileManage_.get(); }
@@ -39,7 +36,7 @@ namespace petools {
 	private:
 		static constexpr const wchar_t* title_prefix_ = L"PE编辑器 - ";
 
-		LRESULT handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) override;
+		LRESULT HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) override;
 	};
 
 } //namespace petools

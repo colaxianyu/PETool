@@ -113,9 +113,9 @@ import DialogManager;
 //    }
 //}
 
-namespace petools {
+namespace petools::gui {
 
-    LRESULT ExportDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT ExportDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)
         {;
         case WM_COMMAND:
@@ -124,7 +124,7 @@ namespace petools {
 
             switch (wmId) {
             case IDOK:
-				dialog_mgr().close_dialog();
+				DialogMgr().CloseDialog();
                 break;
             default:
                 break;
@@ -132,7 +132,7 @@ namespace petools {
             break;
         }
         case WM_CLOSE:
-            dialog_mgr().close_dialog();
+            DialogMgr().CloseDialog();
             break;
 
         default:

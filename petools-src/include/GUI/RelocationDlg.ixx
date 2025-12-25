@@ -10,15 +10,15 @@ import DialogEX;
 import WinHandle;
 import ListControl;
 
-namespace petools {
+namespace petools::gui {
 
 	export class RelocationDlg final : public DialogEX {
 	public:
 		explicit RelocationDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_RELOCATION, parent) {}
 		~RelocationDlg() noexcept override = default;
 
-		void init_dialog() noexcept override;
-		void show_dialog() noexcept override;
+		void InitDialog() noexcept override;
+		void ShowDialog() noexcept override;
 
 		void init_block_list() noexcept;
 		void plant_block_column() noexcept;
@@ -42,7 +42,7 @@ namespace petools {
 		std::unique_ptr<ListCtrl> block_list_ = nullptr;
 		std::unique_ptr<ListCtrl> block_detail_list_ = nullptr;
 
-		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+		LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) override;
 	};
 
 } //namespace petools

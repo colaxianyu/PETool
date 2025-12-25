@@ -8,7 +8,7 @@ export module TimeStampDlg;
 import DialogEX;
 import WinHandle;
 
-namespace petools {
+namespace petools::gui {
 
 	export class TimeStampDlg final : public DialogEX {
 	public:
@@ -21,7 +21,7 @@ namespace petools {
 
 	private:
 
-		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+		LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) override;
 	};
 
 } //namespace petools
