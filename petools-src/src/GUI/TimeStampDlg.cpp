@@ -60,9 +60,9 @@ import DialogManager;
     //    }
     //}
 
-namespace petools {
+namespace petools::gui {
 
-    LRESULT TimeStampDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT TimeStampDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)
         {
         case WM_COMMAND:
@@ -71,16 +71,16 @@ namespace petools {
             switch (wmId)
             {
             case IDOK:
-                dialog_mgr().close_dialog();
+                DialogMgr().CloseDialog();
                 break;
             case IDCANCEL:
-                dialog_mgr().close_dialog();
+                DialogMgr().CloseDialog();
                 break;
             }
             break;
         }
         case WM_CLOSE:
-            dialog_mgr().close_dialog();
+            DialogMgr().CloseDialog();
             break;
         default:
             return FALSE;

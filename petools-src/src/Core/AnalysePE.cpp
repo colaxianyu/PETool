@@ -7,6 +7,7 @@
 module AnalysePE;
 
 import STL;
+import Utility;
 
 using std::string;
 using std::span;

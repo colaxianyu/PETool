@@ -15,14 +15,14 @@ import AnalysePE;
 //using std::wstring;
 using std::array;
 
-namespace petools {
+namespace petools::gui {
 
-    void DirectoryDlg::init_dialog() noexcept {
+    void DirectoryDlg::InitDialog() noexcept {
         set_directory_info();
     }
 
     void DirectoryDlg::set_directory_info() noexcept {
-		IMAGE_DATA_DIRECTORY* data_directory = pe_analyse().GetHeaders().optionalHeader->DataDirectory;
+		IMAGE_DATA_DIRECTORY* data_directory = PeAnalyse().GetHeaders().optionalHeader->DataDirectory;
 
         struct DirectoryInfo {
             DWORD rva_id_;
@@ -59,7 +59,7 @@ namespace petools {
         }
     }
 
-    LRESULT DirectoryDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT DirectoryDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)
         {
         case WM_COMMAND:
@@ -68,22 +68,22 @@ namespace petools {
             switch (wmId)
             {
             case IDC_BUTTON_EXPORT:
-				dialog_mgr().open_dialog<ExportDlg>(current_hwnd_.borrow());
+				DialogMgr().OpenDialog<ExportDlg>(current_hwnd_.borrow());
                 break;
             case IDC_BUTTON_IMPORT:
-				dialog_mgr().open_dialog<ImportDlg>(current_hwnd_.borrow());
+                DialogMgr().OpenDialog<ImportDlg>(current_hwnd_.borrow());
                 break;
             case IDC_BUTTON_RELOCATION:
-				dialog_mgr().open_dialog<RelocationDlg>(current_hwnd_.borrow());
+                DialogMgr().OpenDialog<RelocationDlg>(current_hwnd_.borrow());
                 break;
             case IDOK:
-                dialog_mgr().close_dialog();
+                DialogMgr().CloseDialog();
                 break;
             }
             break;
         }
         case WM_CLOSE:
-            dialog_mgr().close_dialog();
+            DialogMgr().CloseDialog();
             break;
         default:
             return FALSE;

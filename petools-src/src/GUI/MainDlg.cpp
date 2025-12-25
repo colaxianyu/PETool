@@ -1,36 +1,22 @@
 ﻿module;
 
 #include <windows.h>
-#include <Tlhelp32.h>
-#include <WtsApi32.h>
 #include <CommCtrl.h>
 #include "resources/resource.h"
-
-#pragma comment(lib, "WtsApi32.lib")
 
 module MainDlg;
 
 //// import AnalysePE;
-//import DialogManager;
 //import FileManager;
-////import AboutDlg;
 ////import ProtectorDlg;
 
 import PeEditDlg;
 import AboutDlg;
 import DialogManager;
 import Concept;
-import Tool;
 
-using std::vector;
-using std::array;
-using std::wstring;
-using std::size_t;
-using std::optional;
-using std::make_unique;
-
-using petools::tool::wstring_to_string;
-using petools::tool::to_wstring_hex;
+using petools::utility::wstring_to_string;
+using petools::utility::to_wstring_hex;
 
 using tools::config::filename_max;
 using tools::config::format_filter;
@@ -53,192 +39,189 @@ struct module_showing_config {
     static constexpr size_t module_size_hex_width = 8;
 };
 
-namespace petools {
+namespace petools::gui {
 
-    void MainDlg::init_dialog()  noexcept {
-        auto handle = LoadIcon(get_instance(), MAKEINTRESOURCE(IDI_ICON_MAINICO));
+    void MainDlg::InitDialog() {
+        auto handle = LoadIcon(GetInstance(), MAKEINTRESOURCE(IDI_ICON_MAINICO));
         icon_ = make_handle<HICON, decltype(&DestroyIcon)>(handle);
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon_.get()));
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon_.get()));
-        init_process_list();
-        init_module_list();
+        InitProcessList();
+        InitModuleList();
     }
 
-    void MainDlg::show_dialog() noexcept {
-        process_list_->plant_column();
-        process_list_->plant_item();
-        module_list_->plant_column();
+    void MainDlg::ShowDialog() {
+        PlantProcessColumn();
+        PlantProcessItem();
+        PlantModuleColumn();
 
-        ShowWindow(current_hwnd_.get(), get_cmd_show());
+        ShowWindow(current_hwnd_.get(), GetCmdShow());
         UpdateWindow(current_hwnd_.get());
     }
 
-    void MainDlg::close_dialog() noexcept {
-        PostQuitMessage(0);
+    void MainDlg::InitProcessList() noexcept {
+        process_list_ = std::make_unique<ListCtrl>(GetDlgItem(current_hwnd_.get(), IDC_LIST_PROCESS));
+        auto process_result =  process_list_->Init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+        if (!process_result.has_value()) {
+			// TODO: log error
+        }
     }
 
-    void MainDlg::init_process_list() noexcept {
-        process_list_ = make_unique<ListCtrl>(
-            GetDlgItem(current_hwnd_.get(), IDC_LIST_PROCESS),
-            [&]() {plant_process_column(); },
-            [&]() {plant_process_item(); }
-        );
-        process_list_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+    void MainDlg::InitModuleList() noexcept {
+        module_list_ = std::make_unique<ListCtrl>(GetDlgItem(current_hwnd_.get(), IDC_LIST_MODULE));
+        auto module_result = module_list_->Init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM, LVIF_TEXT);
+        if (!module_result.has_value()) {
+			// TODO: log error
+        }
     }
 
-    void MainDlg::init_module_list() noexcept {
-        //module_list_ = make_unique<ListCtrl>(
-        //    GetDlgItem(current_hwnd_.get(), IDC_LIST_MODULE),
-        //    [&]() {plant_module_column(); },
-        //    [&]() {plant_module_item(); }
-        //);
-        //module_list_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM, LVIF_TEXT);
+    void MainDlg::PlantProcessColumn() noexcept {
+        std::array<ColumnDefinition, 4> items = { {
+            { process_showing_config::process_column_length, L"Process" },
+            { process_showing_config::pid_column_length, L"PID" },
+            { process_showing_config::image_base_column_length, L"Image Base" },
+            { process_showing_config::image_size_column_length, L"Image Size" }
+        } };
+
+        auto set_column_result = process_list_->SetColumn(items);
+        if (!set_column_result.has_value()) {
+			// TODO: log error
+        }
     }
 
-    void MainDlg::plant_process_column() noexcept {
-        //array<column_definition, 4> items = { {
-        //    { process_showing_config::process_column_length, L"Process" },
-        //    { process_showing_config::pid_column_length, L"PID" },
-        //    { process_showing_config::image_base_column_length, L"Image Base" },
-        //    { process_showing_config::image_size_column_length, L"Image Size" }
-        //} };
+    void MainDlg::PlantProcessItem() noexcept {
 
-        //process_list_->set_column(items);
+        auto processes = petools::utility::EnumProcesses();
+
+        std::size_t row = 0;
+        for (const auto& p : processes) {
+            std::vector<ItemDefinition> items;
+            items.push_back({ 0, p.exe_name });
+            items.push_back({ 1, to_wstring_hex(p.pid,        process_showing_config::pid_hex_width) });
+            items.push_back({ 2, to_wstring_hex(p.image_base, process_showing_config::image_base_hex_width) });
+            items.push_back({ 3, to_wstring_hex(p.image_size, process_showing_config::image_size_hex_width) });
+
+            auto set_item_result = process_list_->SetItem(items, row++);
+            if (!set_item_result.has_value()) {
+				// TODO: log error
+            }
+        }
     }
 
-    void MainDlg::plant_process_item() noexcept {
-        //PROCESSENTRY32 process;
-        //memset(&process, 0, sizeof(process));
-        //process.dwSize = sizeof(process);
-        //HANDLE process_snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    void MainDlg::PlantModuleColumn() noexcept {
+        std::array<ColumnDefinition, 2> items = { {
+            { module_showing_config::module_name_column_length, L"Module Name" },
+            { module_showing_config::module_size_column_length, L"Module Size" }
+        } };
 
-        //if (process_snap == INVALID_HANDLE_VALUE) {
-        //    return;
-        //}
-
-        //MODULEENTRY32 module;
-        //memset(&module, 0, sizeof(module));
-        //module.dwSize = sizeof(module);
-
-        //std::size_t row = 0;
-
-        //while (Process32Next(process_snap, &process)) {
-        //    HANDLE module_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process.th32ProcessID);
-
-        //    if (module_snap != INVALID_HANDLE_VALUE && Module32First(module_snap, &module)) {
-        //        std::vector<item_definition> items;
-        //        items.push_back(item_definition{ 0, process.szExeFile });
-        //        items.push_back(item_definition{ 1, to_wstring_hex(process.th32ProcessID, process_showing_config::pid_hex_width) });
-        //        items.push_back(item_definition{ 2, to_wstring_hex(reinterpret_cast<DWORD>(module.modBaseAddr), process_showing_config::image_base_hex_width) });
-        //        items.push_back(item_definition{ 3, to_wstring_hex(module.modBaseSize, process_showing_config::image_size_hex_width) });
-
-        //        process_list_->set_item(items, row);
-        //        CloseHandle(module_snap);
-        //        row++;
-        //    }
-        //}
-
-        //CloseHandle(process_snap);
+        auto set_solumn_result = module_list_->SetColumn(items);
+        if (!set_solumn_result.has_value()) {
+			// TODO: log error
+        }
     }
 
-    void MainDlg::plant_module_column() noexcept {
-        //array<column_definition, 2> items = { {
-        //    { module_showing_config::module_name_column_length, L"Module Name" },
-        //    { module_showing_config::module_size_column_length, L"Module Size" }
-        //} };
+    void MainDlg::PlantModuleItem() noexcept {
 
-        //module_list_->set_column(items);
+        auto process_list_row = process_list_->SelectedIndex();
+        if (!process_list_row.has_value()) {
+			// TODO: log error
+            return;
+        }
+
+        auto clear_result = module_list_->ClearItems();
+        if (!clear_result.has_value()) {
+			// TODO: log error
+            return; 
+        }
+
+        auto pid_result = GetPid(process_list_row.value());
+        if (!pid_result.has_value()) {
+            return;
+        }
+
+        auto modules = petools::utility::EnumModules(pid_result.value());
+
+        int row = 0;
+        for (const auto& m : modules) {
+            std::vector<ItemDefinition> items;
+            items.push_back({ 0, m.path });
+            items.push_back({ 1, to_wstring_hex(m.size, module_showing_config::module_size_hex_width) });
+
+            auto set_item_result = module_list_->SetItem(items, row++);
+            if (!set_item_result.has_value()) {
+				// TODO: log error
+            }
+        }
     }
 
-    void MainDlg::plant_module_item() noexcept {
-        //DWORD process_list_row = SendMessage(process_list_->get_list_handle(), LVM_GETNEXTITEM, -1, LVNI_SELECTED);
-        //if (process_list_row == -1) {
-        //    return;
-        //}
+	std::expected<DWORD, petools::utility::PidParseError> MainDlg::GetPid(INT row_index) noexcept {
+		std::wstring pid_str(process_showing_config::pid_hex_width + 1, L'\0');
 
-        //SendMessage(module_list_->get_list_handle(), LVM_DELETEALLITEMS, 0, 0);
+		LV_ITEM item;
+		memset(&item, 0, sizeof(item));
 
-        //std::optional<DWORD> pid_result = get_pid(process_list_row);
-        //if (!pid_result.has_value()) {
-        //    return;
-        //}
-        //HANDLE h_module = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid_result.value());
+		item.iSubItem = 1;
+		item.pszText = pid_str.data();
+		item.cchTextMax = static_cast<int>(pid_str.size());
+		SendMessage(process_list_->GetListHandle(), LVM_GETITEMTEXT, row_index, reinterpret_cast<LPARAM>(&item));
+		pid_str.resize(std::wcslen(pid_str.c_str()));
 
-        //MODULEENTRY32 module;
-        //memset(&module, 0, sizeof(module));
-        //module.dwSize = sizeof(module);
+		return petools::utility::ParsePidHex(pid_str);
+	}
 
-        //int row = 0;
-
-        //while (Module32Next(h_module, &module)) {
-        //    std::vector<item_definition> items;
-        //    items.push_back(item_definition{ 0, module.szExePath });
-        //    items.push_back(item_definition{ 1, to_wstring_hex(module.modBaseSize, module_showing_config::module_size_hex_width) });
-
-        //    module_list_->set_item(items, row);
-        //    row++;
-        //}
-
-        //CloseHandle(h_module);
+    bool MainDlg::OnCommand(WORD id, WORD code, HWND ctrl) {
+        switch (id)
+        {
+        case IDC_BUTTON_PEVIEW:
+        {
+            std::optional<std::string> file_name_result = petools::utility::choose_file(current_hwnd_.get());
+            if (!file_name_result.has_value()) {
+                return true;
+            }
+            PeEditDlg* hwnd = DialogMgr().OpenDialog<PeEditDlg>(GetCurrentHWND(), file_name_result.value());
+            if (hwnd == nullptr) {
+                // TODO: log error
+            }
+            return true;
+        }
+        case IDC_BUTTON_ABOUT:
+        {
+            AboutDlg* hwnd = DialogMgr().OpenDialog<AboutDlg>(GetCurrentHWND());
+            if (hwnd == nullptr) {
+				// TODO: log error
+            }
+            return true;
+        }
+        case IDC_BUTTON_PROTECT:
+        {
+            //create_protector_dlg();
+            return true;
+        }
+        case IDC_BUTTON_QUIT:
+        {
+            DialogMgr().CloseDialog();
+            return true;
+        }
+        default:
+            break;
+        }
+        return false;
     }
 
-    optional<DWORD> MainDlg::get_pid(INT row_index) noexcept {
-        //std::wstring pid_str(process_showing_config::pid_hex_width + 1, L'\0');
-        //LV_ITEM item;
-        //memset(&item, 0, sizeof(item));
-
-        //item.iSubItem = 1;
-        //item.pszText = &pid_str[0];
-        //item.cchTextMax = process_showing_config::pid_hex_width + 1;
-        //SendMessage(process_list_->get_list_handle(), LVM_GETITEMTEXT, row_index, reinterpret_cast<LPARAM>(&item));
-
-        //return tool::wstring_to_dword(pid_str, numeric_base::hex{});
-        return 0;
-    }
-
-    LRESULT MainDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
-    //    NMHDR* hdr = (NMHDR*)l_param;
-    //    switch (message)
-    //    {
-    //    case WM_COMMAND:
-    //    {
-    //        int wmId = LOWORD(w_param);
-    //        std::optional<std::string> file_name_result = std::make_optional<std::string>();
-    //        switch (wmId)
-    //        {
-    //        case IDC_BUTTON_PEVIEW:
-    //            file_name_result = tool::choose_file(current_hwnd_.get());
-    //            if (!file_name_result.has_value()) {
-    //                break;
-    //            }
-				//dialog_mgr.open_dialog<PeEditDlg>(current_hwnd_.borrow(), file_name_result.value());
-    //            break;
-    //        case IDC_BUTTON_ABOUT:
-    //            dialog_mgr.open_dialog<AboutDlg>(current_hwnd_.borrow());
-    //            break;
-    //        case IDC_BUTTON_PROTECT:
-    //            //create_protector_dlg();
-    //            break;
-    //        case IDC_BUTTON_QUIT:
-    //            dialog_mgr.close_dialog();
-    //            break;
-    //        default:
-    //            break;
-    //        }
-    //        break;
-    //    }
-    //    case WM_CLOSE:
-    //        dialog_mgr.close_dialog();
-    //        break;
-    //    case WM_NOTIFY:
-    //        if (w_param == IDC_LIST_PROCESS && hdr->code == NM_CLICK) {
-    //            plant_module_item();
-    //        }
-    //        break;
-    //    default:
-    //        return FALSE;
-    //    }
-        return FALSE;
+    LRESULT MainDlg::OnOtherMessage(UINT msg, WPARAM w_param, LPARAM l_param) {
+        switch (msg) {
+        case WM_NOTIFY: 
+        {
+			NMHDR* hdr = (NMHDR*)l_param;
+            if (w_param == IDC_LIST_PROCESS && hdr->code == NM_CLICK) {
+                PlantModuleItem();
+                return true;
+            }
+        }
+        default:
+			break;
+        }
+        return false;
     }
 
 } //namespace petools

@@ -87,15 +87,15 @@ namespace petools {
 
 	FileManager::FileManager(std::string_view path) noexcept
 		//: file_(fast_io::mnp::os_c_str(path.data())),
-		//file_path_(std::string(path.begin(), path.end())),
+		//: file_path_(std::string(path.begin(), path.end()))
 		//file_size_(file_.size())
 	{
 		//
-		// .init(reinterpret_cast<const std::byte*>(file_.address_begin), file_size_);
+		 //pe_analyse().init(reinterpret_cast<const std::byte*>(file_.address_begin), file_size_);
 	}
 
 	FileManager::~FileManager() noexcept {
-		pe_analyse().UnloadPeData();
+		PeAnalyse().UnloadPeData();
 	}
 
 } //namespace petools

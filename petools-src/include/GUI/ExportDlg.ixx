@@ -10,7 +10,7 @@ import DialogEX;
 import WinHandle;
 //import ListControl;
 
-namespace petools {
+namespace petools::gui {
 
 	export class ExportDlg final : public DialogEX
 	{
@@ -24,7 +24,7 @@ namespace petools {
 		//void plantFuncItem();
 
 	private:
-		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+		LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) override;
 	};
 
 } //namespace petools

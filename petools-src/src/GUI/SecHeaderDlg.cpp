@@ -12,27 +12,26 @@ import AnalysePE;
 using std::array;
 using std::wstring;
 
-namespace petools {
+namespace petools::gui {
 
-	void SecHeaderDlg::init_dialog() noexcept {
+	void SecHeaderDlg::InitDialog() noexcept {
 		init_section_list();
 	}
 
-    void SecHeaderDlg::show_dialog() noexcept {
-        section_list_->plant_column();
-        section_list_->plant_item();
-        ShowWindow(current_hwnd_, get_cmd_show());
+    void SecHeaderDlg::ShowDialog() noexcept {
+        plant_section_column();
+        plant_section_item();
+        ShowWindow(current_hwnd_, GetCmdShow());
         UpdateWindow(current_hwnd_);
     }
 
     void SecHeaderDlg::init_section_list() noexcept {
-        section_list_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(current_hwnd_, IDC_LIST_SECTION),
-            [&]() {plant_section_column(); }, [&]() {plant_section_item(); }));
-        section_list_->init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
+        section_list_ = std::unique_ptr<ListCtrl>(new ListCtrl(GetDlgItem(current_hwnd_, IDC_LIST_SECTION)));
+        section_list_->Init(LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT, LVIF_TEXT);
     }
     
     void SecHeaderDlg::plant_section_column() noexcept {
-        array<column_definition, 7> items = { {
+        array<ColumnDefinition, 7> items = { {
     		{ 30, L"#" },
     		{ 80, L"Name" },
     		{ 110, L"Virtual Size"},
@@ -42,7 +41,7 @@ namespace petools {
     		{ 120, L"Characteristics"}
     	} };
     
-        section_list_->set_column(items);
+        section_list_->SetColumn(items);
     }
     
     void SecHeaderDlg::plant_section_item() noexcept {
@@ -50,7 +49,7 @@ namespace petools {
         memset(&item, 0, sizeof(LV_ITEM));
         item.mask = LVIF_TEXT;
     
-        IMAGE_SECTION_HEADER* sec_header = pe_analyse().GetHeaders().sectionHeader;
+        IMAGE_SECTION_HEADER* sec_header = PeAnalyse().GetHeaders().sectionHeader;
 
         DWORD index = 0;
         auto SetSectionHexText = [&](HWND hDlg, DWORD row, DWORD value = 0) {
@@ -65,7 +64,7 @@ namespace petools {
             }
             else if (index == 1) {
                 TCHAR* nameBuffer = nullptr;
-                pe_analyse().GetTcharSectionName(row, &nameBuffer);
+                PeAnalyse().GetTcharSectionName(row, &nameBuffer);
                 item.pszText = nameBuffer;
                 ListView_SetItem(hDlg, &item);
             }
@@ -79,18 +78,18 @@ namespace petools {
     	};
     
         for (int row = 0; sec_header->Name != 0 && sec_header->Characteristics != 0; row++, sec_header++) {
-            SetSectionHexText(section_list_->get_list_handle(), row);
-            SetSectionHexText(section_list_->get_list_handle(), row);
-            SetSectionHexText(section_list_->get_list_handle(), row, sec_header->Misc.VirtualSize);
-            SetSectionHexText(section_list_->get_list_handle(), row, sec_header->VirtualAddress);
-            SetSectionHexText(section_list_->get_list_handle(), row, sec_header->SizeOfRawData);
-            SetSectionHexText(section_list_->get_list_handle(), row, sec_header->PointerToRawData);
-            SetSectionHexText(section_list_->get_list_handle(), row, sec_header->Characteristics);
+            SetSectionHexText(section_list_->GetListHandle(), row);
+            SetSectionHexText(section_list_->GetListHandle(), row);
+            SetSectionHexText(section_list_->GetListHandle(), row, sec_header->Misc.VirtualSize);
+            SetSectionHexText(section_list_->GetListHandle(), row, sec_header->VirtualAddress);
+            SetSectionHexText(section_list_->GetListHandle(), row, sec_header->SizeOfRawData);
+            SetSectionHexText(section_list_->GetListHandle(), row, sec_header->PointerToRawData);
+            SetSectionHexText(section_list_->GetListHandle(), row, sec_header->Characteristics);
             index = 0;
         }
     }
 
-    LRESULT SecHeaderDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT SecHeaderDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)
         {
         case WM_COMMAND:
@@ -99,13 +98,13 @@ namespace petools {
             switch (wmId)
             {
             case IDOK:
-                dialog_mgr().close_dialog();
+                DialogMgr().CloseDialog();
                 break;
             }
             break;
         }
         case WM_CLOSE:
-            dialog_mgr().close_dialog();
+            DialogMgr().CloseDialog();
             break;
         default:
             return FALSE;

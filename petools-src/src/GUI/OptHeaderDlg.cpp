@@ -7,7 +7,7 @@ module OptHeaderDlg;
 
 import DialogManager;
 import AnalysePE;
-import Tool;
+import Utility;
 
 
 //void OptHeaderDlg::SetOptHeaderInfo() {
@@ -43,13 +43,13 @@ import Tool;
 //    SetDlgItemText_t(h_current_dlg_, IDC_EDIT_OPTRVAANDSIZE, AnalysePE::GetAnalyse().GetHeaders().optionalHeader->NumberOfRvaAndSizes, 8);
 //}
 
-namespace petools {
-    void OptHeaderDlg::init_dialog() noexcept {
+namespace petools::gui {
+    void OptHeaderDlg::InitDialog() noexcept {
         set_optional_header_info();
     }
 
     void OptHeaderDlg::set_optional_header_info() noexcept {
-        const auto& header = pe_analyse().GetHeaders();
+        const auto& header = PeAnalyse().GetHeaders();
 
         struct pe_field_mapping {
             DWORD template_id;
@@ -91,11 +91,11 @@ namespace petools {
         };
 
         for (const auto& field : pe_fields) {
-             tool::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
+            petools::utility::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
         }
     }
 
-    LRESULT OptHeaderDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT OptHeaderDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message)
         {
         case WM_COMMAND:
@@ -104,13 +104,13 @@ namespace petools {
             switch (wmId)
             {
             case IDOK:
-                dialog_mgr().close_dialog();
+                DialogMgr().CloseDialog();
                 break;
             }
             break;
         }
         case WM_CLOSE:
-            dialog_mgr().close_dialog();
+            DialogMgr().CloseDialog();
             break;
         default:
             return FALSE;

@@ -4,15 +4,10 @@
 
 export module DialogEX;
 
-import STL;
-import DialogStateMachine;
+import std.compat;
 import WinHandle;
 
-using std::atomic;
-using std::atomic_int;
-using std::move;
-
-namespace petools {
+namespace petools::gui {
 
     export class DialogEX {
     public:
@@ -26,50 +21,57 @@ namespace petools {
         DialogEX(DialogEX&&) noexcept;
         DialogEX& operator=(DialogEX&&) noexcept;
 
-        [[nodiscard]] HWND get_current_hwnd() const noexcept { return current_hwnd_.get(); }
-        [[nodiscard]] HWND get_parent_hwnd() const noexcept { return parent_hwnd_.get(); }
+        [[nodiscard]] HWND GetCurrentHWND() const noexcept { return current_hwnd_.get(); }
+        [[nodiscard]] HWND GetParentHWND() const noexcept { return parent_hwnd_; }
 
-        [[nodiscard]] INT get_template_id() const noexcept { return template_id_; }
-        [[nodiscard]] DialogStateMachine& get_state_machine() noexcept { return state_machine_; }
+        [[nodiscard]] INT GetTemplateID() const noexcept { return template_id_; }
 
-        static void configure(HINSTANCE h_instance, int cmd_show) noexcept;
-        [[nodiscard]] static HINSTANCE get_instance() noexcept { return app_instance_.load(); }
-        [[nodiscard]] static int get_cmd_show() noexcept { return default_cmd_show_.load(); }
+        static void Configure(HINSTANCE h_instance, int cmd_show) noexcept;
+        [[nodiscard]] static HINSTANCE GetInstance() noexcept { return app_instance_; }
+        [[nodiscard]] static int GetCmdShow() noexcept { return default_cmd_show_; }
 
     protected:
         WindowHandle current_hwnd_;
-        WindowHandleRef parent_hwnd_;
+        HWND parent_hwnd_{};
 
-        virtual void init_dialog() noexcept {}
-        virtual void show_dialog() noexcept {
-            ShowWindow(current_hwnd_.get(), default_cmd_show_);
-            UpdateWindow(current_hwnd_.get());
+        virtual void InitDialog() {}
+        virtual void ShowDialog() {
+            ::ShowWindow(current_hwnd_.get(), default_cmd_show_);
+            ::UpdateWindow(current_hwnd_.get());
         }
-        virtual void hide_dialog() noexcept {}
-        virtual void close_dialog() noexcept {
-            EndDialog(current_hwnd_.get(), 0);
+        virtual void PreCloseDialog() {}
+
+        virtual bool OnInitDialog() {
+            InitDialog();
+            ShowDialog();
+            return true;
         }
 
-        [[nodiscard]] DialogState get_current_state() const noexcept { return state_machine_.get_current_state(); }
-        [[nodiscard]] DialogState get_previous_state() const noexcept { return state_machine_.get_previous_state(); }
+        virtual bool OnCommand(WORD, WORD, HWND) {
+            return false;
+        }
 
-        virtual LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) = 0;
+        virtual bool OnPreClose() {
+            PreCloseDialog();
+            return true;
+        }
+
+        virtual LRESULT OnOtherMessage(UINT, WPARAM, LPARAM) {
+            return FALSE;
+        }
+
+        virtual LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) {
+            return FALSE;
+        }
+
     private:
         friend class DialogManager;
 
         INT template_id_;
-        DialogStateMachine state_machine_;
-        inline static atomic<HINSTANCE> app_instance_{ nullptr };
-        inline static atomic_int default_cmd_show_{ SW_SHOWNORMAL };
+        inline static HINSTANCE app_instance_{ nullptr };
+        inline static int default_cmd_show_{ SW_SHOWNORMAL };
 
-        void handle_init() { state_machine_.transition_to(DialogState::Initializing); }
-        void handle_show() { state_machine_.transition_to(DialogState::Active); }
-        void handle_hide() { state_machine_.transition_to(DialogState::Suspended); }
-        void handle_close() { state_machine_.transition_to(DialogState::Closing); }
-
-        void set_transitions();
-
-        static INT_PTR CALLBACK static_dialog_proc(HWND, UINT, WPARAM, LPARAM);
+        static INT_PTR CALLBACK StaticDialogProc(HWND, UINT, WPARAM, LPARAM);
     };
 
-} //namespace petools
+} //namespace petools::gui

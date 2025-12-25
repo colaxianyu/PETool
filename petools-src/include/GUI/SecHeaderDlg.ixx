@@ -12,15 +12,15 @@ import ListControl;
 
 //using std::unique_ptr;
 
-namespace petools {
+namespace petools::gui {
 
 	export class SecHeaderDlg final : public DialogEX {
 	public:
 		explicit SecHeaderDlg(HWND h_parent) noexcept : DialogEX(IDD_DIALOG_SECTIONS, h_parent) {}
 		~SecHeaderDlg() noexcept override = default;
 
-		void init_dialog() noexcept override;
-		void show_dialog() noexcept override;
+		void InitDialog() noexcept override;
+		void ShowDialog() noexcept override;
 
 		void init_section_list() noexcept;
 
@@ -30,7 +30,7 @@ namespace petools {
 	private:
 		std::unique_ptr<ListCtrl> section_list_ = nullptr;
 
-		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+		LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) override;
 	};
 
 } //namespace petools

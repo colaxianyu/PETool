@@ -4,51 +4,65 @@
 
 export module DialogManager;
 
+import std.compat;
 import DialogEX;
-import STL;
 
-using std::unique_ptr;
-using std::stack;
-using std::make_unique;
-using std::forward;
-
-namespace petools {
+namespace petools::gui {
 
 	export class DialogManager {
 	public:
-		static DialogManager& instance() {
+		static DialogManager& Instance() noexcept {
 			static DialogManager instance;
 			return instance;
 		}
 
-		template <typename T, typename... Args>
-		void open_dialog(Args&&... args) {
-			auto dialog = make_unique<T>(forward<Args>(args)...);
-			if (!dialogs_.empty()) {
-				disable_current_dialog();
+		template <typename Dlg, typename... Args>
+		[[nodiscard]] Dlg* OpenDialog(Args&&... args) {
+			static_assert(std::is_base_of_v<DialogEX, Dlg>, "Dlg must derive from DialogEX");
+
+			auto dialog = std::make_unique<Dlg>(std::forward<Args>(args)...);
+			if (!dialog) {
+				return nullptr;
 			}
 
-			::CreateDialogParam(
-				dialog->get_instance(),
-				MAKEINTRESOURCE(dialog->get_template_id()),
-				dialog->get_parent_hwnd(),
-				DialogEX::static_dialog_proc,
+			if (!dialogs_.empty()) {
+				DisableCurrentDialog();
+			}
+
+			HWND hdlg = ::CreateDialogParam(
+				dialog->GetInstance(),
+				MAKEINTRESOURCE(dialog->GetTemplateID()),
+				dialog->GetParentHWND(),
+				DialogEX::StaticDialogProc,
 				reinterpret_cast<LPARAM>(dialog.get())
 			);
 
-			dialog->handle_init();
-			dialogs_.push(move(dialog));
-			dialogs_.top()->handle_show();
+			if (!hdlg) {
+				::MessageBoxW(
+					dialog->GetParentHWND(),
+					L"创建对话框失败。",
+					L"错误",
+					MB_ICONERROR | MB_OK
+				);
+				return nullptr;
+			}
+
+			dialogs_.push(std::move(dialog));
+			return static_cast<Dlg*>(dialogs_.top().get());
 		}
 
-		void close_dialog() {
+		void CloseDialog() noexcept {
 			if (dialogs_.empty()) {
 				return;
 			}
-			dialogs_.top()->handle_close();
+
 			dialogs_.pop();
+
 			if (!dialogs_.empty()) {
-				activate_current_dialog();
+				ActivateCurrentDialog();
+			}
+			else {
+				::PostQuitMessage(0);
 			}
 		}
 
@@ -61,25 +75,24 @@ namespace petools {
 		DialogManager(DialogManager&&) = delete;
 		DialogManager& operator=(DialogManager&&) = delete;
 
-		void disable_current_dialog() {
-			if (auto hwnd = dialogs_.top()->get_current_hwnd()) {
+		void DisableCurrentDialog() noexcept {
+			if (auto hwnd = dialogs_.top()->GetCurrentHWND()) {
 				::EnableWindow(hwnd, FALSE);
 			}
 		}
 
-		void activate_current_dialog() {
-			if (auto hwnd = dialogs_.top()->get_current_hwnd()) {
+		void ActivateCurrentDialog() noexcept {
+			if (auto hwnd = dialogs_.top()->GetCurrentHWND()) {
 				::EnableWindow(hwnd, TRUE);
 				::SetForegroundWindow(hwnd);
 			}
 		}
 
-		stack<unique_ptr<DialogEX>> dialogs_;
+		std::stack<std::unique_ptr<DialogEX>> dialogs_;
 	};
 
-	//export inline auto& dialog_mgr = DialogManager::instance();
-	export inline DialogManager& dialog_mgr() noexcept {
-		return DialogManager::instance();
+	export inline DialogManager& DialogMgr() noexcept {
+		return DialogManager::Instance();
 	}
 
-} //namespace petools
+} //namespace petools::gui

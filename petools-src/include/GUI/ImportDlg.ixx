@@ -10,15 +10,15 @@ import DialogEX;
 import ListControl;
 import WinHandle;
 
-namespace petools {
+namespace petools::gui {
 
 	export class ImportDlg final : public DialogEX {
 	public:
 		explicit ImportDlg(HWND parent) noexcept : DialogEX(IDD_DIALOG_IMPORT, parent) {}
 		~ImportDlg() noexcept override = default;
 
-		void init_dialog() noexcept override;
-		void show_dialog() noexcept override;
+		void InitDialog() noexcept override;
+		void ShowDialog() noexcept override;
 
 		void init_main_list() noexcept;
 		void plant_main_column() noexcept;
@@ -33,7 +33,7 @@ namespace petools {
 		std::unique_ptr<ListCtrl> func_list_ = nullptr;
 
 		DWORD get_first_thunk_from_main_list(DWORD row_id) noexcept;
-		LRESULT handle_message(const WindowHandle&, UINT, WPARAM, LPARAM) override;
+		LRESULT HandleMessage(const WindowHandle&, UINT, WPARAM, LPARAM) override;
 	};
 
 } //namespace petools

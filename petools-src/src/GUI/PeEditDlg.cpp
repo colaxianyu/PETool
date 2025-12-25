@@ -1,7 +1,6 @@
 ﻿module;
 
 #include <windows.h>
-#include <string>
 #include "resources/resource.h"
 
 module PeEditDlg;
@@ -12,63 +11,53 @@ import SecHeaderDlg;
 import DirectoryDlg;
 import DialogManager;
 import AnalysePE;
-import Tool;
+import Utility;
 
-using std::wstring;
-
-using petools::tool::string_to_wstring;
+using petools::utility::string_to_wstring;
 using tools::config::filename_max;
 
-namespace petools {
+namespace petools::gui {
 
-    void PeEditDlg::init_dialog() noexcept {
-        set_dialog_title();
-        set_main_info();
+    void PeEditDlg::InitDialog() noexcept {
+        SetTitle();
+        SetMainInfo();
     }
 
-    void PeEditDlg::set_dialog_title() noexcept {
-  //      wstring file_path = string_to_wstring(file_manager_.get_file_path());
-		//wstring title = title_prefix_ + file_path;
-  //      SetWindowText(current_hwnd_, title.c_str());
-
-        wstring file_path = string_to_wstring(file_manager_.get_file_path());
-
-        // 🔁 改写这里：
-        wstring title = title_prefix_;  // 拷贝前缀
-        title += file_path;             // 再拼接文件名
-
+    void PeEditDlg::SetTitle() noexcept {
+        std::wstring file_path = string_to_wstring(file_manager_.get_file_path());
+		std::wstring title = title_prefix_ + file_path;
         SetWindowText(current_hwnd_, title.c_str());
     }
 
-    void PeEditDlg::set_main_info() noexcept {
-  //      const auto& headers = pe_analyse.GetHeaders();
+    void PeEditDlg::SetMainInfo() noexcept {
+        const auto& headers = PeAnalyse().GetHeaders();
 
-  //      struct pe_field_mapping {
-  //          DWORD template_id;
-  //          DWORD value;
-		//	DWORD show_length = 8;
-  //      };
+        struct pe_field_mapping {
+            DWORD template_id;
+            DWORD value;
+			DWORD show_length = 8;
+        };
 
-		//const pe_field_mapping pe_fields[] = {
-		//	{ IDC_EDIT_ENTRY, headers.optionalHeader->AddressOfEntryPoint },
-		//	{ IDC_EDIT_IMAGEBASE, headers.optionalHeader->ImageBase },
-		//	{ IDC_EDIT_IMAGESIZE, headers.optionalHeader->SizeOfImage },
-		//	{ IDC_EDIT_CODEBASE, headers.optionalHeader->BaseOfCode },
-		//	{ IDC_EDIT_DATABASE, headers.optionalHeader->BaseOfData },
-		//	{ IDC_EDIT_SECTIONALIGN, headers.optionalHeader->SectionAlignment },
-		//	{ IDC_EDIT_FILEALIGN, headers.optionalHeader->FileAlignment },
-		//	{ IDC_EDIT_HEADERSIZE, headers.optionalHeader->SizeOfHeaders },
-		//	{ IDC_EDIT_OPTHEADERSIZE, headers.fileHeader->SizeOfOptionalHeader },
-		//	{ IDC_EDIT_SECTIONSIZE, headers.fileHeader->NumberOfSections },
-		//	{ IDC_EDIT_CHARACT, headers.fileHeader->Characteristics },
-		//	{ IDC_EDIT_TIMESTAMP, headers.fileHeader->TimeDateStamp },
-		//	{ IDC_EDIT_SUBSYS, headers.optionalHeader->Subsystem },
-		//	{ IDC_EDIT_DIRSIZE, headers.optionalHeader->NumberOfRvaAndSizes }
-		//};
+		const pe_field_mapping pe_fields[] = {
+			{ IDC_EDIT_ENTRY, headers.optionalHeader->AddressOfEntryPoint },
+			{ IDC_EDIT_IMAGEBASE, headers.optionalHeader->ImageBase },
+			{ IDC_EDIT_IMAGESIZE, headers.optionalHeader->SizeOfImage },
+			{ IDC_EDIT_CODEBASE, headers.optionalHeader->BaseOfCode },
+			{ IDC_EDIT_DATABASE, headers.optionalHeader->BaseOfData },
+			{ IDC_EDIT_SECTIONALIGN, headers.optionalHeader->SectionAlignment },
+			{ IDC_EDIT_FILEALIGN, headers.optionalHeader->FileAlignment },
+			{ IDC_EDIT_HEADERSIZE, headers.optionalHeader->SizeOfHeaders },
+			{ IDC_EDIT_OPTHEADERSIZE, headers.fileHeader->SizeOfOptionalHeader },
+			{ IDC_EDIT_SECTIONSIZE, headers.fileHeader->NumberOfSections },
+			{ IDC_EDIT_CHARACT, headers.fileHeader->Characteristics },
+			{ IDC_EDIT_TIMESTAMP, headers.fileHeader->TimeDateStamp },
+			{ IDC_EDIT_SUBSYS, headers.optionalHeader->Subsystem },
+			{ IDC_EDIT_DIRSIZE, headers.optionalHeader->NumberOfRvaAndSizes }
+		};
 
-		//for (const auto& field : pe_fields) {
-		//	tool::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
-		//}
+		for (const auto& field : pe_fields) {
+            utility::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
+		}
     }
 
     //void PeEditDlg::SaveAsFile() {
@@ -107,7 +96,7 @@ namespace petools {
     //
     //}
 
-    LRESULT PeEditDlg::handle_message(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
+    LRESULT PeEditDlg::HandleMessage(const WindowHandle& h_dlg, UINT message, WPARAM w_param, LPARAM l_param) {
     //    NMHDR* phdr = (NMHDR*)l_param;
     //    switch (message)
     //    {
