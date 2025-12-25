@@ -213,8 +213,7 @@ namespace petools {
 	//	variant<pe_headers32, pe_headers64> headers_;
 	//};
 
-	// export inline auto& pe_analyse = AnalysePE::instance();
-	export inline AnalysePE& pe_analyse() noexcept {
+	export inline AnalysePE& PeAnalyse() noexcept {
 		return AnalysePE::instance();
 	}
 
