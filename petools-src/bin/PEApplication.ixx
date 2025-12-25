@@ -34,9 +34,11 @@ namespace petools {
 		PEApplication& operator=(PEApplication&&) = delete;
 
 		void RunApplication(HINSTANCE h_instance, int cmd_show) noexcept {
+			using namespace petools::gui;
+
 			Logger::instance().init();
 			DialogEX::Configure(h_instance, cmd_show);
-			dialog_mgr().OpenDialog<MainDlg>();
+			DialogMgr().OpenDialog<MainDlg>();
 			
 		}
 	};
