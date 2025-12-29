@@ -4,7 +4,8 @@
 
 export module FileManager;
 
-import STL;
+import std.compat;
+import WinHandle;
 
 //struct FileBufferDeleter {
 //	void operator()(char* buffer) {
@@ -86,5 +87,59 @@ namespace petools {
 		std::size_t file_size_;
 	};
 
+	export enum class FileErrorOP {
+		OpenFailed,
+		SizeQueryFailed,
+		MappingFailed,
+		ViewFailed,
+		Unknown
+	};
+
+	export struct FileError {
+		FileErrorOP	op{};
+		std::error_code code;
+		std::string message;    
+	};
+
+	template <typename T>
+	using file_result = std::expected<T, FileError>;
+
+	export class FileManager2 {
+	public:
+		FileManager2() = delete;
+
+		[[nodiscard]] static file_result<FileManager2> OpenReadOnly(const std::filesystem::path& path);
+
+		FileManager2(FileManager2&&) noexcept = default;
+		FileManager2& operator=(FileManager2&&) noexcept = default;
+
+		FileManager2(const FileManager2&) = delete;
+		FileManager2& operator=(const FileManager2&) = delete;
+
+		~FileManager2() noexcept;
+
+		[[nodiscard]] const std::filesystem::path& GetPath() const noexcept { return path_; }
+		[[nodiscard]] std::size_t GetSize() const noexcept { return size_; }
+
+		[[nodiscard]] std::span<const std::byte> GetBytes() const noexcept {
+			return { static_cast<const std::byte*>(view_), size_ };
+		}
+
+	private:
+		using FileHandle = petools::FileHandle;   
+		using MappingHandle = petools::FileHandle;   
+
+		explicit FileManager2(std::filesystem::path path,
+			FileHandle file,
+			MappingHandle mapping,
+			void* view,
+			std::size_t size) noexcept;
+
+		std::filesystem::path path_;
+		FileHandle            file_;      
+		MappingHandle         mapping_;   
+		void* view_{ nullptr };   
+		std::size_t           size_{ 0 };
+	};
 
 } //namespace petools
