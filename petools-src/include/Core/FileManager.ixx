@@ -129,17 +129,13 @@ namespace petools {
 		using FileHandle = petools::FileHandle;   
 		using MappingHandle = petools::FileHandle;   
 
-		explicit FileManager2(std::filesystem::path path,
-			FileHandle file,
-			MappingHandle mapping,
-			void* view,
-			std::size_t size) noexcept;
+		explicit FileManager2(std::filesystem::path path, FileHandle file, MappingHandle mapping, void* view, std::size_t size) noexcept;
 
 		std::filesystem::path path_;
-		FileHandle            file_;      
-		MappingHandle         mapping_;   
+		FileHandle file_;      
+		MappingHandle mapping_;   
 		void* view_{ nullptr };   
-		std::size_t           size_{ 0 };
+		std::size_t size_{ 0 };
 	};
 
 } //namespace petools
