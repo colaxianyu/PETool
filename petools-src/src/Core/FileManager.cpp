@@ -8,7 +8,7 @@
 module FileManager;
 
 import STL;
-import AnalysePE;
+//import AnalysePE;
 
 //FileManager::FileManager(const char* file_path, const char* mode){
 //	file_.open(file_path, std::fstream::in | std::fstream::out | std::fstream::binary);
@@ -82,20 +82,7 @@ import AnalysePE;
 //	file_buffer_.reset(file_buffer);
 //}
 
-namespace petools {
-
-	FileManager::FileManager(std::string_view path) noexcept
-		//: file_(fast_io::mnp::os_c_str(path.data())),
-		//: file_path_(std::string(path.begin(), path.end()))
-		//file_size_(file_.size())
-	{
-		//
-		 //pe_analyse().init(reinterpret_cast<const std::byte*>(file_.address_begin), file_size_);
-	}
-
-	FileManager::~FileManager() noexcept {
-		PeAnalyse().UnloadPeData();
-	}
+namespace petools::core::io {
 
     namespace {
         inline std::error_code make_win32_error(DWORD win32) noexcept {
@@ -103,7 +90,7 @@ namespace petools {
         }
     } // namespace detail
 
-    FileManager2::FileManager2(std::filesystem::path path, FileHandle file, MappingHandle mapping, void* view, std::size_t size) noexcept
+    FileManager::FileManager(std::filesystem::path path, FileHandle file, MappingHandle mapping, void* view, std::size_t size) noexcept
         : path_(std::move(path)),
         file_(std::move(file)),
         mapping_(std::move(mapping)),
@@ -112,7 +99,31 @@ namespace petools {
     {
     }
 
-    file_result<FileManager2> FileManager2::OpenReadOnly(const std::filesystem::path& path) {
+	FileManager::FileManager(FileManager&& other) noexcept
+		: path_(std::move(other.path_))
+		, file_(std::move(other.file_))
+		, mapping_(std::move(other.mapping_))
+		, view_(std::exchange(other.view_, nullptr))
+		, size_(std::exchange(other.size_, 0)) {
+	}
+
+	FileManager& FileManager::operator=(FileManager&& other) noexcept {
+		if (this != &other) {
+			if (view_) {
+				::UnmapViewOfFile(view_);
+				view_ = nullptr;
+			}
+
+			path_ = std::move(other.path_);
+			file_ = std::move(other.file_);
+			mapping_ = std::move(other.mapping_);
+			view_ = std::exchange(other.view_, nullptr);
+			size_ = std::exchange(other.size_, 0);
+		}
+		return *this;
+	}
+
+    file_result<FileManager> FileManager::OpenReadOnly(const std::filesystem::path& path) {
         // 1. 以只读方式打开文件
         HANDLE hfile = ::CreateFileW(
             path.c_str(),
@@ -195,7 +206,7 @@ namespace petools {
             return std::unexpected(err);
         }
 
-        return FileManager2{
+        return FileManager{
             path,
             std::move(file_handle),
             std::move(mapping_handle),
@@ -204,12 +215,11 @@ namespace petools {
         };
     }
 
-    FileManager2::~FileManager2() noexcept {
+    FileManager::~FileManager() noexcept {
         if (view_) {
             ::UnmapViewOfFile(view_);
             view_ = nullptr;
         }
-        // file_ 和 mapping_ 由 FileHandle RAII 自动 CloseHandle
     }
 
-} //namespace petools
+} //namespace petools::core::io
