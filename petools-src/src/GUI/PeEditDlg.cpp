@@ -19,45 +19,51 @@ using tools::config::filename_max;
 namespace petools::gui {
 
     void PeEditDlg::InitDialog() noexcept {
+		//if (!HasPe()) {
+		//	std::wstring msg = L"Failed to open PE file.\n";
+		//	if (auto err = PeError()) {
+		//		msg += string_to_wstring(err->message);
+		//	}
+		//	::MessageBoxW(current_hwnd_, msg.c_str(), L"PETools", MB_ICONERROR);
+		//	DialogMgr().CloseDialog();
+		//	return;
+		//}
         SetTitle();
         SetMainInfo();
     }
 
     void PeEditDlg::SetTitle() noexcept {
-        std::wstring file_path = string_to_wstring(file_manager_.get_file_path());
-		std::wstring title = title_prefix_ + file_path;
-        SetWindowText(current_hwnd_, title.c_str());
+		//const auto* pe = Pe();
+		//if (!pe) {
+		//	return;
+		//}
+		//std::wstring file_path = pe->Path().wstring();
+		//std::wstring title = title_prefix_ + file_path;
+		//SetWindowText(current_hwnd_, title.c_str());
     }
 
     void PeEditDlg::SetMainInfo() noexcept {
-        const auto& headers = PeAnalyse().GetHeaders();
 
-        struct pe_field_mapping {
-            DWORD template_id;
-            DWORD value;
-			DWORD show_length = 8;
-        };
+		//const pe_field_mapping pe_fields[] = {
+		//	{ IDC_EDIT_ENTRY, headers.optionalHeader->AddressOfEntryPoint },
+		//	{ IDC_EDIT_IMAGEBASE, headers.optionalHeader->ImageBase },
+		//	{ IDC_EDIT_IMAGESIZE, headers.optionalHeader->SizeOfImage },
+		//	{ IDC_EDIT_CODEBASE, headers.optionalHeader->BaseOfCode },
+		//	{ IDC_EDIT_DATABASE, headers.optionalHeader->BaseOfData },
+		//	{ IDC_EDIT_SECTIONALIGN, headers.optionalHeader->SectionAlignment },
+		//	{ IDC_EDIT_FILEALIGN, headers.optionalHeader->FileAlignment },
+		//	{ IDC_EDIT_HEADERSIZE, headers.optionalHeader->SizeOfHeaders },
+		//	{ IDC_EDIT_OPTHEADERSIZE, headers.fileHeader->SizeOfOptionalHeader },
+		//	{ IDC_EDIT_SECTIONSIZE, headers.fileHeader->NumberOfSections },
+		//	{ IDC_EDIT_CHARACT, headers.fileHeader->Characteristics },
+		//	{ IDC_EDIT_TIMESTAMP, headers.fileHeader->TimeDateStamp },
+		//	{ IDC_EDIT_SUBSYS, headers.optionalHeader->Subsystem },
+		//	{ IDC_EDIT_DIRSIZE, headers.optionalHeader->NumberOfRvaAndSizes }
+		//};
 
-		const pe_field_mapping pe_fields[] = {
-			{ IDC_EDIT_ENTRY, headers.optionalHeader->AddressOfEntryPoint },
-			{ IDC_EDIT_IMAGEBASE, headers.optionalHeader->ImageBase },
-			{ IDC_EDIT_IMAGESIZE, headers.optionalHeader->SizeOfImage },
-			{ IDC_EDIT_CODEBASE, headers.optionalHeader->BaseOfCode },
-			{ IDC_EDIT_DATABASE, headers.optionalHeader->BaseOfData },
-			{ IDC_EDIT_SECTIONALIGN, headers.optionalHeader->SectionAlignment },
-			{ IDC_EDIT_FILEALIGN, headers.optionalHeader->FileAlignment },
-			{ IDC_EDIT_HEADERSIZE, headers.optionalHeader->SizeOfHeaders },
-			{ IDC_EDIT_OPTHEADERSIZE, headers.fileHeader->SizeOfOptionalHeader },
-			{ IDC_EDIT_SECTIONSIZE, headers.fileHeader->NumberOfSections },
-			{ IDC_EDIT_CHARACT, headers.fileHeader->Characteristics },
-			{ IDC_EDIT_TIMESTAMP, headers.fileHeader->TimeDateStamp },
-			{ IDC_EDIT_SUBSYS, headers.optionalHeader->Subsystem },
-			{ IDC_EDIT_DIRSIZE, headers.optionalHeader->NumberOfRvaAndSizes }
-		};
-
-		for (const auto& field : pe_fields) {
-            utility::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
-		}
+		//for (const auto& field : pe_fields) {
+  //          utility::set_dlg_item_text(current_hwnd_, field.template_id, field.value, field.show_length);
+		//}
     }
 
     //void PeEditDlg::SaveAsFile() {

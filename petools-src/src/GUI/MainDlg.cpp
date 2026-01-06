@@ -43,7 +43,7 @@ namespace petools::gui {
 
     void MainDlg::InitDialog() {
         auto handle = LoadIcon(GetInstance(), MAKEINTRESOURCE(IDI_ICON_MAINICO));
-        icon_ = make_handle<HICON, decltype(&DestroyIcon)>(handle);
+        icon_.reset(handle);
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon_.get()));
         SendMessage(current_hwnd_.get(), WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon_.get()));
         InitProcessList();
@@ -178,6 +178,7 @@ namespace petools::gui {
             if (!file_name_result.has_value()) {
                 return true;
             }
+
             PeEditDlg* hwnd = DialogMgr().OpenDialog<PeEditDlg>(GetCurrentHWND(), file_name_result.value());
             if (hwnd == nullptr) {
                 // TODO: log error

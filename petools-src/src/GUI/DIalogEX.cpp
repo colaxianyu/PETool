@@ -46,7 +46,7 @@ namespace petools::gui {
         if (message == WM_INITDIALOG) {
             this_dlg = reinterpret_cast<DialogEX*>(l_param);
             SetWindowLongPtr(h_dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this_dlg));
-            this_dlg->current_hwnd_ = make_handle<HWND, decltype(&DestroyWindow)>(h_dlg);
+			this_dlg->current_hwnd_.reset(h_dlg);
             return this_dlg->OnInitDialog() ? TRUE : FALSE;
         }
 

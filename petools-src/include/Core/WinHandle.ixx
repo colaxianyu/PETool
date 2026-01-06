@@ -91,6 +91,15 @@ namespace petools {
                 }
             }
 
+            void reset(HandleType new_handle) noexcept {
+                reset();
+                handle_ = new_handle;
+                if (handle_ != traits::invalid_value && !traits::is_valid(handle_)) {
+                    assert(false && "Invalid handle provided to reset");
+                    handle_ = traits::invalid_value;
+                }
+            }
+
             HandleType release() noexcept {
                 return exchange(handle_, traits::invalid_value);
             }
