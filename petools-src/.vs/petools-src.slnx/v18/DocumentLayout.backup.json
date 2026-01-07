@@ -1,0 +1,168 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\WinHandle.ixx||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:include\\Core\\WinHandle.ixx||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\Logger.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\Core\\Logger.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\ListControl.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\Core\\ListControl.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\FileManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\Core\\FileManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\DialogStateMachine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\Core\\DialogStateMachine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\AnalysePE.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\Core\\AnalysePE.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\ListControl.ixx||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:include\\Core\\ListControl.ixx||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\Logger.ixx||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:include\\Core\\Logger.ixx||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b205a03c-566f-4dc3-9e2f-99e2df765f1e}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "WinHandle.ixx",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\WinHandle.ixx",
+              "RelativeDocumentMoniker": "include\\Core\\WinHandle.ixx",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\WinHandle.ixx",
+              "RelativeToolTip": "include\\Core\\WinHandle.ixx",
+              "ViewState": "AgIAACoAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001913|",
+              "WhenOpened": "2025-10-18T13:42:14.428Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Logger.cpp",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\Logger.cpp",
+              "RelativeDocumentMoniker": "src\\Core\\Logger.cpp",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\Logger.cpp",
+              "RelativeToolTip": "src\\Core\\Logger.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-18T13:41:59.324Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ListControl.cpp",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\ListControl.cpp",
+              "RelativeDocumentMoniker": "src\\Core\\ListControl.cpp",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\ListControl.cpp",
+              "RelativeToolTip": "src\\Core\\ListControl.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-18T13:41:58.227Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "FileManager.cpp",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\FileManager.cpp",
+              "RelativeDocumentMoniker": "src\\Core\\FileManager.cpp",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\FileManager.cpp",
+              "RelativeToolTip": "src\\Core\\FileManager.cpp",
+              "ViewState": "AgIAAFEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-18T13:41:53.631Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "DialogStateMachine.cpp",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\DialogStateMachine.cpp",
+              "RelativeDocumentMoniker": "src\\Core\\DialogStateMachine.cpp",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\DialogStateMachine.cpp",
+              "RelativeToolTip": "src\\Core\\DialogStateMachine.cpp",
+              "ViewState": "AgIAACQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-18T13:41:50.948Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AnalysePE.cpp",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\AnalysePE.cpp",
+              "RelativeDocumentMoniker": "src\\Core\\AnalysePE.cpp",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\src\\Core\\AnalysePE.cpp",
+              "RelativeToolTip": "src\\Core\\AnalysePE.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-18T13:41:50.011Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ListControl.ixx",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\ListControl.ixx",
+              "RelativeDocumentMoniker": "include\\Core\\ListControl.ixx",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\ListControl.ixx",
+              "RelativeToolTip": "include\\Core\\ListControl.ixx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001913|",
+              "WhenOpened": "2025-10-18T13:41:35.719Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Logger.ixx",
+              "DocumentMoniker": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\Logger.ixx",
+              "RelativeDocumentMoniker": "include\\Core\\Logger.ixx",
+              "ToolTip": "D:\\MyFile\\LearnMaterial\\project\\cpp_project\\PETools\\PETools\\petools-src\\include\\Core\\Logger.ixx",
+              "RelativeToolTip": "include\\Core\\Logger.ixx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001913|",
+              "WhenOpened": "2025-10-18T13:41:30.285Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
