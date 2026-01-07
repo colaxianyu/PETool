@@ -7,6 +7,9 @@ Release/
 # ignore all file in x64
 x64/
 
+# ignore all file in .vs
+.vs/
+
 # ignore
 *.ico
 petools-src/*.vcxproj
