@@ -1,3 +1,0 @@
-\toprule
-\multicolumn{1}{|c|}{\multirow{2.2}{*}{\textbf{Methods}}} & \multicolumn{1}{|c|}{\textbf{Accuracy(\%)}} & \multicolumn{1}{|c|}{\textbf{F1(\%)}} & \multicolumn{1}{|c|}{\textbf{Accuracy(\%)}} & \multicolumn{1}{|c|}{\textbf{F1(\%)}} \\ 
-\multicolumn{1}{|c|}{\textbf{}} & \multicolumn{1}{|c|}{\textbf{N-SP}} & \multicolumn{1}{|c|}{\textbf{SP}} & \multicolumn{1}{|c|}{\textbf{N-SP}} & \multicolumn{1}{|c|}{\textbf{SP}} \\
