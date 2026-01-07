@@ -32,16 +32,16 @@ PETool
 ## 效果展示
 
 ### PETool主界面
-![PETool主界面](https://github.com/colaxianyu/PETool/tree/master/example/tool_main.png)
+![PETool主界面](https://github.com/colaxianyu/PETool/blob/master/example/tool_main.png?raw=true)
 
 ### PETool Section解析
-![PETool Section解析](https://github.com/colaxianyu/PETool/tree/master/example/tool_section.png)
+![PETool Section解析](https://github.com/colaxianyu/PETool/blob/master/example/tool_section.png?raw=true)
 
 ### PETool加壳界面
-![PETool protect](https://github.com/colaxianyu/PETool/tree/master/example/tool_protect.png)
+![PETool protect](https://github.com/colaxianyu/PETool/blob/master/example/tool_protect.png?raw=true)
 
 ### 傀儡进程展示
-![fake_process](https://github.com/colaxianyu/PETool/tree/master/example/hollowing.png)
+![fake_process](https://github.com/colaxianyu/PETool/blob/master/example/hollowing.png?raw=true)
 
 ## 开发人员
 
